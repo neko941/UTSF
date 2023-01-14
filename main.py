@@ -51,13 +51,15 @@ from rich.terminal_theme import MONOKAI
 
 # deep learning models
 from models.RNN import BiRNN__Tensorflow
-from models.LSTM import BiLSTM__Tensorflow
 from models.GRU import BiGRU__Tensorflow
+from models.LSTM import BiLSTM__Tensorflow
 from models.customized import RNNcLSTM__Tensorflow
 
 # machine learning models
 from xgboost import XGBRegressor
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
 
 def test(model, X, y, weight=None):
     # model = model(input_shape=input_shape, output_size=labelsz, normalize_layer=normalize_layer, RANDOM_SEED=seed)
@@ -145,6 +147,9 @@ def parse_opt(known=False):
     parser.add_argument('--MachineLearning', action='store_true', help='')
     parser.add_argument('--LinearRegression', action='store_true', help='')
     parser.add_argument('--XGBoost', action='store_true', help='')
+    parser.add_argument('--RandomForest', action='store_true', help='')
+    parser.add_argument('--DecisionTree', action='store_true', help='')
+
     parser.add_argument('--DeepLearning', action='store_true', help='')
     parser.add_argument('--BiRNN__Tensorflow', action='store_true', help='')
     parser.add_argument('--BiLSTM__Tensorflow', action='store_true', help='')
@@ -166,19 +171,26 @@ def main(opt):
         opt.BiLSTM__Tensorflow = True
         opt.BiGRU__Tensorflow = True
         opt.RNNcLSTM__Tensorflow = True
-    if not opt.all and opt.MachineLearning:
-        opt.LinearRegression = True
-        opt.XGBoost = True
-    elif not opt.all and opt.DeepLearning:
-        opt.BiRNN__Tensorflow = True
-        opt.BiLSTM__Tensorflow = True
-        opt.BiGRU__Tensorflow = True
-        opt.RNNcLSTM__Tensorflow = True
+        opt.RandomForest = True
+        opt.DecisionTree = True
+    else:
+        if opt.MachineLearning:
+            opt.LinearRegression = True
+            opt.XGBoost = True
+            opt.RandomForest = True
+            opt.DecisionTree = True
+        if opt.DeepLearning:
+            opt.BiRNN__Tensorflow = True
+            opt.BiLSTM__Tensorflow = True
+            opt.BiGRU__Tensorflow = True
+            opt.RNNcLSTM__Tensorflow = True
     
     # collecting later used models
     models_machine_learning = []
     if opt.XGBoost: models_machine_learning.append(XGBRegressor)    
     if opt.LinearRegression: models_machine_learning.append(LinearRegression)
+    if opt.RandomForest: models_machine_learning.append(RandomForestRegressor)
+    if opt.DecisionTree: models_machine_learning.append(DecisionTreeClassifier)
     models_tensorflow = []
     if opt.BiRNN__Tensorflow: models_tensorflow.append(BiRNN__Tensorflow)
     if opt.BiLSTM__Tensorflow: models_tensorflow.append(BiLSTM__Tensorflow)
@@ -243,7 +255,12 @@ def main(opt):
         table.add_column(f'[green]{name}', justify='center')
 
     for model in models_machine_learning:
-        model = model().fit([i.flatten() for i in X_train], [i.flatten() for i in y_train])
+        try:
+            model = model().fit([i.flatten() for i in X_train], [i.flatten() for i in y_train])
+        except:
+            # for DecisionTreeClassifier
+            model = model().fit([i.flatten() for i in X_train], [i.flatten().astype(int) for i in y_train])
+        # model.predict(np.ravel([i.flatten() for i in X_test]))
         model.predict([i.flatten() for i in X_test])
         errors = test(model=model, X=[i.flatten() for i in X_test], y=[i.flatten() for i in y_test])
         table.add_row(type(model).__name__, *errors)
