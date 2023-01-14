@@ -1,0 +1,6 @@
+tensorflow
+numpy
+pandas
+rich
+scikit-learn
+xgboost

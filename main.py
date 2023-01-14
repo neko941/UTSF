@@ -142,8 +142,10 @@ def parse_opt(known=False):
     parser.add_argument('--optimizer', type=str, choices=['SGD', 'Adam'], default='Adam', help='optimizer')
     parser.add_argument('--seed', type=int, default=941, help='Global training seed')
 
+    parser.add_argument('--MachineLearning', action='store_true', help='')
     parser.add_argument('--LinearRegression', action='store_true', help='')
     parser.add_argument('--XGBoost', action='store_true', help='')
+    parser.add_argument('--DeepLearning', action='store_true', help='')
     parser.add_argument('--BiRNN__Tensorflow', action='store_true', help='')
     parser.add_argument('--BiLSTM__Tensorflow', action='store_true', help='')
     parser.add_argument('--BiGRU__Tensorflow', action='store_true', help='')
@@ -165,7 +167,14 @@ def main(opt):
         opt.BiLSTM__Tensorflow = True
         opt.BiGRU__Tensorflow = True
         opt.RNNcLSTM__Tensorflow = True
-
+    if not opt.all and opt.MachineLearning:
+        opt.LinearRegression = True
+        opt.XGBoost = True
+    elif not opt.all and opt.DeepLearning:
+        opt.BiRNN__Tensorflow = True
+        opt.BiLSTM__Tensorflow = True
+        opt.BiGRU__Tensorflow = True
+        opt.RNNcLSTM__Tensorflow = True
     if opt.XGBoost: models_machine_learning.append(XGBRegressor)    
     if opt.LinearRegression: models_machine_learning.append(LinearRegression)
     if opt.BiRNN__Tensorflow: models_tensorflow.append(BiRNN__Tensorflow)
@@ -234,10 +243,7 @@ def main(opt):
         model = model().fit([i.flatten() for i in X_train], [i.flatten() for i in y_train])
         model.predict([i.flatten() for i in X_test])
         errors = test(model=model, X_test=[i.flatten() for i in X_test], y_test=[i.flatten() for i in y_test])
-        try:
-            table.add_row(model.name, *errors)
-        except:
-            table.add_row(type(model).__name__, *errors)
+        table.add_row(type(model).__name__, *errors)
         print()
 
     for model in models_tensorflow:
