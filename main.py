@@ -87,7 +87,7 @@ optimizer_dict = {
     'Adam' : Adam
 }
 
-def train(model, train_ds, val_ds, patience, save_dir, lr, optimizer, min_delta=0.001):
+def train(model, train_ds, val_ds, patience, save_dir, lr, optimizer, min_delta=0.001, epochs=10_000_000):
     model.compile(loss=MeanSquaredError(), 
                   optimizer=optimizer_dict[optimizer](learning_rate=lr))
 
@@ -100,7 +100,7 @@ def train(model, train_ds, val_ds, patience, save_dir, lr, optimizer, min_delta=
     # plot_model(model, to_file=os.path.join(model_path, f'{model.name}.png'), show_shapes=False)
     history = model.fit(train_ds, 
                     validation_data=val_ds,
-                    epochs=opt.epochs,
+                    epochs=epochs,
                     callbacks=[EarlyStopping(monitor='val_loss', patience=patience, min_delta=min_delta), 
                                ModelCheckpoint(filepath=os.path.join(weight_path, f"{model.name}_best.h5"),
                                                save_best_only=True,
@@ -249,7 +249,7 @@ def main(opt):
     for model in models_tensorflow:
         model = model(input_shape=INPUT_SHAPE, output_size=opt.labelsz, normalize_layer=normalize_layer, seed=opt.seed)
         model.summary()
-        history, model = train(model=model, train_ds=train_ds, val_ds=val_ds, patience=opt.patience, save_dir=save_dir, optimizer=opt.optimizer, lr=opt.lr)
+        history, model = train(model=model, train_ds=train_ds, val_ds=val_ds, patience=opt.patience, save_dir=save_dir, optimizer=opt.optimizer, lr=opt.lr, epochs=opt.epochs)
         errors = test(model=model, weight=os.path.join(save_dir, 'weights', f"{model.name}_best.h5"), X_test=X_test, y_test=y_test)
         table.add_row(model.name, *errors)
         print()

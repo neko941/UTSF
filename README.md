@@ -4,7 +4,7 @@
 
 ### Download repo
 ```bash
-git clone
+git clone https://github.com/neko941/UTSF
 cd UTSF
 ```
 
