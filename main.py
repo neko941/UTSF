@@ -39,6 +39,7 @@ from utils.metrics import MAE
 from utils.metrics import MSE
 from utils.metrics import RMSE
 from utils.metrics import MAPE
+from sklearn.metrics import r2_score
 
 from utils.dataset import slicing_window
 
@@ -58,29 +59,28 @@ from models.customized import RNNcLSTM__Tensorflow
 from xgboost import XGBRegressor
 from sklearn.linear_model import LinearRegression
 
-# from transformers import TFBertForSequenceClassification, TimeSeriesTransformerConfig
-# def BERT(input_shape, output_size, normalize_layer=None, seed=941):
-#     return TFBertForSequenceClassification(TimeSeriesTransformerConfig(input_shape))
-
-def test(model, X_test, y_test, weight=None):
+def test(model, X, y, weight=None):
     # model = model(input_shape=input_shape, output_size=labelsz, normalize_layer=normalize_layer, RANDOM_SEED=seed)
     # model.load_weights(os.path.join(save_dir, 'weights', f"{model.name}_best.h5"))
     # print(weight)
     if weight is not None: model.load_weights(weight)
     # model.load_weights(r'D:\01.Code\00.Github\UTSF\runs\exp1\weights\combined_RNN_LSTM_best.h5')
-    y_test_pred = model.predict(X_test)
+    yhat = model.predict(X)
 
     print()
-    rmse = RMSE(y_test, y_test_pred)
+    rmse = RMSE(y, yhat)
     print(f'RMSE: {rmse}')
-    mape = MAPE(y_test, y_test_pred)
+    mape = MAPE(y, yhat)
     print(f'MAPE: {mape}')
-    mse = MSE(y_test, y_test_pred)
+    mse = MSE(y, yhat)
     print(f'MSE: {mse}')
-    mae = MAE(y_test, y_test_pred)
+    mae = MAE(y, yhat)
     print(f'MAE: {mae}')
-
-    return [str(rmse), str(mape), str(mse), str(mae)]
+    # r2 = np.sum((yhat-np.sum(y)/len(y))**2)  / np.sum((y - np.sum(y)/len(y))**2) 
+    # r2 = 1 - (np.sum(np.power(y - yhat, 2)) / np.sum(np.power(y - np.mean(y), 2)))
+    r2 = r2_score(y_true=y, y_pred=yhat)
+    print(f'R2: {r2}')
+    return [str(rmse), str(mape), str(mse), str(mae), str(r2)]
 
 optimizer_dict = {
     'SGD': SGD,
@@ -158,8 +158,7 @@ def main(opt):
     save_dir = str(increment_path(Path(opt.project) / opt.name, overwrite=opt.overwrite, mkdir=True))
     yaml_save(os.path.join(save_dir, 'opt.yaml'), vars(opt))
 
-    models_machine_learning = []
-    models_tensorflow = []
+    # update option
     if opt.all:
         opt.LinearRegression = True
         opt.XGBoost = True
@@ -175,18 +174,22 @@ def main(opt):
         opt.BiLSTM__Tensorflow = True
         opt.BiGRU__Tensorflow = True
         opt.RNNcLSTM__Tensorflow = True
+    
+    # collecting later used models
+    models_machine_learning = []
     if opt.XGBoost: models_machine_learning.append(XGBRegressor)    
     if opt.LinearRegression: models_machine_learning.append(LinearRegression)
+    models_tensorflow = []
     if opt.BiRNN__Tensorflow: models_tensorflow.append(BiRNN__Tensorflow)
     if opt.BiLSTM__Tensorflow: models_tensorflow.append(BiLSTM__Tensorflow)
     if opt.BiGRU__Tensorflow: models_tensorflow.append(BiGRU__Tensorflow)
     if opt.RNNcLSTM__Tensorflow: models_tensorflow.append(RNNcLSTM__Tensorflow)
-    # models_tensorflow = [BERT]
     
     # set random seed
     set_seed(opt.seed)
 
-    df = pd.read_csv(opt.source, index_col=0) # Đọc file .csv thành DataFrame
+    # read data to DataFrame
+    df = pd.read_csv(opt.source, index_col=0)
     dataset_length = len(df)
 
     TRAIN_END_IDX = int(opt.trainsz * dataset_length) 
@@ -236,13 +239,13 @@ def main(opt):
               header_style="bold magenta",
               box=rbox.ROUNDED)
 
-    for name in ['Name', 'RMSE', 'MAPE', 'MSE', 'MAE']:
+    for name in ['Name', 'RMSE', 'MAPE', 'MSE', 'MAE', 'R2']:
         table.add_column(f'[green]{name}', justify='center')
 
     for model in models_machine_learning:
         model = model().fit([i.flatten() for i in X_train], [i.flatten() for i in y_train])
         model.predict([i.flatten() for i in X_test])
-        errors = test(model=model, X_test=[i.flatten() for i in X_test], y_test=[i.flatten() for i in y_test])
+        errors = test(model=model, X=[i.flatten() for i in X_test], y=[i.flatten() for i in y_test])
         table.add_row(type(model).__name__, *errors)
         print()
 
@@ -250,7 +253,7 @@ def main(opt):
         model = model(input_shape=INPUT_SHAPE, output_size=opt.labelsz, normalize_layer=normalize_layer, seed=opt.seed)
         model.summary()
         history, model = train(model=model, train_ds=train_ds, val_ds=val_ds, patience=opt.patience, save_dir=save_dir, optimizer=opt.optimizer, lr=opt.lr, epochs=opt.epochs)
-        errors = test(model=model, weight=os.path.join(save_dir, 'weights', f"{model.name}_best.h5"), X_test=X_test, y_test=y_test)
+        errors = test(model=model, weight=os.path.join(save_dir, 'weights', f"{model.name}_best.h5"), X=X_test, y=y_test)
         table.add_row(model.name, *errors)
         print()
 
@@ -260,7 +263,11 @@ def main(opt):
     # console.save_text(os.path.join(save_dir, 'results.txt'))
 
 def run(**kwargs):
-    # Usage: import train; train.run(data='coco128.yaml', imgsz=320, weights='yolov5m.pt')
+    """ 
+    Usage (example)
+        import main
+        main.run(all=True, source='/content/UTSF/data/stocks/TSLA-Tesla.csv')
+    """
     opt = parse_opt(True)
     for k, v in kwargs.items():
         setattr(opt, k, v)
