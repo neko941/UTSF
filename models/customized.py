@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-def combined_RNN_LSTM__Tensorflow(input_shape, output_size, normalize_layer=None, seed=941):
+def RNNcLSTM__Tensorflow(input_shape, output_size, normalize_layer=None, seed=941):
     input_layer = tf.keras.Input(shape=input_shape, name='input_layer')
 
     if normalize_layer: x = normalize_layer(input_layer)

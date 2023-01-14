@@ -34,6 +34,7 @@ from keras.losses import MeanSquaredError
 from utils.general import yaml_save
 from utils.general import increment_path
 
+# performance metrics
 from utils.metrics import MAE
 from utils.metrics import MSE
 from utils.metrics import RMSE
@@ -41,22 +42,33 @@ from utils.metrics import MAPE
 
 from utils.dataset import slicing_window
 
+# display results
 from rich import box as rbox
 from rich.table import Table
 from rich.console import Console
 from rich.terminal_theme import MONOKAI
 
-from models.combined_RNN_LSTM import combined_RNN_LSTM__Tensorflow
-from models.BiLSTM import BiLSTM__Tensorflow
-from models.BiRNN import BiRNN__Tensorflow
+# deep learning models
+from models.RNN import BiRNN__Tensorflow
+from models.LSTM import BiLSTM__Tensorflow
+from models.GRU import BiGRU__Tensorflow
+from models.customized import RNNcLSTM__Tensorflow
 
-def test(model, weight, X_test, y_test):
+# machine learning models
+from xgboost import XGBRegressor
+from sklearn.linear_model import LinearRegression
+
+# from transformers import TFBertForSequenceClassification, TimeSeriesTransformerConfig
+# def BERT(input_shape, output_size, normalize_layer=None, seed=941):
+#     return TFBertForSequenceClassification(TimeSeriesTransformerConfig(input_shape))
+
+def test(model, X_test, y_test, weight=None):
     # model = model(input_shape=input_shape, output_size=labelsz, normalize_layer=normalize_layer, RANDOM_SEED=seed)
     # model.load_weights(os.path.join(save_dir, 'weights', f"{model.name}_best.h5"))
     # print(weight)
-    model.load_weights(weight)
+    if weight is not None: model.load_weights(weight)
     # model.load_weights(r'D:\01.Code\00.Github\UTSF\runs\exp1\weights\combined_RNN_LSTM_best.h5')
-    y_test_pred = model.predict(X_test, verbose=0)
+    y_test_pred = model.predict(X_test)
 
     print()
     rmse = RMSE(y_test, y_test_pred)
@@ -70,9 +82,14 @@ def test(model, weight, X_test, y_test):
 
     return [str(rmse), str(mape), str(mse), str(mae)]
 
-def train(model, train_ds, val_ds, patience, save_dir, lr, min_delta=0.001):
+optimizer_dict = {
+    'SGD': SGD,
+    'Adam' : Adam
+}
+
+def train(model, train_ds, val_ds, patience, save_dir, lr, optimizer, min_delta=0.001):
     model.compile(loss=MeanSquaredError(), 
-                  optimizer=Adam(learning_rate=lr))
+                  optimizer=optimizer_dict[optimizer](learning_rate=lr))
 
     weight_path = os.path.join(save_dir, 'weights')
     os.makedirs(name=weight_path, exist_ok=True)
@@ -105,11 +122,6 @@ def train(model, train_ds, val_ds, patience, save_dir, lr, min_delta=0.001):
 
     return history, model
 
-optimizer_dict = {
-    'SGD': SGD,
-    'Adam' : Adam
-}
-
 def parse_opt(known=False):
     parser = argparse.ArgumentParser()
     # parser.add_argument('--weights', type=str, default=ROOT / 'yolov5s.pt', help='initial weights path')
@@ -127,11 +139,14 @@ def parse_opt(known=False):
     parser.add_argument('--project', default=ROOT / 'runs', help='save to project/name')
     parser.add_argument('--name', default='exp', help='save to project/name')
     parser.add_argument('--overwrite', action='store_true', help='existing project/name ok, do not increment')
-    # parser.add_argument('--optimizer', type=str, choices=['SGD', 'Adam'], default='Adam', help='optimizer')
+    parser.add_argument('--optimizer', type=str, choices=['SGD', 'Adam'], default='Adam', help='optimizer')
     parser.add_argument('--seed', type=int, default=941, help='Global training seed')
 
+    parser.add_argument('--LinearRegression', action='store_true', help='')
+    parser.add_argument('--XGBoost', action='store_true', help='')
     parser.add_argument('--BiRNN__Tensorflow', action='store_true', help='')
     parser.add_argument('--BiLSTM__Tensorflow', action='store_true', help='')
+    parser.add_argument('--BiGRU__Tensorflow', action='store_true', help='')
     parser.add_argument('--RNNcLSTM__Tensorflow', action='store_true', help='Model that combineced RNN and LSTM')
     parser.add_argument('--all', action='store_true', help='Use all available models')
 
@@ -141,14 +156,23 @@ def main(opt):
     save_dir = str(increment_path(Path(opt.project) / opt.name, overwrite=opt.overwrite, mkdir=True))
     yaml_save(os.path.join(save_dir, 'opt.yaml'), vars(opt))
 
-    models = []
+    models_machine_learning = []
+    models_tensorflow = []
     if opt.all:
+        opt.LinearRegression = True
+        opt.XGBoost = True
         opt.BiRNN__Tensorflow = True
         opt.BiLSTM__Tensorflow = True
+        opt.BiGRU__Tensorflow = True
         opt.RNNcLSTM__Tensorflow = True
-    if opt.BiRNN__Tensorflow: models.append(BiRNN__Tensorflow)
-    if opt.BiLSTM__Tensorflow: models.append(BiLSTM__Tensorflow)
-    if opt.RNNcLSTM__Tensorflow: models.append(combined_RNN_LSTM__Tensorflow)
+
+    if opt.XGBoost: models_machine_learning.append(XGBRegressor)    
+    if opt.LinearRegression: models_machine_learning.append(LinearRegression)
+    if opt.BiRNN__Tensorflow: models_tensorflow.append(BiRNN__Tensorflow)
+    if opt.BiLSTM__Tensorflow: models_tensorflow.append(BiLSTM__Tensorflow)
+    if opt.BiGRU__Tensorflow: models_tensorflow.append(BiGRU__Tensorflow)
+    if opt.RNNcLSTM__Tensorflow: models_tensorflow.append(RNNcLSTM__Tensorflow)
+    # models_tensorflow = [BERT]
     
     # set random seed
     set_seed(opt.seed)
@@ -206,11 +230,20 @@ def main(opt):
     for name in ['Name', 'RMSE', 'MAPE', 'MSE', 'MAE']:
         table.add_column(f'[green]{name}', justify='center')
 
+    for model in models_machine_learning:
+        model = model().fit([i.flatten() for i in X_train], [i.flatten() for i in y_train])
+        model.predict([i.flatten() for i in X_test])
+        errors = test(model=model, X_test=[i.flatten() for i in X_test], y_test=[i.flatten() for i in y_test])
+        try:
+            table.add_row(model.name, *errors)
+        except:
+            table.add_row(type(model).__name__, *errors)
+        print()
 
-    for model in models:
+    for model in models_tensorflow:
         model = model(input_shape=INPUT_SHAPE, output_size=opt.labelsz, normalize_layer=normalize_layer, seed=opt.seed)
         model.summary()
-        history, model = train(model=model, train_ds=train_ds, val_ds=val_ds, patience=opt.patience, save_dir=save_dir, lr=opt.lr)
+        history, model = train(model=model, train_ds=train_ds, val_ds=val_ds, patience=opt.patience, save_dir=save_dir, optimizer=opt.optimizer, lr=opt.lr)
         errors = test(model=model, weight=os.path.join(save_dir, 'weights', f"{model.name}_best.h5"), X_test=X_test, y_test=y_test)
         table.add_row(model.name, *errors)
         print()
