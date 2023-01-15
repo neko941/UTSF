@@ -70,6 +70,11 @@ def test(model, X, y, weight=None):
     yhat = model.predict(X)
 
     print()
+    try:
+        name = type(model).__name__
+    except:
+        name = model.name
+    print(f'Model: {name}')
     rmse = RMSE(y, yhat)
     print(f'RMSE: {rmse}')
     mape = MAPE(y, yhat)
@@ -126,7 +131,6 @@ def train(model, train_ds, val_ds, patience, save_dir, lr, optimizer, min_delta=
 
 def parse_opt(known=False):
     parser = argparse.ArgumentParser()
-    # parser.add_argument('--weights', type=str, default=ROOT / 'yolov5s.pt', help='initial weights path')
     parser.add_argument('--epochs', type=int, default=10_000_000, help='total training epochs')
     parser.add_argument('--lr', type=float, default=0.001, help='')
     parser.add_argument('--batchsz', type=int, default=64, help='total batch size for all GPUs')
@@ -165,25 +169,18 @@ def main(opt):
 
     # update option
     if opt.all:
+        opt.MachineLearning = True
+        opt.DeepLearning = True
+    if opt.MachineLearning:
         opt.LinearRegression = True
         opt.XGBoost = True
+        opt.RandomForest = True
+        opt.DecisionTree = True
+    if opt.DeepLearning:
         opt.BiRNN__Tensorflow = True
         opt.BiLSTM__Tensorflow = True
         opt.BiGRU__Tensorflow = True
         opt.RNNcLSTM__Tensorflow = True
-        opt.RandomForest = True
-        opt.DecisionTree = True
-    else:
-        if opt.MachineLearning:
-            opt.LinearRegression = True
-            opt.XGBoost = True
-            opt.RandomForest = True
-            opt.DecisionTree = True
-        if opt.DeepLearning:
-            opt.BiRNN__Tensorflow = True
-            opt.BiLSTM__Tensorflow = True
-            opt.BiGRU__Tensorflow = True
-            opt.RNNcLSTM__Tensorflow = True
     
     # collecting later used models
     models_machine_learning = []
