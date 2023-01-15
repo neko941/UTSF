@@ -1,5 +1,31 @@
 import tensorflow as tf
 
+def VanillaGRU__Tensorflow(input_shape, output_size, normalize_layer=None, seed=941):
+  return tf.keras.Sequential([
+        # Input layer 
+        tf.keras.Input(shape=input_shape, name='input_layer'), 
+
+        normalize_layer,
+
+        # GRU Layer 1 
+        tf.keras.layers.GRU(128,
+                            # return_sequences=True,
+                            kernel_initializer=tf.initializers.GlorotUniform(seed=seed), 
+                            name='GRU_layer'),
+        # FC Layer 1
+        tf.keras.layers.Dense(32,
+                              activation='relu',
+                              kernel_initializer=tf.initializers.GlorotUniform(seed=seed),
+                              name='Fully_Connected_layer'
+                              ),
+        
+        # Output Layer
+        tf.keras.layers.Dense(output_size, 
+                              kernel_initializer=tf.initializers.GlorotUniform(seed=seed),
+                              name='Output_layer') 
+    ],
+    name='VanillaGRU__Tensorflow')
+
 def BiGRU__Tensorflow(input_shape, output_size, normalize_layer=None, seed=941):
 	return tf.keras.Sequential([
         # Input layer 
@@ -7,7 +33,7 @@ def BiGRU__Tensorflow(input_shape, output_size, normalize_layer=None, seed=941):
 
         normalize_layer,
 
-        # BiLSTM Layer 1 
+        # BiGRU Layer 1 
         tf.keras.layers.Bidirectional(tf.keras.layers.GRU(128,
                                                           return_sequences=True,
                                                           kernel_initializer=tf.initializers.GlorotUniform(seed=seed)),

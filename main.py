@@ -49,19 +49,30 @@ from rich.table import Table
 from rich.console import Console
 from rich.terminal_theme import MONOKAI
 
-# deep learning models
-from models.RNN import BiRNN__Tensorflow
-from models.GRU import BiGRU__Tensorflow
-from models.LSTM import BiLSTM__Tensorflow
-from models.customized import RNNcLSTM__Tensorflow
-from models.NBeats import NBeats
-
 # machine learning models
 from xgboost import XGBRegressor
+from sklearn.linear_model import Lasso
+from sklearn.linear_model import LassoCV
+from sklearn.linear_model import Ridge
+from sklearn.linear_model import RidgeCV
+from sklearn.linear_model import Lars
+from sklearn.linear_model import LarsCV
+from sklearn.linear_model import OrthogonalMatchingPursuit
+from sklearn.linear_model import OrthogonalMatchingPursuitCV
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import SGDRegressor
 from sklearn.ensemble import RandomForestRegressor
 
+# deep learning models
+from models.RNN import VanillaRNN__Tensorflow    
+from models.RNN import BiRNN__Tensorflow
+from models.LSTM import VanillaLSTM__Tensorflow    
+from models.LSTM import BiLSTM__Tensorflow    
+from models.GRU import VanillaGRU__Tensorflow
+from models.GRU import BiGRU__Tensorflow
+from models.customized import RNNcLSTM__Tensorflow
+from models.NBeats import NBeats
 
 def parse_opt(known=False):
     parser = argparse.ArgumentParser()
@@ -82,19 +93,30 @@ def parse_opt(known=False):
     parser.add_argument('--optimizer', type=str, choices=['SGD', 'Adam'], default='Adam', help='optimizer')
     parser.add_argument('--seed', type=int, default=941, help='Global training seed')
 
+    parser.add_argument('--all', action='store_true', help='Use all available models')
     parser.add_argument('--MachineLearning', action='store_true', help='')
     parser.add_argument('--LinearRegression', action='store_true', help='')
+    parser.add_argument('--SGDRegressor', action='store_true', help='')
     parser.add_argument('--XGBoost', action='store_true', help='')
+    parser.add_argument('--Lasso', action='store_true', help='')
+    parser.add_argument('--LassoCV', action='store_true', help='Lasso linear model with iterative fitting along a regularization path')
+    parser.add_argument('--Ridge', action='store_true', help='')
+    parser.add_argument('--RidgeCV', action='store_true', help='Ridge regression with built-in cross-validation')
+    parser.add_argument('--Lars', action='store_true', help='Least Angle Regression')
+    parser.add_argument('--LarsCV', action='store_true', help='Cross-validated Least Angle Regression')
+    parser.add_argument('--OrthogonalMatchingPursuit', action='store_true', help='')
+    parser.add_argument('--OrthogonalMatchingPursuitCV', action='store_true', help='')
     parser.add_argument('--RandomForest', action='store_true', help='')
     parser.add_argument('--DecisionTree', action='store_true', help='')
-
     parser.add_argument('--DeepLearning', action='store_true', help='')
+    parser.add_argument('--VanillaRNN__Tensorflow', action='store_true', help='')
     parser.add_argument('--BiRNN__Tensorflow', action='store_true', help='')
+    parser.add_argument('--VanillaLSTM__Tensorflow', action='store_true', help='')
     parser.add_argument('--BiLSTM__Tensorflow', action='store_true', help='')
+    parser.add_argument('--VanillaGRU__Tensorflow', action='store_true', help='')
     parser.add_argument('--BiGRU__Tensorflow', action='store_true', help='')
     parser.add_argument('--RNNcLSTM__Tensorflow', action='store_true', help='Model that combineced RNN and LSTM')
     parser.add_argument('--NBeats', action='store_true', help='')
-    parser.add_argument('--all', action='store_true', help='Use all available models')
 
     return parser.parse_known_args()[0] if known else parser.parse_args()
 
@@ -104,10 +126,10 @@ optimizer_dict = {
 }
 
 metric_dict = {
+    'MAE' : MAE, 
+    'MSE' : MSE,
     'RMSE' : RMSE, 
     'MAPE' : MAPE, 
-    'MSE' : MSE,
-    'MAE' : MAE, 
     'R2' : r2_score
 }
 
@@ -119,30 +141,17 @@ def test(model, X, y, weight=None):
     # model.load_weights(r'D:\01.Code\00.Github\UTSF\runs\exp1\weights\combined_RNN_LSTM_best.h5')
     yhat = model.predict(X)
 
-    results = []
     print()
     try:
         name = model.name
     except:
         name = type(model).__name__
     print(f'Model: {name}')
+    results = []
     for metric, func in metric_dict.items():
         result = func(y, yhat)
         results.append(str(result))
         print(f'{metric}: {result}')
-    # rmse = RMSE(y, yhat)
-    # print(f'RMSE: {rmse}')
-    # mape = MAPE(y, yhat)
-    # print(f'MAPE: {mape}')
-    # mse = MSE(y, yhat)
-    # print(f'MSE: {mse}')
-    # mae = MAE(y, yhat)
-    # print(f'MAE: {mae}')
-    # # r2 = np.sum((yhat-np.sum(y)/len(y))**2)  / np.sum((y - np.sum(y)/len(y))**2) 
-    # # r2 = 1 - (np.sum(np.power(y - yhat, 2)) / np.sum(np.power(y - np.mean(y), 2)))
-    # r2 = r2_score(y_true=y, y_pred=yhat)
-    # print(f'R2: {r2}')
-    # return [str(rmse), str(mape), str(mse), str(mae), str(r2)]
     return results
 
 def train_tensorflow(model, train_ds, val_ds, patience, save_dir, lr, optimizer, min_delta=0.001, epochs=10_000_000):
@@ -190,12 +199,24 @@ def main(opt):
         opt.DeepLearning = True
     if opt.MachineLearning:
         opt.LinearRegression = True
+        opt.SGDRegressor = True
         opt.XGBoost = True
         opt.RandomForest = True
         opt.DecisionTree = True
+        opt.Lasso = True
+        opt.LassoCV = True
+        opt.Ridge = True
+        opt.RidgeCV = True
+        opt.Lars = True
+        opt.LarsCV = True
+        opt.OrthogonalMatchingPursuit = True
+        opt.OrthogonalMatchingPursuitCV = True
     if opt.DeepLearning:
+        opt.VanillaRNN__Tensorflow = True
         opt.BiRNN__Tensorflow = True
+        opt.VanillaLSTM__Tensorflow = True
         opt.BiLSTM__Tensorflow = True
+        opt.VanillaGRU__Tensorflow = True
         opt.BiGRU__Tensorflow = True
         opt.RNNcLSTM__Tensorflow = True
         opt.NBeats = True
@@ -204,11 +225,23 @@ def main(opt):
     models_machine_learning = []
     if opt.XGBoost: models_machine_learning.append(XGBRegressor)    
     if opt.LinearRegression: models_machine_learning.append(LinearRegression)
+    if opt.SGDRegressor: models_machine_learning.append(SGDRegressor)
+    if opt.Lasso: models_machine_learning.append(Lasso)
+    if opt.LassoCV: models_machine_learning.append(LassoCV)
+    if opt.Ridge: models_machine_learning.append(Ridge)
+    if opt.RidgeCV: models_machine_learning.append(RidgeCV)
+    if opt.Lars: models_machine_learning.append(Lars)
+    if opt.LarsCV: models_machine_learning.append(LarsCV)
+    if opt.OrthogonalMatchingPursuit: models_machine_learning.append(OrthogonalMatchingPursuit)
+    if opt.OrthogonalMatchingPursuitCV: models_machine_learning.append(OrthogonalMatchingPursuitCV)
     if opt.RandomForest: models_machine_learning.append(RandomForestRegressor)
     if opt.DecisionTree: models_machine_learning.append(DecisionTreeClassifier)
     models_tensorflow = []
+    if opt.VanillaRNN__Tensorflow: models_tensorflow.append(VanillaRNN__Tensorflow) 
     if opt.BiRNN__Tensorflow: models_tensorflow.append(BiRNN__Tensorflow)
+    if opt.VanillaLSTM__Tensorflow: models_tensorflow.append(VanillaLSTM__Tensorflow)
     if opt.BiLSTM__Tensorflow: models_tensorflow.append(BiLSTM__Tensorflow)
+    if opt.VanillaGRU__Tensorflow: models_tensorflow.append(VanillaGRU__Tensorflow)
     if opt.BiGRU__Tensorflow: models_tensorflow.append(BiGRU__Tensorflow)
     if opt.RNNcLSTM__Tensorflow: models_tensorflow.append(RNNcLSTM__Tensorflow)
     # TODO
@@ -221,21 +254,21 @@ def main(opt):
     TARGET_NAME = 'Adj Close'
     DATE_VARIABLE = 'Date'
     
-    # read data to DataFrame
-    df = pd.read_csv(opt.source)
-    df[DATE_VARIABLE] = pd.to_datetime(df[DATE_VARIABLE])
-    df.sort_values(DATE_VARIABLE, inplace=True)
+    # # read data to DataFrame
+    # df = pd.read_csv(opt.source)
+    # df[DATE_VARIABLE] = pd.to_datetime(df[DATE_VARIABLE])
+    # df.sort_values(DATE_VARIABLE, inplace=True)
 
-    # add sin cos 
-    d = [x.timestamp() for x in df[f'{DATE_VARIABLE}']]
-    df.drop([DATE_VARIABLE], axis=1, inplace=True)
-    s = 24 * 60 * 60 # Seconds in day  
-    year = (365.25) * s # Seconds in year 
-    df.insert(loc=0, column='month_cos', value=[np.cos((x) * (2 * np.pi / year)) for x in d])
-    df.insert(loc=0, column='month_sin', value=[np.sin((x) * (2 * np.pi / year)) for x in d]) 
-    # print(df)
+    # # add sin cos 
+    # d = [x.timestamp() for x in df[f'{DATE_VARIABLE}']]
+    # df.drop([DATE_VARIABLE], axis=1, inplace=True)
+    # s = 24 * 60 * 60 # Seconds in day  
+    # year = (365.25) * s # Seconds in year 
+    # df.insert(loc=0, column='month_cos', value=[np.cos((x) * (2 * np.pi / year)) for x in d])
+    # df.insert(loc=0, column='month_sin', value=[np.sin((x) * (2 * np.pi / year)) for x in d]) 
     
     # get dataset length
+    df = pd.read_csv(opt.source, index_col=0)
     dataset_length = len(df)
 
     TRAIN_END_IDX = int(opt.trainsz * dataset_length) 

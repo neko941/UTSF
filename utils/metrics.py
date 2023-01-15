@@ -1,5 +1,7 @@
 import numpy as np
 
+# r2 = 1 - (np.sum(np.power(y - yhat, 2)) / np.sum(np.power(y - np.mean(y), 2)))
+
 def MAE(y_true, y_pred):
     """ Mean Absolute Error """
     return np.mean(np.abs((y_true - y_pred)))

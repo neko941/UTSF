@@ -1,5 +1,31 @@
 import tensorflow as tf
 
+def VanillaRNN__Tensorflow(input_shape, output_size, normalize_layer=None, seed=941):
+  return tf.keras.Sequential([
+        # Input layer 
+        tf.keras.Input(shape=input_shape, name='input_layer'), 
+
+        normalize_layer,
+
+        # RNN Layer 1 
+        tf.keras.layers.SimpleRNN(128,
+                            # return_sequences=True,
+                            kernel_initializer=tf.initializers.GlorotUniform(seed=seed), 
+                            name='RNN_layer'),
+        # FC Layer 1
+        tf.keras.layers.Dense(32,
+                              activation='relu',
+                              kernel_initializer=tf.initializers.GlorotUniform(seed=seed),
+                              name='Fully_Connected_layer'
+                              ),
+        
+        # Output Layer
+        tf.keras.layers.Dense(output_size, 
+                              kernel_initializer=tf.initializers.GlorotUniform(seed=seed),
+                              name='Output_layer') 
+    ],
+    name='VanillaRNN__Tensorflow')
+
 def BiRNN__Tensorflow(input_shape, output_size, normalize_layer=None, seed=941):
 	return tf.keras.Sequential([
         # Input layer 

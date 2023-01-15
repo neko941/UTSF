@@ -1,5 +1,31 @@
 import tensorflow as tf
 
+def VanillaLSTM__Tensorflow(input_shape, output_size, normalize_layer=None, seed=941):
+  return tf.keras.Sequential([
+        # Input layer 
+        tf.keras.Input(shape=input_shape, name='input_layer'), 
+
+        normalize_layer,
+
+        # LSTM Layer 1 
+        tf.keras.layers.LSTM(128,
+                            # return_sequences=True,
+                            kernel_initializer=tf.initializers.GlorotUniform(seed=seed), 
+                            name='LSTM_layer'),
+        # FC Layer 1
+        tf.keras.layers.Dense(32,
+                              activation='relu',
+                              kernel_initializer=tf.initializers.GlorotUniform(seed=seed),
+                              name='Fully_Connected_layer'
+                              ),
+        
+        # Output Layer
+        tf.keras.layers.Dense(output_size, 
+                              kernel_initializer=tf.initializers.GlorotUniform(seed=seed),
+                              name='Output_layer') 
+    ],
+    name='VanillaLSTM__Tensorflow')
+
 def BiLSTM__Tensorflow(input_shape, output_size, normalize_layer=None, seed=941):
 	return tf.keras.Sequential([
         # Input layer 
