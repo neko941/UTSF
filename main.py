@@ -54,12 +54,62 @@ from models.RNN import BiRNN__Tensorflow
 from models.GRU import BiGRU__Tensorflow
 from models.LSTM import BiLSTM__Tensorflow
 from models.customized import RNNcLSTM__Tensorflow
+from models.NBeats import NBeats
 
 # machine learning models
 from xgboost import XGBRegressor
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
+
+
+def parse_opt(known=False):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--epochs', type=int, default=10_000_000, help='total training epochs')
+    parser.add_argument('--lr', type=float, default=0.001, help='')
+    parser.add_argument('--batchsz', type=int, default=64, help='total batch size for all GPUs')
+    parser.add_argument('--inputsz', type=int, default=30, help='')
+    parser.add_argument('--labelsz', type=int, default=1, help='')
+    parser.add_argument('--offset', type=int, default=1, help='')
+    parser.add_argument('--trainsz', type=float, default=0.7, help='')
+    parser.add_argument('--valsz', type=float, default=0.2, help='')
+
+    parser.add_argument('--source', default=r'.\data\stocks\TSLA-Tesla.csv', help='dataset')
+    parser.add_argument('--patience', type=int, default=1000, help='EarlyStopping patience (epochs without improvement)')
+    parser.add_argument('--project', default=ROOT / 'runs', help='save to project/name')
+    parser.add_argument('--name', default='exp', help='save to project/name')
+    parser.add_argument('--overwrite', action='store_true', help='existing project/name ok, do not increment')
+    parser.add_argument('--optimizer', type=str, choices=['SGD', 'Adam'], default='Adam', help='optimizer')
+    parser.add_argument('--seed', type=int, default=941, help='Global training seed')
+
+    parser.add_argument('--MachineLearning', action='store_true', help='')
+    parser.add_argument('--LinearRegression', action='store_true', help='')
+    parser.add_argument('--XGBoost', action='store_true', help='')
+    parser.add_argument('--RandomForest', action='store_true', help='')
+    parser.add_argument('--DecisionTree', action='store_true', help='')
+
+    parser.add_argument('--DeepLearning', action='store_true', help='')
+    parser.add_argument('--BiRNN__Tensorflow', action='store_true', help='')
+    parser.add_argument('--BiLSTM__Tensorflow', action='store_true', help='')
+    parser.add_argument('--BiGRU__Tensorflow', action='store_true', help='')
+    parser.add_argument('--RNNcLSTM__Tensorflow', action='store_true', help='Model that combineced RNN and LSTM')
+    parser.add_argument('--NBeats', action='store_true', help='')
+    parser.add_argument('--all', action='store_true', help='Use all available models')
+
+    return parser.parse_known_args()[0] if known else parser.parse_args()
+
+optimizer_dict = {
+    'SGD': SGD,
+    'Adam' : Adam
+}
+
+metric_dict = {
+    'RMSE' : RMSE, 
+    'MAPE' : MAPE, 
+    'MSE' : MSE,
+    'MAE' : MAE, 
+    'R2' : r2_score
+}
 
 def test(model, X, y, weight=None):
     # model = model(input_shape=input_shape, output_size=labelsz, normalize_layer=normalize_layer, RANDOM_SEED=seed)
@@ -69,32 +119,33 @@ def test(model, X, y, weight=None):
     # model.load_weights(r'D:\01.Code\00.Github\UTSF\runs\exp1\weights\combined_RNN_LSTM_best.h5')
     yhat = model.predict(X)
 
+    results = []
     print()
     try:
-        name = type(model).__name__
-    except:
         name = model.name
+    except:
+        printtype(model).__name__
     print(f'Model: {name}')
-    rmse = RMSE(y, yhat)
-    print(f'RMSE: {rmse}')
-    mape = MAPE(y, yhat)
-    print(f'MAPE: {mape}')
-    mse = MSE(y, yhat)
-    print(f'MSE: {mse}')
-    mae = MAE(y, yhat)
-    print(f'MAE: {mae}')
-    # r2 = np.sum((yhat-np.sum(y)/len(y))**2)  / np.sum((y - np.sum(y)/len(y))**2) 
-    # r2 = 1 - (np.sum(np.power(y - yhat, 2)) / np.sum(np.power(y - np.mean(y), 2)))
-    r2 = r2_score(y_true=y, y_pred=yhat)
-    print(f'R2: {r2}')
-    return [str(rmse), str(mape), str(mse), str(mae), str(r2)]
+    for metric, func in metric_dict.items():
+        result = func(y, yhat)
+        results.append(str(result))
+        print(f'{metric}: {result}')
+    # rmse = RMSE(y, yhat)
+    # print(f'RMSE: {rmse}')
+    # mape = MAPE(y, yhat)
+    # print(f'MAPE: {mape}')
+    # mse = MSE(y, yhat)
+    # print(f'MSE: {mse}')
+    # mae = MAE(y, yhat)
+    # print(f'MAE: {mae}')
+    # # r2 = np.sum((yhat-np.sum(y)/len(y))**2)  / np.sum((y - np.sum(y)/len(y))**2) 
+    # # r2 = 1 - (np.sum(np.power(y - yhat, 2)) / np.sum(np.power(y - np.mean(y), 2)))
+    # r2 = r2_score(y_true=y, y_pred=yhat)
+    # print(f'R2: {r2}')
+    # return [str(rmse), str(mape), str(mse), str(mae), str(r2)]
+    return results
 
-optimizer_dict = {
-    'SGD': SGD,
-    'Adam' : Adam
-}
-
-def train(model, train_ds, val_ds, patience, save_dir, lr, optimizer, min_delta=0.001, epochs=10_000_000):
+def train_tensorflow(model, train_ds, val_ds, patience, save_dir, lr, optimizer, min_delta=0.001, epochs=10_000_000):
     model.compile(loss=MeanSquaredError(), 
                   optimizer=optimizer_dict[optimizer](learning_rate=lr))
 
@@ -129,40 +180,6 @@ def train(model, train_ds, val_ds, patience, save_dir, lr, optimizer, min_delta=
 
     return history, model
 
-def parse_opt(known=False):
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--epochs', type=int, default=10_000_000, help='total training epochs')
-    parser.add_argument('--lr', type=float, default=0.001, help='')
-    parser.add_argument('--batchsz', type=int, default=64, help='total batch size for all GPUs')
-    parser.add_argument('--inputsz', type=int, default=30, help='')
-    parser.add_argument('--labelsz', type=int, default=1, help='')
-    parser.add_argument('--offset', type=int, default=1, help='')
-    parser.add_argument('--trainsz', type=float, default=0.7, help='')
-    parser.add_argument('--valsz', type=float, default=0.2, help='')
-
-    parser.add_argument('--source', default='data.csv', help='dataset')
-    parser.add_argument('--patience', type=int, default=1000, help='EarlyStopping patience (epochs without improvement)')
-    parser.add_argument('--project', default=ROOT / 'runs', help='save to project/name')
-    parser.add_argument('--name', default='exp', help='save to project/name')
-    parser.add_argument('--overwrite', action='store_true', help='existing project/name ok, do not increment')
-    parser.add_argument('--optimizer', type=str, choices=['SGD', 'Adam'], default='Adam', help='optimizer')
-    parser.add_argument('--seed', type=int, default=941, help='Global training seed')
-
-    parser.add_argument('--MachineLearning', action='store_true', help='')
-    parser.add_argument('--LinearRegression', action='store_true', help='')
-    parser.add_argument('--XGBoost', action='store_true', help='')
-    parser.add_argument('--RandomForest', action='store_true', help='')
-    parser.add_argument('--DecisionTree', action='store_true', help='')
-
-    parser.add_argument('--DeepLearning', action='store_true', help='')
-    parser.add_argument('--BiRNN__Tensorflow', action='store_true', help='')
-    parser.add_argument('--BiLSTM__Tensorflow', action='store_true', help='')
-    parser.add_argument('--BiGRU__Tensorflow', action='store_true', help='')
-    parser.add_argument('--RNNcLSTM__Tensorflow', action='store_true', help='Model that combineced RNN and LSTM')
-    parser.add_argument('--all', action='store_true', help='Use all available models')
-
-    return parser.parse_known_args()[0] if known else parser.parse_args()
-
 def main(opt):
     save_dir = str(increment_path(Path(opt.project) / opt.name, overwrite=opt.overwrite, mkdir=True))
     yaml_save(os.path.join(save_dir, 'opt.yaml'), vars(opt))
@@ -181,6 +198,7 @@ def main(opt):
         opt.BiLSTM__Tensorflow = True
         opt.BiGRU__Tensorflow = True
         opt.RNNcLSTM__Tensorflow = True
+        opt.NBeats = True
     
     # collecting later used models
     models_machine_learning = []
@@ -193,18 +211,35 @@ def main(opt):
     if opt.BiLSTM__Tensorflow: models_tensorflow.append(BiLSTM__Tensorflow)
     if opt.BiGRU__Tensorflow: models_tensorflow.append(BiGRU__Tensorflow)
     if opt.RNNcLSTM__Tensorflow: models_tensorflow.append(RNNcLSTM__Tensorflow)
+    # TODO
+    # if opt.NBeats: models_tensorflow.append(NBeats)
     
     # set random seed
     set_seed(opt.seed)
 
+    # TODO: change these into options
+    TARGET_NAME = 'Adj Close'
+    DATE_VARIABLE = 'Date'
+    
     # read data to DataFrame
-    df = pd.read_csv(opt.source, index_col=0)
+    df = pd.read_csv(opt.source)
+    df[DATE_VARIABLE] = pd.to_datetime(df[DATE_VARIABLE])
+    df.sort_values(DATE_VARIABLE, inplace=True)
+
+    # add sin cos 
+    d = [x.timestamp() for x in df[f'{DATE_VARIABLE}']]
+    df.drop([DATE_VARIABLE], axis=1, inplace=True)
+    s = 24 * 60 * 60 # Seconds in day  
+    year = (365.25) * s # Seconds in year 
+    df.insert(loc=0, column='month_cos', value=[np.cos((x) * (2 * np.pi / year)) for x in d])
+    df.insert(loc=0, column='month_sin', value=[np.sin((x) * (2 * np.pi / year)) for x in d]) 
+    # print(df)
+    
+    # get dataset length
     dataset_length = len(df)
 
     TRAIN_END_IDX = int(opt.trainsz * dataset_length) 
     VAL_END_IDX = int(opt.valsz * dataset_length) + TRAIN_END_IDX
-    
-    TARGET_NAME = 'Adj Close'
 
     X_train, y_train = slicing_window(df, 
                                       df_start_idx=0,
@@ -248,7 +283,7 @@ def main(opt):
               header_style="bold magenta",
               box=rbox.ROUNDED)
 
-    for name in ['Name', 'RMSE', 'MAPE', 'MSE', 'MAE', 'R2']:
+    for name in ['Name', *list(metric_dict.keys())]:
         table.add_column(f'[green]{name}', justify='center')
 
     for model in models_machine_learning:
@@ -266,7 +301,7 @@ def main(opt):
     for model in models_tensorflow:
         model = model(input_shape=INPUT_SHAPE, output_size=opt.labelsz, normalize_layer=normalize_layer, seed=opt.seed)
         model.summary()
-        history, model = train(model=model, train_ds=train_ds, val_ds=val_ds, patience=opt.patience, save_dir=save_dir, optimizer=opt.optimizer, lr=opt.lr, epochs=opt.epochs)
+        history, model = train_tensorflow(model=model, train_ds=train_ds, val_ds=val_ds, patience=opt.patience, save_dir=save_dir, optimizer=opt.optimizer, lr=opt.lr, epochs=opt.epochs)
         errors = test(model=model, weight=os.path.join(save_dir, 'weights', f"{model.name}_best.h5"), X=X_test, y=y_test)
         table.add_row(model.name, *errors)
         print()
