@@ -124,7 +124,7 @@ def test(model, X, y, weight=None):
     try:
         name = model.name
     except:
-        printtype(model).__name__
+        print(type(model).__name__)
     print(f'Model: {name}')
     for metric, func in metric_dict.items():
         result = func(y, yhat)
