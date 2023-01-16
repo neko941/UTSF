@@ -1,7 +1,19 @@
 # Ultimate Time Series Forcasting
 
 # Installation
-
+## Colab
+```bash
+!git clone https://github.com/neko941/UTSF
+%cd UTSF
+!pip install -r requirements_colab.txt
+```
+```python
+import main
+main.run(all=True, 
+		 source='/content/UTSF/data/stocks/TSLA-Tesla.csv',
+		 epochs=100)
+```
+## Window (virtualenv)
 ### Download repo
 ```bash
 git clone https://github.com/neko941/UTSF
