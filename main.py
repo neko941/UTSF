@@ -93,6 +93,9 @@ def parse_opt(known=False):
     parser.add_argument('--optimizer', type=str, choices=['SGD', 'Adam'], default='Adam', help='optimizer')
     parser.add_argument('--seed', type=int, default=941, help='Global training seed')
 
+    parser.add_argument('--AutoInterpolate', type=str, choices=['', 'forward', 'backward'], default='', help='')
+    parser.add_argument('--CyclicalPattern', action='store_true', help='Add sin cos cyclical feature')
+
     parser.add_argument('--all', action='store_true', help='Use all available models')
     parser.add_argument('--MachineLearning', action='store_true', help='')
     parser.add_argument('--LinearRegression', action='store_true', help='')
@@ -254,21 +257,28 @@ def main(opt):
     TARGET_NAME = 'Adj Close'
     DATE_VARIABLE = 'Date'
     
-    # # read data to DataFrame
-    # df = pd.read_csv(opt.source)
-    # df[DATE_VARIABLE] = pd.to_datetime(df[DATE_VARIABLE])
-    # df.sort_values(DATE_VARIABLE, inplace=True)
+    # read data
+    df = pd.read_csv(opt.source)
+    df[DATE_VARIABLE] = pd.to_datetime(df[DATE_VARIABLE])
+    if opt.AutoInterpolate != '':
+        df = pd.merge(df,
+                 pd.DataFrame(pd.date_range(min(df[DATE_VARIABLE]), max(df[DATE_VARIABLE])), columns=[DATE_VARIABLE]),
+                 how='right',
+                 left_on=[DATE_VARIABLE],
+                 right_on = [DATE_VARIABLE])
+        df.fillna(method=f'{list(opt.AutoInterpolate)[0].lower()}fill', inplace=True)
 
-    # # add sin cos 
-    # d = [x.timestamp() for x in df[f'{DATE_VARIABLE}']]
-    # df.drop([DATE_VARIABLE], axis=1, inplace=True)
-    # s = 24 * 60 * 60 # Seconds in day  
-    # year = (365.25) * s # Seconds in year 
-    # df.insert(loc=0, column='month_cos', value=[np.cos((x) * (2 * np.pi / year)) for x in d])
-    # df.insert(loc=0, column='month_sin', value=[np.sin((x) * (2 * np.pi / year)) for x in d]) 
-    
+    #  
+    df.sort_values(DATE_VARIABLE, inplace=True)
+    d = [x.timestamp() for x in df[f'{DATE_VARIABLE}']]
+    df.drop([DATE_VARIABLE], axis=1, inplace=True)
+    if opt.CyclicalPattern:
+        s = 24 * 60 * 60 # Seconds in day  
+        year = (365.25) * s # Seconds in year 
+        df.insert(loc=0, column='month_cos', value=[np.cos((x) * (2 * np.pi / year)) for x in d])
+        df.insert(loc=0, column='month_sin', value=[np.sin((x) * (2 * np.pi / year)) for x in d]) 
+
     # get dataset length
-    df = pd.read_csv(opt.source, index_col=0)
     dataset_length = len(df)
 
     TRAIN_END_IDX = int(opt.trainsz * dataset_length) 
