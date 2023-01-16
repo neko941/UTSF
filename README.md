@@ -10,8 +10,8 @@
 ```python
 import main
 main.run(all=True, 
-		 source='/content/UTSF/data/stocks/TSLA-Tesla.csv',
-		 epochs=100)
+	 source='/content/UTSF/data/stocks/TSLA-Tesla.csv',
+	 epochs=100)
 ```
 ## Window (virtualenv)
 ### Download repo
