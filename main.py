@@ -50,7 +50,6 @@ from rich.console import Console
 from rich.terminal_theme import MONOKAI
 
 # machine learning models
-from xgboost import XGBRegressor
 from sklearn.linear_model import Lasso
 from sklearn.linear_model import LassoCV
 from sklearn.linear_model import Ridge
@@ -63,6 +62,9 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import SGDRegressor
 from sklearn.ensemble import RandomForestRegressor
+from xgboost import XGBRegressor
+from lightgbm import LGBMRegressor
+from catboost import CatBoostRegressor
 
 # deep learning models
 from models.RNN import VanillaRNN__Tensorflow    
@@ -101,6 +103,8 @@ def parse_opt(known=False):
     parser.add_argument('--LinearRegression', action='store_true', help='')
     parser.add_argument('--SGDRegressor', action='store_true', help='')
     parser.add_argument('--XGBoost', action='store_true', help='')
+    parser.add_argument('--CatBoost', action='store_true', help='')
+    parser.add_argument('--LightGBM', action='store_true', help='')
     parser.add_argument('--Lasso', action='store_true', help='')
     parser.add_argument('--LassoCV', action='store_true', help='Lasso linear model with iterative fitting along a regularization path')
     parser.add_argument('--Ridge', action='store_true', help='')
@@ -111,7 +115,10 @@ def parse_opt(known=False):
     parser.add_argument('--OrthogonalMatchingPursuitCV', action='store_true', help='')
     parser.add_argument('--RandomForest', action='store_true', help='')
     parser.add_argument('--DecisionTree', action='store_true', help='')
+
     parser.add_argument('--DeepLearning', action='store_true', help='')
+    parser.add_argument('--Tensorflow', action='store_true', help='')
+    parser.add_argument('--Pytorch', action='store_true', help='')
     parser.add_argument('--VanillaRNN__Tensorflow', action='store_true', help='')
     parser.add_argument('--BiRNN__Tensorflow', action='store_true', help='')
     parser.add_argument('--VanillaLSTM__Tensorflow', action='store_true', help='')
@@ -200,10 +207,15 @@ def main(opt):
     if opt.all:
         opt.MachineLearning = True
         opt.DeepLearning = True
+    if opt.DeepLearning:
+        opt.Tensorflow = True
+        opt.Pytorch = True
     if opt.MachineLearning:
         opt.LinearRegression = True
         opt.SGDRegressor = True
         opt.XGBoost = True
+        opt.CatBoost = True
+        opt.LightGBM = True
         opt.RandomForest = True
         opt.DecisionTree = True
         opt.Lasso = True
@@ -214,7 +226,7 @@ def main(opt):
         opt.LarsCV = True
         opt.OrthogonalMatchingPursuit = True
         opt.OrthogonalMatchingPursuitCV = True
-    if opt.DeepLearning:
+    if opt.Tensorflow:
         opt.VanillaRNN__Tensorflow = True
         opt.BiRNN__Tensorflow = True
         opt.VanillaLSTM__Tensorflow = True
@@ -223,10 +235,14 @@ def main(opt):
         opt.BiGRU__Tensorflow = True
         opt.RNNcLSTM__Tensorflow = True
         opt.NBeats = True
+    if opt.Pytorch:
+        pass
     
     # collecting later used models
     models_machine_learning = []
     if opt.XGBoost: models_machine_learning.append(XGBRegressor)    
+    if opt.LightGBM: models_machine_learning.append(LGBMRegressor)    
+    if opt.CatBoost: models_machine_learning.append(CatBoostRegressor)    
     if opt.LinearRegression: models_machine_learning.append(LinearRegression)
     if opt.SGDRegressor: models_machine_learning.append(SGDRegressor)
     if opt.Lasso: models_machine_learning.append(Lasso)
@@ -322,24 +338,27 @@ def main(opt):
 
     console = Console(record=True)
     table = Table(title="[cyan]Results", 
-              show_header=True, 
-              header_style="bold magenta",
-              box=rbox.ROUNDED)
-
-    for name in ['Name', *list(metric_dict.keys())]:
-        table.add_column(f'[green]{name}', justify='center')
+                  show_header=True, 
+                  header_style="bold magenta",
+                  box=rbox.ROUNDED)
+    # table header
+    for name in ['Name', *list(metric_dict.keys())]: table.add_column(f'[green]{name}', justify='center')
 
     for model in models_machine_learning:
         try:
-            model = model().fit([i.flatten() for i in X_train], [i.flatten() for i in y_train])
-        except:
-            # for DecisionTreeClassifier
-            model = model().fit([i.flatten() for i in X_train], [i.flatten().astype(int) for i in y_train])
-        # model.predict(np.ravel([i.flatten() for i in X_test]))
-        model.predict([i.flatten() for i in X_test])
-        errors = test(model=model, X=[i.flatten() for i in X_test], y=[i.flatten() for i in y_test])
-        table.add_row(type(model).__name__, *errors)
-        print()
+            try:
+                model = model().fit([i.flatten() for i in X_train], [i.flatten() for i in y_train])
+            except:
+                # for DecisionTreeClassifier
+                model = model().fit([i.flatten() for i in X_train], [i.flatten().astype(int) for i in y_train])
+            # model.predict(np.ravel([i.flatten() for i in X_test]))
+            model.predict([i.flatten() for i in X_test])
+            errors = test(model=model, X=[i.flatten() for i in X_test], y=[i.flatten() for i in y_test])
+            table.add_row(type(model).__name__, *errors)
+            print()
+        except ValueError:
+            # table.add_row(type(model).__name__, *['_' for _ in range(len(metric_dict.keys()))])
+            table.add_row(model.__name__, *list('_' * len(metric_dict.keys())))
 
     for model in models_tensorflow:
         model = model(input_shape=INPUT_SHAPE, output_size=opt.labelsz, normalize_layer=normalize_layer, seed=opt.seed)

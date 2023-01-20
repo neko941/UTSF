@@ -4,3 +4,5 @@ pandas
 rich
 scikit-learn
 xgboost
+pyyaml
+lightgbm
