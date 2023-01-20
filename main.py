@@ -75,6 +75,8 @@ from models.GRU import VanillaGRU__Tensorflow
 from models.GRU import BiGRU__Tensorflow
 from models.customized import RNNcLSTM__Tensorflow
 from models.NBeats import NBeats
+from models.EncoderDecoder import EncoderDecoder__Tensorflow
+from models.EncoderDecoder import BiEncoderDecoder__Tensorflow
 
 def parse_opt(known=False):
     parser = argparse.ArgumentParser()
@@ -100,33 +102,12 @@ def parse_opt(known=False):
 
     parser.add_argument('--all', action='store_true', help='Use all available models')
     parser.add_argument('--MachineLearning', action='store_true', help='')
-    parser.add_argument('--LinearRegression', action='store_true', help='')
-    parser.add_argument('--SGDRegressor', action='store_true', help='')
-    parser.add_argument('--XGBoost', action='store_true', help='')
-    parser.add_argument('--CatBoost', action='store_true', help='')
-    parser.add_argument('--LightGBM', action='store_true', help='')
-    parser.add_argument('--Lasso', action='store_true', help='')
-    parser.add_argument('--LassoCV', action='store_true', help='Lasso linear model with iterative fitting along a regularization path')
-    parser.add_argument('--Ridge', action='store_true', help='')
-    parser.add_argument('--RidgeCV', action='store_true', help='Ridge regression with built-in cross-validation')
-    parser.add_argument('--Lars', action='store_true', help='Least Angle Regression')
-    parser.add_argument('--LarsCV', action='store_true', help='Cross-validated Least Angle Regression')
-    parser.add_argument('--OrthogonalMatchingPursuit', action='store_true', help='')
-    parser.add_argument('--OrthogonalMatchingPursuitCV', action='store_true', help='')
-    parser.add_argument('--RandomForest', action='store_true', help='')
-    parser.add_argument('--DecisionTree', action='store_true', help='')
-
     parser.add_argument('--DeepLearning', action='store_true', help='')
     parser.add_argument('--Tensorflow', action='store_true', help='')
     parser.add_argument('--Pytorch', action='store_true', help='')
-    parser.add_argument('--VanillaRNN__Tensorflow', action='store_true', help='')
-    parser.add_argument('--BiRNN__Tensorflow', action='store_true', help='')
-    parser.add_argument('--VanillaLSTM__Tensorflow', action='store_true', help='')
-    parser.add_argument('--BiLSTM__Tensorflow', action='store_true', help='')
-    parser.add_argument('--VanillaGRU__Tensorflow', action='store_true', help='')
-    parser.add_argument('--BiGRU__Tensorflow', action='store_true', help='')
-    parser.add_argument('--RNNcLSTM__Tensorflow', action='store_true', help='Model that combineced RNN and LSTM')
-    parser.add_argument('--NBeats', action='store_true', help='')
+
+    for item in model_dict:
+        parser.add_argument(f"--{item['name']}", action='store_true', help=f"{item['help']}")
 
     return parser.parse_known_args()[0] if known else parser.parse_args()
 
@@ -143,6 +124,111 @@ metric_dict = {
     'R2' : r2_score
 }
 
+model_dict = [
+    {
+        'name' : 'LinearRegression', 
+        'model' : LinearRegression,
+        'help' : ''
+    },{
+        'name' : 'SGDRegressor', 
+        'model' : SGDRegressor,
+        'help' : ''
+    },{
+        'name' : 'Lasso', 
+        'model' : Lasso,
+        'help' : ''
+    },{
+        'name' : 'LassoCV', 
+        'model' : LassoCV,
+        'help' : 'Lasso linear model with iterative fitting along a regularization path'
+    },{
+        'name' : 'Ridge', 
+        'model' : Ridge,
+        'help' : ''
+    },{
+        'name' : 'RidgeCV', 
+        'model' : RidgeCV,
+        'help' : 'Ridge regression with built-in cross-validation'
+    },{
+        'name' : 'Lars', 
+        'model' : Lars,
+        'help' : ''
+    },{
+        'name' : 'LarsCV', 
+        'model' : LarsCV,
+        'help' : ''
+    },{
+        'name' : 'OrthogonalMatchingPursuit', 
+        'model' : OrthogonalMatchingPursuit,
+        'help' : ''
+    },{
+        'name' : 'OrthogonalMatchingPursuitCV', 
+        'model' : OrthogonalMatchingPursuitCV,
+        'help' : ''
+    },{
+        'name' : 'XGBoost', 
+        'model' : XGBRegressor,
+        'help' : ''
+    },{
+        'name' : 'LightGBM', 
+        'model' : LGBMRegressor,
+        'help' : ''
+    },{
+        'name' : 'CatBoost', 
+        'model' : CatBoostRegressor,
+        'help' : ''
+    },{
+        'name' : 'RandomForest', 
+        'model' : RandomForestRegressor,
+        'help' : ''
+    },{
+        'name' : 'DecisionTree', 
+        'model' : DecisionTreeClassifier,
+        'help' : ''
+    },{
+        'name' : 'VanillaRNN__Tensorflow', 
+        'model' : VanillaRNN__Tensorflow,
+        'help' : ''
+    },{
+        'name' : 'BiRNN__Tensorflow', 
+        'model' : BiRNN__Tensorflow,
+        'help' : ''
+    },{
+        'name' : 'VanillaLSTM__Tensorflow', 
+        'model' : VanillaLSTM__Tensorflow,
+        'help' : ''
+    },{
+        'name' : 'BiLSTM__Tensorflow', 
+        'model' : BiLSTM__Tensorflow,
+        'help' : ''
+    },{
+        'name' : 'VanillaGRU__Tensorflow', 
+        'model' : VanillaGRU__Tensorflow,
+        'help' : ''
+    },{
+        'name' : 'BiGRU__Tensorflow', 
+        'model' : BiGRU__Tensorflow,
+        'help' : ''
+    },{
+        'name' : 'RNNcLSTM__Tensorflow', 
+        'model' : RNNcLSTM__Tensorflow,
+        'help' : ''
+    },{
+        'name' : 'EncoderDecoder__Tensorflow', 
+        'model' : EncoderDecoder__Tensorflow,
+        'help' : ''
+    },{
+        'name' : 'BiEncoderDecoder__Tensorflow', 
+        'model' : BiEncoderDecoder__Tensorflow,
+        'help' : ''
+    },
+    # {
+    #     'name' : 'NBeats', 
+    #     'model' : NBeats,
+    #     'help' : ''
+    # },
+]
+
 def test(model, X, y, weight=None):
     # model = model(input_shape=input_shape, output_size=labelsz, normalize_layer=normalize_layer, RANDOM_SEED=seed)
     # model.load_weights(os.path.join(save_dir, 'weights', f"{model.name}_best.h5"))
@@ -150,6 +236,9 @@ def test(model, X, y, weight=None):
     if weight is not None: model.load_weights(weight)
     # model.load_weights(r'D:\01.Code\00.Github\UTSF\runs\exp1\weights\combined_RNN_LSTM_best.h5')
     yhat = model.predict(X)
+    if len(yhat.shape) > 2: 
+        nsamples, nx, ny = yhat.shape
+        yhat = yhat.reshape((nsamples,nx*ny))
 
     print()
     try:
@@ -210,62 +299,22 @@ def main(opt):
     if opt.DeepLearning:
         opt.Tensorflow = True
         opt.Pytorch = True
-    if opt.MachineLearning:
-        opt.LinearRegression = True
-        opt.SGDRegressor = True
-        opt.XGBoost = True
-        opt.CatBoost = True
-        opt.LightGBM = True
-        opt.RandomForest = True
-        opt.DecisionTree = True
-        opt.Lasso = True
-        opt.LassoCV = True
-        opt.Ridge = True
-        opt.RidgeCV = True
-        opt.Lars = True
-        opt.LarsCV = True
-        opt.OrthogonalMatchingPursuit = True
-        opt.OrthogonalMatchingPursuitCV = True
-    if opt.Tensorflow:
-        opt.VanillaRNN__Tensorflow = True
-        opt.BiRNN__Tensorflow = True
-        opt.VanillaLSTM__Tensorflow = True
-        opt.BiLSTM__Tensorflow = True
-        opt.VanillaGRU__Tensorflow = True
-        opt.BiGRU__Tensorflow = True
-        opt.RNNcLSTM__Tensorflow = True
-        opt.NBeats = True
-    if opt.Pytorch:
-        pass
-    
-    # collecting later used models
-    models_machine_learning = []
-    if opt.XGBoost: models_machine_learning.append(XGBRegressor)    
-    if opt.LightGBM: models_machine_learning.append(LGBMRegressor)    
-    if opt.CatBoost: models_machine_learning.append(CatBoostRegressor)    
-    if opt.LinearRegression: models_machine_learning.append(LinearRegression)
-    if opt.SGDRegressor: models_machine_learning.append(SGDRegressor)
-    if opt.Lasso: models_machine_learning.append(Lasso)
-    if opt.LassoCV: models_machine_learning.append(LassoCV)
-    if opt.Ridge: models_machine_learning.append(Ridge)
-    if opt.RidgeCV: models_machine_learning.append(RidgeCV)
-    if opt.Lars: models_machine_learning.append(Lars)
-    if opt.LarsCV: models_machine_learning.append(LarsCV)
-    if opt.OrthogonalMatchingPursuit: models_machine_learning.append(OrthogonalMatchingPursuit)
-    if opt.OrthogonalMatchingPursuitCV: models_machine_learning.append(OrthogonalMatchingPursuitCV)
-    if opt.RandomForest: models_machine_learning.append(RandomForestRegressor)
-    if opt.DecisionTree: models_machine_learning.append(DecisionTreeClassifier)
-    models_tensorflow = []
-    if opt.VanillaRNN__Tensorflow: models_tensorflow.append(VanillaRNN__Tensorflow) 
-    if opt.BiRNN__Tensorflow: models_tensorflow.append(BiRNN__Tensorflow)
-    if opt.VanillaLSTM__Tensorflow: models_tensorflow.append(VanillaLSTM__Tensorflow)
-    if opt.BiLSTM__Tensorflow: models_tensorflow.append(BiLSTM__Tensorflow)
-    if opt.VanillaGRU__Tensorflow: models_tensorflow.append(VanillaGRU__Tensorflow)
-    if opt.BiGRU__Tensorflow: models_tensorflow.append(BiGRU__Tensorflow)
-    if opt.RNNcLSTM__Tensorflow: models_tensorflow.append(RNNcLSTM__Tensorflow)
-    # TODO
-    # if opt.NBeats: models_tensorflow.append(NBeats)
-    
+    for item in model_dict:
+        if any([opt.Tensorflow and 'Tensorflow' in item["name"],
+                opt.Pytorch and 'Tensorflow' in item["name"],
+                opt.MachineLearning and 'Tensorflow' not in item["name"] and 'Pytorch' not in item["name"]]): 
+            vars(opt)[f'{item["name"]}'] = True
+
+
+    modelsMachineLearning = []
+    modelsTensorflow = []
+    modelsPytorch = []
+    for item in model_dict:
+        if not vars(opt)[f'{item["name"]}']: continue
+        if 'Tensorflow' in item["name"]: modelsTensorflow.append(item['model'])
+        elif 'Pytorch' in item["name"]: modelsPytorch.append(item['model'])
+        else: modelsMachineLearning.append(item['model'])
+        
     # set random seed
     set_seed(opt.seed)
 
@@ -344,7 +393,7 @@ def main(opt):
     # table header
     for name in ['Name', *list(metric_dict.keys())]: table.add_column(f'[green]{name}', justify='center')
 
-    for model in models_machine_learning:
+    for model in modelsMachineLearning:
         try:
             try:
                 model = model().fit([i.flatten() for i in X_train], [i.flatten() for i in y_train])
@@ -360,7 +409,7 @@ def main(opt):
             # table.add_row(type(model).__name__, *['_' for _ in range(len(metric_dict.keys()))])
             table.add_row(model.__name__, *list('_' * len(metric_dict.keys())))
 
-    for model in models_tensorflow:
+    for model in modelsTensorflow:
         model = model(input_shape=INPUT_SHAPE, output_size=opt.labelsz, normalize_layer=normalize_layer, seed=opt.seed)
         model.summary()
         history, model = train_tensorflow(model=model, train_ds=train_ds, val_ds=val_ds, patience=opt.patience, save_dir=save_dir, optimizer=opt.optimizer, lr=opt.lr, epochs=opt.epochs)
