@@ -1,6 +1,5 @@
 import numpy as np
-
-# r2 = 1 - (np.sum(np.power(y - yhat, 2)) / np.sum(np.power(y - np.mean(y), 2)))
+from sklearn.metrics import r2_score
 
 def MAE(y_true, y_pred):
     """ Mean Absolute Error """
@@ -17,3 +16,7 @@ def RMSE(y_true, y_pred):
 def MAPE(y_true, y_pred):
     """ Mean Absolute Percentage Error """
     return np.mean(np.abs((y_true-y_pred) / y_true)) * 100
+
+def R2(y_true, y_pred):
+    # return 1 - (np.sum(np.power(y - yhat, 2)) / np.sum(np.power(y - np.mean(y), 2)))
+    return r2_score(y_true, y_pred)

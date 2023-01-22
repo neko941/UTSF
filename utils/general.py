@@ -3,6 +3,10 @@ import os
 import yaml
 from pathlib import Path
 
+def yaml_load(file='data.yaml'):
+    # Single-line safe yaml loading
+    return yaml.safe_load(open(file, errors='ignore'))
+
 def yaml_save(file='opt.yaml', data={}):
     # Single-line safe yaml saving
     with open(file, 'w') as f:
@@ -12,12 +16,19 @@ def increment_path(path, overwrite=False, sep='', mkdir=False):
     path = Path(path)  
     if path.exists():
         path, suffix = (path.with_suffix(''), path.suffix) if path.is_file() else (path, '')
-        for n in range(1, 9999):
+        # for n in range(1, 9999):
+        #     p = f'{path}{sep}{n}{suffix}' 
+        #     if not os.path.exists(p): 
+        #         if overwrite: p = f'{path}{sep}{n-1}{suffix}'
+        #         break
+        n = 1
+        while True:
             p = f'{path}{sep}{n}{suffix}' 
             if not os.path.exists(p): 
                 if overwrite: p = f'{path}{sep}{n-1}{suffix}'
                 break
-                    
+            n += 1
+
         path = Path(p)
 
     if mkdir: path.mkdir(parents=True, exist_ok=True)  
