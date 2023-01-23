@@ -89,6 +89,7 @@ TODO:
     from models.LSTNet import LSTNet__Pytorch
     from models.Averaging import StackingAveragedModels
     from models.Averaging import AveragingModels
+    from models.LSTM import ConvLSTM__Tensorflow    
 """
 
 optimizer_dict = {
@@ -210,6 +211,10 @@ model_dict = [
         'model' : BiLSTM__Tensorflow,
         'help' : ''
     },{
+    #     'name' : 'ConvLSTM__Tensorflow', 
+    #     'model' : ConvLSTM__Tensorflow,
+    #     'help' : ''
+    # },{
         'name' : 'VanillaGRU__Tensorflow', 
         'model' : VanillaGRU__Tensorflow,
         'help' : ''
