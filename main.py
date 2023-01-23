@@ -82,47 +82,14 @@ from models.customized import RNNcLSTM__Tensorflow
 from models.customized import GRUcLSTM__Tensorflow
 from models.EncoderDecoder import EncoderDecoder__Tensorflow
 from models.EncoderDecoder import BiEncoderDecoder__Tensorflow
+from models.EncoderDecoder import CNNcLSTMcEncoderDecoder__Tensorflow
 """ 
 TODO:
     from models.NBeats import NBeats
     from models.LSTNet import LSTNet__Pytorch
+    from models.Averaging import StackingAveragedModels
+    from models.Averaging import AveragingModels
 """
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import RobustScaler
-from sklearn.base import BaseEstimator, TransformerMixin, RegressorMixin, clone
-class AveragingModels(BaseEstimator, RegressorMixin, TransformerMixin):
-    """
-        https://www.kaggle.com/code/serigne/stacked-regressions-top-4-on-leaderboard#Modelling
-    """
-    def __init__(self, models=None):
-        if models is None:
-            lasso = make_pipeline(RobustScaler(), Lasso(alpha =0.0005, random_state=1))
-            ENet = make_pipeline(RobustScaler(), ElasticNet(alpha=0.0005, l1_ratio=.9, random_state=3))
-            KRR = KernelRidge(alpha=0.6, kernel='polynomial', degree=2, coef0=2.5)
-            GBoost = GradientBoostingRegressor(n_estimators=3000, learning_rate=0.05,
-                                   max_depth=4, max_features='sqrt',
-                                   min_samples_leaf=15, min_samples_split=10, 
-                                   loss='huber', random_state =5)
-            self.models = (ENet, GBoost, KRR, lasso)
-        else:
-            self.models = models
-        
-    # we define clones of the original models to fit the data in
-    def fit(self, X, y):
-        self.models_ = [clone(x) for x in self.models]
-        
-        # Train cloned base models
-        for model in self.models_:
-            model.fit(X, y)
-
-        return self
-    
-    #Now we do the predictions for cloned models and average them
-    def predict(self, X):
-        predictions = np.column_stack([
-            model.predict(X) for model in self.models_
-        ])
-        return np.mean(predictions, axis=1)  
 
 optimizer_dict = {
     'SGD': SGD,
@@ -211,10 +178,14 @@ model_dict = [
         'model' : GradientBoostingRegressor,
         'help' : ''
     },{
-        'name' : 'AveragingModels', 
-        'model' : AveragingModels,
-        'help' : ''
-    },{
+    #     'name' : 'StackingAveragedModels', 
+    #     'model' : StackingAveragedModels,
+    #     'help' : ''
+    # },{
+    #     'name' : 'AveragingModels', 
+    #     'model' : AveragingModels,
+    #     'help' : ''
+    # },{
         'name' : 'DecisionTree', 
         'model' : DecisionTreeClassifier,
         'help' : ''
@@ -253,6 +224,10 @@ model_dict = [
     },{
         'name' : 'BiEncoderDecoder__Tensorflow', 
         'model' : BiEncoderDecoder__Tensorflow,
+        'help' : ''
+    },{
+        'name' : 'CNNcLSTMcEncoderDecoder__Tensorflow', 
+        'model' : CNNcLSTMcEncoderDecoder__Tensorflow,
         'help' : ''
     },{
         'name' : 'RNNcLSTM__Tensorflow', 
