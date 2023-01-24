@@ -39,6 +39,7 @@ from utils.metrics import MAE
 from utils.metrics import MSE
 from utils.metrics import RMSE
 from utils.metrics import MAPE
+from utils.metrics import SMAPE
 from utils.metrics import R2
 
 # dataset slicing 
@@ -102,6 +103,7 @@ metric_dict = {
     'MSE' : MSE,
     'RMSE' : RMSE, 
     'MAPE' : MAPE, 
+    'SMAPE' : SMAPE,
     'R2' : R2
 }
 
@@ -307,6 +309,7 @@ def test(model, X, y, weight=None):
     for metric, func in metric_dict.items():
         result = func(y, yhat)
         results.append(str(result))
+        # results.append(str(round(result, 6)))
         # print(f'{metric}: {result}')
     return results
 
