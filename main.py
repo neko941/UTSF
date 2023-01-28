@@ -406,44 +406,45 @@ def main(opt):
     for i in csvs[1:]: df = pd.concat([df, pd.read_csv(i)])
     df.reset_index(drop=True, inplace=True)
 
-    # get used cols
-    cols = []
-    for i in [data['date'], data['features'], data['target']]: 
-        if isinstance(i, list): cols.extend(i)
-        else: cols.append(i) 
-    df = df[cols]
+    if data['date'] is not None:
+        # get used cols
+        cols = []
+        for i in [data['date'], data['features'], data['target']]: 
+            if isinstance(i, list): cols.extend(i)
+            else: cols.append(i) 
+        df = df[cols]
 
-    # convert date to type datetime
-    df[data['date']] = pd.to_datetime(df[data['date']])
+        # convert date to type datetime
+        df[data['date']] = pd.to_datetime(df[data['date']])
 
-    # auto fill missing data
-    if opt.AutoInterpolate != '':
-        df = pd.merge(df,
-                 pd.DataFrame(pd.date_range(min(df[data['date']]), max(df[data['date']])), columns=[data['date']]),
-                 how='right',
-                 left_on=[data['date']],
-                 right_on = [data['date']])
-        df.fillna(method=f'{list(opt.AutoInterpolate)[0].lower()}fill', inplace=True)
+        # auto fill missing data
+        if opt.AutoInterpolate != '':
+            df = pd.merge(df,
+                     pd.DataFrame(pd.date_range(min(df[data['date']]), max(df[data['date']])), columns=[data['date']]),
+                     how='right',
+                     left_on=[data['date']],
+                     right_on = [data['date']])
+            df.fillna(method=f'{list(opt.AutoInterpolate)[0].lower()}fill', inplace=True)
 
-    # sort data by date
-    df.sort_values(data['date'], inplace=True)
+        # sort data by date
+        df.sort_values(data['date'], inplace=True)
 
-    # add month sin, month cos (cyclical pattern)
-    if opt.CyclicalPattern:
-        # Extracting the hour of day
-        # d["hour"] = [x.hour for x in d["dt"]]
-        # # Creating the cyclical daily feature 
-        # d["day_cos"] = [np.cos(x * (2 * np.pi / 24)) for x in d["hour"]]
-        # d["day_sin"] = [np.sin(x * (2 * np.pi / 24)) for x in d["hour"]]
+        # add month sin, month cos (cyclical pattern)
+        if opt.CyclicalPattern:
+            # Extracting the hour of day
+            # d["hour"] = [x.hour for x in d["dt"]]
+            # # Creating the cyclical daily feature 
+            # d["day_cos"] = [np.cos(x * (2 * np.pi / 24)) for x in d["hour"]]
+            # d["day_sin"] = [np.sin(x * (2 * np.pi / 24)) for x in d["hour"]]
 
-        d = [x.timestamp() for x in df[f"{data['date']}"]]
-        s = 24 * 60 * 60 # Seconds in day  
-        year = (365.25) * s # Seconds in year 
-        df.insert(loc=0, column='month_cos', value=[np.cos((x) * (2 * np.pi / year)) for x in d])
-        df.insert(loc=0, column='month_sin', value=[np.sin((x) * (2 * np.pi / year)) for x in d]) 
+            d = [x.timestamp() for x in df[f"{data['date']}"]]
+            s = 24 * 60 * 60 # Seconds in day  
+            year = (365.25) * s # Seconds in year 
+            df.insert(loc=0, column='month_cos', value=[np.cos((x) * (2 * np.pi / year)) for x in d])
+            df.insert(loc=0, column='month_sin', value=[np.sin((x) * (2 * np.pi / year)) for x in d]) 
 
-    # remove date col
-    df.drop([data['date']], axis=1, inplace=True)
+        # remove date col
+        df.drop([data['date']], axis=1, inplace=True)
 
     # get dataset length
     dataset_length = len(df)
