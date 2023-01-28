@@ -23,7 +23,7 @@ pip install -r requirements.txt
 ```python
 import main
 main.run(all=True, 
-	 source='/content/UTSF/data/stocks/TSLA-Tesla.csv',
+	 source='/content/UTSF/data.yaml',
 	 epochs=100)
 ```
 ### Command

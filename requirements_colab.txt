@@ -6,3 +6,4 @@ scikit-learn
 xgboost
 pyyaml
 lightgbm
+catboost
