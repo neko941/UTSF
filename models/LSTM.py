@@ -20,6 +20,7 @@ def VanillaLSTM__Tensorflow(input_shape, output_size, normalize_layer=None, seed
                              tensor=None,
                              ragged=None,
                              type_spec=None))
+    # Normalization
     if normalize_layer: model.add(normalize_layer)
     # LSTM Layer 1
     model.add(tf.keras.layers.LSTM(units=128,
