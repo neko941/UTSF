@@ -12,8 +12,8 @@ def VanillaLSTM__Tensorflow(input_shape, output_size, normalize_layer=None, seed
     model = tf.keras.Sequential(layers=None, 
                                 name='VanillaLSTM__Tensorflow')
     model.add(tf.keras.Input(shape=input_shape, 
-                             name='Input_layer',
-                             # default
+                             name='Input_layer'
+,                             # default
                              batch_size=None,
                              dtype=None,
                              sparse=None,
@@ -98,6 +98,7 @@ def BiLSTM__Tensorflow(input_shape, output_size, normalize_layer=None, seed=941)
                                 name='BiLSTM__Tensorflow')
     model.add(tf.keras.Input(shape=input_shape, 
                              name='Input_layer'))
+    # Normalization
     if normalize_layer: model.add(normalize_layer)
     # BiLSTM Layer 1 
     model.add(tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(units=128, 
