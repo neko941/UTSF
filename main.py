@@ -84,6 +84,7 @@ from models.customized import GRUcLSTM__Tensorflow
 from models.EncoderDecoder import EncoderDecoder__Tensorflow
 from models.EncoderDecoder import BiEncoderDecoder__Tensorflow
 from models.EncoderDecoder import CNNcLSTMcEncoderDecoder__Tensorflow
+# from models.TabTransformer import TabTransformer
 """ 
 TODO:
     from models.NBeats import NBeats
@@ -248,6 +249,23 @@ model_dict = [
     #     'name' : 'NBeats', 
     #     'model' : NBeats,
     #     'help' : ''
+    # },{
+    #     'name' : 'TabTransformer', 
+    #     'model' : lambda: TabTransformer(numerical_features = NUMERIC_FEATURES,  # List with names of numeric features
+    #                                     categorical_features = CATEGORICAL_FEATURES, # List with names of categorical feature
+    #                                     categorical_lookup=category_prep_layers,   # Dict with StringLookup layers 
+    #                                     numerical_discretisers=None,  # None, we are simply passing the numeric features
+    #                                     embedding_dim=32,  # Dimensionality of embeddings
+    #                                     out_dim=1,  # Dimensionality of output (binary task)
+    #                                     out_activation='sigmoid',  # Activation of output layer
+    #                                     depth=4,  # Number of Transformer Block layers
+    #                                     heads=8,  # Number of attention heads in the Transformer Blocks
+    #                                     attn_dropout=0.1,  # Dropout rate in Transformer Blocks
+    #                                     ff_dropout=0.1,  # Dropout rate in the final MLP
+    #                                     mlp_hidden_factors=[2, 4],  # Factors by which we divide final embeddings for each layer
+    #                                     use_column_embedding=True,  # If we want to use column embeddings
+    #                                 ),
+    #     'help' : ''
     },
 ]
 
@@ -272,6 +290,7 @@ def parse_opt(known=False):
 
     parser.add_argument('--AutoInterpolate', type=str, choices=['', 'forward', 'backward'], default='', help='')
     parser.add_argument('--CyclicalPattern', action='store_true', help='Add sin cos cyclical feature')
+    parser.add_argument('--Normalization', action='store_true', help='')
 
     parser.add_argument('--all', action='store_true', help='Use all available models')
     parser.add_argument('--MachineLearning', action='store_true', help='')
@@ -484,8 +503,12 @@ def main(opt):
     train_ds = train_ds.cache().prefetch(buffer_size=AUTOTUNE)
     val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
 
-    normalize_layer = Normalization()
-    normalize_layer.adapt(np.vstack((X_train, X_val, X_test)))
+    if opt.Normalization:
+        normalize_layer = Normalization()
+        normalize_layer.adapt(np.vstack((X_train, X_val, X_test)))
+    else:
+        normalize_layer = None
+        
     INPUT_SHAPE = X_train.shape[-2:] 
 
 
