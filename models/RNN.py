@@ -59,18 +59,18 @@ def BiRNN__Tensorflow(input_shape, output_size, normalize_layer=None, seed=941):
     if normalize_layer: model.add(normalize_layer)
     # BiRNN Layer 1 
     model.add(tf.keras.layers.Bidirectional(tf.keras.layers.SimpleRNN(units=128, 
-                                                                 return_sequences=True,
-                                                                 kernel_initializer=tf.initializers.GlorotUniform(seed=seed)),
+                                                                      return_sequences=True,
+                                                                      kernel_initializer=tf.initializers.GlorotUniform(seed=seed)),
                                             name='BiRNN_layer_1'))
     # BiRNN Layer 2 
     model.add(tf.keras.layers.Bidirectional(tf.keras.layers.SimpleRNN(units=64, 
-                                                                 return_sequences=True,
-                                                                 kernel_initializer=tf.initializers.GlorotUniform(seed=seed)),
+                                                                      return_sequences=True,
+                                                                      kernel_initializer=tf.initializers.GlorotUniform(seed=seed)),
                                             name='BiRNN_layer_2'))
     # BiRNN Layer 3 
     model.add(tf.keras.layers.Bidirectional(tf.keras.layers.SimpleRNN(units=32, 
-                                                                 return_sequences=False,
-                                                                 kernel_initializer=tf.initializers.GlorotUniform(seed=seed)),
+                                                                      return_sequences=False,
+                                                                      kernel_initializer=tf.initializers.GlorotUniform(seed=seed)),
                                             name='BiRNN_layer_3'))
     # FC Layer
     model.add(tf.keras.layers.Dense(units=32,

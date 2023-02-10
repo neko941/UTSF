@@ -2,7 +2,9 @@ import tensorflow as tf
 
 def EncoderDecoder__Tensorflow(input_shape, output_size, normalize_layer=None, seed=941):
     model = tf.keras.Sequential(layers=None, name='EncoderDecoder__Tensorflow')
-    model.add(tf.keras.Input(shape=input_shape, name='input_layer'))
+    model.add(tf.keras.Input(shape=input_shape, 
+                             name='Input_layer'))
+    # Normalization
     if normalize_layer: model.add(normalize_layer)
     model.add(tf.keras.layers.LSTM(256, activation='relu'))
     model.add(tf.keras.layers.RepeatVector(output_size))
