@@ -1,0 +1,51 @@
+#  """ https://scikit-learn.org/stable/modules/generated/sklearn.svm.LinearSVR.html#sklearn.svm.LinearSVR """
+
+epsilon: 0.0
+# description: Epsilon parameter in the epsilon-insensitive loss function. Note that the value of this parameter depends on the scale of the target variable y. If unsure, set epsilon=0.
+# default: 0.0
+# options: float: range [0, inf]
+
+tol: 0.0001
+# description: Tolerance for stopping criterion.
+# default: 1e-4
+# options:
+
+C: 1.0
+# description: Regularization parameter. The strength of the regularization is inversely proportional to C
+# default: 1.0
+# options: float: range [0, inf]
+
+loss: 'epsilon_insensitive'
+# description: Specifies the loss function. The epsilon-insensitive loss (standard SVR) is the L1 loss, while the squared epsilon-insensitive loss (‘squared_epsilon_insensitive’) is the L2 loss.
+# default: 'epsilon_insensitive'
+# options: 'epsilon_insensitive', 'squared_epsilon_insensitive'
+
+fit_intercept: True
+# description: Whether to calculate the intercept for this model. If set to false, no intercept will be used in calculations (i.e. data is expected to be already centered).
+# default: True
+# options: True, False
+
+intercept_scaling: 1.0
+# description: 
+# default: 1.0
+# options:
+
+dual: True
+# description: 
+# default: True
+# options:
+
+verbose: 1
+# description: 
+# default: 0
+# options:
+
+random_state: 941
+# description: 
+# default: None
+# options:
+
+max_iter: 10000
+# description: 
+# default: 1000
+# options:

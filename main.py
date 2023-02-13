@@ -66,7 +66,9 @@ from sklearn.ensemble import GradientBoostingRegressor
 from lightgbm import LGBMRegressor
 from catboost import CatBoostRegressor
 # from sklearn.impute import KNNImputer
-from models.SVM import SupportVectorMachinesRegression
+
+from models.SVM import SupportVectorMachines
+from models.SVM import LinearSupportVectorMachines
 from models.XGBoost import ExtremeGradientBoosting
 # deep learning models
 from models.RNN import VanillaRNN__Tensorflow    
@@ -150,9 +152,14 @@ model_dict = [
         'config': 'configs/XGBoost.yaml'
     },{
         'name' : 'SVM', 
-        'model' : SupportVectorMachinesRegression,
+        'model' : SupportVectorMachines,
         'help' : '',
         'config': 'configs/SVM.yaml'
+    },{
+        'name' : 'LinearSVR', 
+        'model' : LinearSupportVectorMachines,
+        'help' : '',
+        'config': 'configs/LinearSVR.yaml'
     },{
     #     'name' : 'LightGBM', 
     #     'model' : LGBMRegressor,
