@@ -13,6 +13,10 @@ from tensorflow.data import AUTOTUNE
 
 import torch
 from torch.utils.data import DataLoader
+import numpy as np
+import pickle
+from utils.general import yaml_load
+from pathlib import Path
 
 class BaseModel:
     @abstractmethod
@@ -43,13 +47,18 @@ class MachineLearningModel(BaseModel):
         return [i.flatten() for i in x]
 
     def fit(self, X_train, y_train, **kwargs):
-        self.model.fit(self.preprocessing(x=X_train), self.preprocessing(x=y_train))
+        self.model.fit(self.preprocessing(x=X_train), np.ravel(self.preprocessing(x=y_train), order='C'))
+        # self.model.fit(self.preprocessing(x=X_train), self.preprocessing(x=y_train))
     
-    def save(self):
-        pass 
+    def save(self, file_name:str, save_dir:str='.', extension:str='.pkl'):
+        os.makedirs(name=save_dir, exist_ok=True)
+        file_path = os.path.join(save_dir, file_name+extension)
+        pickle.dump(self.model, open(Path(file_path).absolute(), "wb"))
+        return file_path
 
     def load(self, weight):
         if not os.path.exists(weight): pass
+        self.model = pickle.load(open(weight, "rb"))
 
     def predict(self, X):
         return self.model.predict(self.preprocessing(x=X))
@@ -110,8 +119,11 @@ class TensorflowModel(BaseModel):
     def predict(self, X):
         return self.model.predict(X)
     
-    def save(self, filename):
-        self.model.save(filename)
+    def save(self, file_name:str, save_dir:str='.', extension:str='.h5'):
+        os.makedirs(name=save_dir, exist_ok=True)
+        file_path = os.path.join(save_dir, file_name+extension)
+        pickle.dump(self.model, open(Path(file_path).absolute(), "wb"))
+        return file_path
     
     def load(self, weight):
         self.model.load_weights(weight)

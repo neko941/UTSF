@@ -12,11 +12,8 @@ def yaml_save(file='opt.yaml', data={}):
     with open(file, 'w') as f:
         yaml.safe_dump({k: str(v) if isinstance(v, Path) else v for k, v in data.items()}, f, sort_keys=False)
 
-def abs_path(path):
-    return Path(path).absolute()
-
 def increment_path(path, overwrite=False, sep='', mkdir=False):
-    path = abs_path(path)  
+    path = Path(path)  .absolute()
     if path.exists():
         path, suffix = (path.with_suffix(''), path.suffix) if path.is_file() else (path, '')
         n = 1

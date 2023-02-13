@@ -63,11 +63,11 @@ from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import SGDRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.ensemble import GradientBoostingRegressor
-from models.XGBoost import ExtremeGradientBoosting
 from lightgbm import LGBMRegressor
 from catboost import CatBoostRegressor
 # from sklearn.impute import KNNImputer
-
+from models.SVM import SupportVectorMachinesRegression
+from models.XGBoost import ExtremeGradientBoosting
 # deep learning models
 from models.RNN import VanillaRNN__Tensorflow    
 from models.RNN import BiRNN__Tensorflow
@@ -148,6 +148,11 @@ model_dict = [
         'model' : ExtremeGradientBoosting,
         'help' : '',
         'config': 'configs/XGBoost.yaml'
+    },{
+        'name' : 'SVM', 
+        'model' : SupportVectorMachinesRegression,
+        'help' : '',
+        'config': 'configs/SVM.yaml'
     },{
     #     'name' : 'LightGBM', 
     #     'model' : LGBMRegressor,
@@ -428,7 +433,8 @@ def main(opt):
                       X_train=X_train, y_train=y_train,
                       X_val=X_val, y_val=y_val)
             weight=os.path.join(save_dir, 'weights', f"{model.name}_best.h5")
-            if not os.path.exists(weight): weight=model.save(save_dir=os.path.join(save_dir, 'weights'))
+            if not os.path.exists(weight): weight = model.save(save_dir=os.path.join(save_dir, 'weights'),
+                                                               file_name=model.name)
             if weight is not None: model.load(weight)
             yhat = model.predict(X=X_test)
             scores = calculate_score(y=y_test, yhat=yhat)
