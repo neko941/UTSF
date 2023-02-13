@@ -1,0 +1,9 @@
+n_estimators: 1000 #200
+max_depth: 7 #7
+# max_features: "auto"
+# min_samples_split: 7
+# min_samples_leaf: 3
+learning_rate: 0.01 #0.17
+gamma: 1
+reg_alpha: 0
+reg_lambda: 1

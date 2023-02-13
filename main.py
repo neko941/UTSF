@@ -146,7 +146,8 @@ model_dict = [
     # },{
         'name' : 'XGBoost', 
         'model' : ExtremeGradientBoosting,
-        'help' : ''
+        'help' : '',
+        'config': 'configs/XGBoost.yaml'
     },{
     #     'name' : 'LightGBM', 
     #     'model' : LGBMRegressor,
@@ -401,15 +402,6 @@ def main(opt):
                                   label_name=data['target'])
     test_ds = tf.data.Dataset.from_tensor_slices((X_test, y_test)).batch(opt.batchsz)
 
-    if opt.Normalization:
-        normalize_layer = Normalization()
-        normalize_layer.adapt(np.vstack((X_train, X_val, X_test)))
-    else:
-        normalize_layer = None
-
-    INPUT_SHAPE = X_train.shape[-2:] 
-
-
     console = Console(record=True)
     table = Table(title="[cyan]Results", 
                   show_header=True, 
@@ -418,16 +410,25 @@ def main(opt):
     # table header
     for name in ['Name', *list(used_metric())]: table.add_column(f'[green]{name}', justify='center')
 
+    # Normalization
+    if opt.Normalization:
+        norm = Normalization()
+        norm.adapt(np.vstack((X_train, X_val, X_test)))
+    else:
+        norm = None
+
     errors = []
     for item in model_dict:
         if not vars(opt)[f'{item["name"]}']: continue
-        model = item['model'](input_shape=INPUT_SHAPE, output_shape=opt.labelsz, units=item.get('units'), normalize_layer=normalize_layer, seed=opt.seed)
+        model = item['model'](input_shape=X_train.shape[-2:], output_shape=opt.labelsz, seed=opt.seed,
+                              config_path=item.get('config'), 
+                              units=item.get('units'), normalize_layer=norm)
         try:
             model.fit(patience=opt.patience, save_dir=save_dir, optimizer=opt.optimizer, loss=opt.loss, lr=opt.lr, epochs=opt.epochs, learning_rate=opt.lr, batchsz=opt.batchsz,
                       X_train=X_train, y_train=y_train,
                       X_val=X_val, y_val=y_val)
             weight=os.path.join(save_dir, 'weights', f"{model.name}_best.h5")
-            if not os.path.exists(weight): weight=os.path.join(save_dir, 'weights', f"{model.name}.h5")
+            if not os.path.exists(weight): weight=model.save(save_dir=os.path.join(save_dir, 'weights'))
             if weight is not None: model.load(weight)
             yhat = model.predict(X=X_test)
             scores = calculate_score(y=y_test, yhat=yhat)
