@@ -73,17 +73,18 @@ from models.SVM import SupportVectorMachines
 from models.SVM import LinearSupportVectorMachines
 from models.XGBoost import ExtremeGradientBoosting
 # deep learning models
-from models.RNN import VanillaRNN__Tensorflow    
-from models.RNN import BiRNN__Tensorflow
+# from models.RNN import VanillaRNN__Tensorflow    
+# from models.RNN import BiRNN__Tensorflow
 from models.LSTM import VanillaLSTM__Tensorflow    
 from models.LSTM import BiLSTM__Tensorflow    
-from models.GRU import VanillaGRU__Tensorflow
-from models.GRU import BiGRU__Tensorflow
-# from models.customized import RNNcLSTM__Tensorflow
+from models.Concatenated import RNNcLSTM__Tensorflow
+from models.Concatenated import LSTMcGRU__Tensorflow
+# from models.GRU import VanillaGRU__Tensorflow
+# from models.GRU import BiGRU__Tensorflow
 # from models.customized import GRUcLSTM__Tensorflow
-from models.EncoderDecoder import EncoderDecoder__Tensorflow
-from models.EncoderDecoder import BiEncoderDecoder__Tensorflow
-from models.EncoderDecoder import CNNcLSTMcEncoderDecoder__Tensorflow
+# from models.EncoderDecoder import EncoderDecoder__Tensorflow
+# from models.EncoderDecoder import BiEncoderDecoder__Tensorflow
+# from models.EncoderDecoder import CNNcLSTMcEncoderDecoder__Tensorflow
 """ 
 TODO:
     from models.TabTransformer import TabTransformer
@@ -236,14 +237,16 @@ model_dict = [
     #     'name' : 'CNNcLSTMcEncoderDecoder__Tensorflow', 
     #     'model' : CNNcLSTMcEncoderDecoder__Tensorflow,
     #     'help' : ''
-    # },{
-    #     'name' : 'RNNcLSTM__Tensorflow', 
-    #     'model' : RNNcLSTM__Tensorflow,
-    #     'help' : ''
-    # },{
-    #     'name' : 'GRUcLSTM__Tensorflow', 
-    #     'model' : GRUcLSTM__Tensorflow,
-    #     'help' : ''
+    },{
+        'model' : RNNcLSTM__Tensorflow,
+        'help' : '',
+        'units' : [128, 64, 32],
+        'type' : 'Tensorflow'
+    },{
+        'model' : LSTMcGRU__Tensorflow,
+        'help' : '',
+        'units' : [128, 64, 32],
+        'type' : 'Tensorflow'
     # },{
     #     'name' : 'NBeats', 
     #     'model' : NBeats,
