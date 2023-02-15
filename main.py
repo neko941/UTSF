@@ -69,12 +69,14 @@ from lightgbm import LGBMRegressor
 from catboost import CatBoostRegressor
 # from sklearn.impute import KNNImputer
 
-from models.SVM import SupportVectorMachinesRegression
-from models.SVM import LinearSupportVectorMachinesRegression
 from models.XGBoost import ExtremeGradientBoostingRegression
+from models.SVM import SupportVectorMachinesClassification
+from models.SVM import SupportVectorMachinesRegression
+from models.SVM import NuSupportVectorMachinesRegression
+from models.SVM import LinearSupportVectorMachinesRegression
 # deep learning models
-# from models.RNN import VanillaRNN__Tensorflow    
-# from models.RNN import BiRNN__Tensorflow
+from models.RNN import VanillaRNN__Tensorflow    
+from models.RNN import BiRNN__Tensorflow
 from models.LSTM import VanillaLSTM__Tensorflow    
 from models.LSTM import BiLSTM__Tensorflow    
 from models.Concatenated import RNNcLSTM__Tensorflow
@@ -154,10 +156,20 @@ model_dict = [
         'type' : 'MachineLearning',
         'config': 'configs/XGBoost.yaml'
     },{
+        'model' : SupportVectorMachinesClassification,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/SVC.yaml'
+    },{
         'model' : SupportVectorMachinesRegression,
         'help' : '',
         'type' : 'MachineLearning',
-        'config': 'configs/SVM.yaml'
+        'config': 'configs/SVR.yaml'
+    },{
+        'model' : NuSupportVectorMachinesRegression,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/NuSVR.yaml'
     },{
         'model' : LinearSupportVectorMachinesRegression,
         'help' : '',
@@ -195,15 +207,17 @@ model_dict = [
     #     'name' : 'KNNImputer', 
     #     'model' : KNNImputer,
     #     'help' : ''
-    # },{
-        # 'name' : 'VanillaRNN__Tensorflow', 
-        # 'model' : VanillaRNN__Tensorflow,
-        # 'help' : ''
-    # },{
-    #     'name' : 'BiRNN__Tensorflow', 
-    #     'model' : BiRNN__Tensorflow,
-    #     'help' : ''
-    # },{
+    # },{ 
+        'model' : VanillaRNN__Tensorflow,
+        'help' : '',
+        'type' : 'Tensorflow',
+        'units' : [128, 32]
+    },{
+        'model' : BiRNN__Tensorflow,
+        'help' : '',
+        'type' : 'Tensorflow',
+        'units' : [128, 64, 32, 32]
+    },{
         'model' : VanillaLSTM__Tensorflow,
         'help' : '',
         'type' : 'Tensorflow',

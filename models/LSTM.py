@@ -72,9 +72,9 @@ class BiLSTM__Tensorflow(TensorflowModel):
         
     def build(self, input_shape, output_shape, units):
         self.model = tf.keras.Sequential(layers=None, 
-                                    name=self.__class__.__name__)
+                                         name=self.__class__.__name__)
         self.model.add(tf.keras.Input(shape=input_shape, 
-                                 name='Input_layer'))
+                                      name='Input_layer'))
         # Normalization
         if self.normalize_layer: self.model.add(self.normalize_layer)
         # BiLSTM Layer 1 

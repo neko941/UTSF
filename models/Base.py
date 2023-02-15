@@ -47,7 +47,8 @@ class MachineLearningModel(BaseModel):
         return [i.flatten() for i in x]
 
     def fit(self, X_train, y_train, **kwargs):
-        self.model.fit(self.preprocessing(x=X_train), np.ravel(self.preprocessing(x=y_train), order='C'))
+        self.model.fit(X=self.preprocessing(x=X_train), 
+                       y=np.ravel(self.preprocessing(x=y_train), order='C'))
         # self.model.fit(self.preprocessing(x=X_train), self.preprocessing(x=y_train))
     
     def save(self, file_name:str, save_dir:str='.', extension:str='.pkl'):
@@ -61,8 +62,8 @@ class MachineLearningModel(BaseModel):
         self.model = pickle.load(open(weight, "rb"))
 
     def predict(self, X):
-        return self.model.predict(self.preprocessing(x=X))
-        
+        return self.model.predict(X=self.preprocessing(x=X))
+
 # from keras import backend as K
 # from keras.layers.core import Activation
 # from keras.utils.generic_utils import get_custom_objects

@@ -1,0 +1,11 @@
+#  """ https://scikit-learn.org/stable/modules/generated/sklearn.svm.NuSVR.html#sklearn.svm.NuSVR """
+
+nu: 0.5
+# description: An upper bound on the fraction of training errors and a lower bound of the fraction of support vectors.
+# default: 0.5
+# options: range (0, 1]
+
+C: 1.0
+# description: Penalty parameter C of the error term.
+# default: 1.0
+# options:
