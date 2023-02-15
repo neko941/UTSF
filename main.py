@@ -304,10 +304,13 @@ def parse_opt(known=False):
     return parser.parse_known_args()[0] if known else parser.parse_args()
 
 def main(opt):
+    """ Get the save directory for this run """
     save_dir = str(increment_path(Path(opt.project) / opt.name, overwrite=opt.overwrite, mkdir=True))
+    
+    """ Save init options """
     yaml_save(os.path.join(save_dir, 'opt.yaml'), vars(opt))
 
-    # update option
+    """ Update options and save """
     if opt.all:
         opt.MachineLearning = True
         opt.DeepLearning = True
@@ -321,22 +324,24 @@ def main(opt):
             vars(opt)[f'{item["model"].__name__}'] = True
     yaml_save(os.path.join(save_dir, 'updated_opt.yaml'), vars(opt))
 
-    # set random seed
+    """ 
+    Set random seed 
+        https://pytorch.org/docs/stable/notes/randomness.html
+    """
     set_seed(opt.seed)
-    # Initialize random number generator (RNG) seeds https://pytorch.org/docs/stable/notes/randomness.html
     # random.seed(opt.seed)
     # np.random.seed(opt.seed)
     torch.manual_seed(opt.seed)
     torch.cuda.manual_seed(opt.seed)
     torch.cuda.manual_seed_all(opt.seed)  # for Multi-GPU, exception safe
 
-    # read data.yaml
+    """ Read data config """
     data = yaml_load(opt.source)
     if data['features'] is None: 
         opt.CyclicalPattern = True
         data['features'] = []
 
-    # read data
+    """ Get all files with given extensions and read """
     csvs = []
     extensions = ('.csv')
     if not isinstance(data['data'], list): data['data'] = [data['data']]
@@ -351,6 +356,7 @@ def main(opt):
     for i in csvs[1:]: df = pd.concat([df, pd.read_csv(i)])
     df.reset_index(drop=True, inplace=True)
 
+    """ Data preprocessing """
     if data['date'] is not None:
         # get used cols
         cols = []
