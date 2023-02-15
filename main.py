@@ -12,6 +12,8 @@ import argparse
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+import torch
+# import random
 from keras.layers import Normalization
 
 # optimizers
@@ -82,14 +84,14 @@ from models.customized import GRUcLSTM__Tensorflow
 from models.EncoderDecoder import EncoderDecoder__Tensorflow
 from models.EncoderDecoder import BiEncoderDecoder__Tensorflow
 from models.EncoderDecoder import CNNcLSTMcEncoderDecoder__Tensorflow
-# from models.TabTransformer import TabTransformer
 """ 
 TODO:
+    from models.TabTransformer import TabTransformer
     from models.NBeats import NBeats
+    from models.LSTM import ConvLSTM__Tensorflow    
     from models.LSTNet import LSTNet__Pytorch
     from models.Averaging import StackingAveragedModels
     from models.Averaging import AveragingModels
-    from models.LSTM import ConvLSTM__Tensorflow    
 """
 
 model_dict = [
@@ -320,6 +322,12 @@ def main(opt):
 
     # set random seed
     set_seed(opt.seed)
+    # Initialize random number generator (RNG) seeds https://pytorch.org/docs/stable/notes/randomness.html
+    # random.seed(opt.seed)
+    # np.random.seed(opt.seed)
+    torch.manual_seed(opt.seed)
+    torch.cuda.manual_seed(opt.seed)
+    torch.cuda.manual_seed_all(opt.seed)  # for Multi-GPU, exception safe
 
     # read data.yaml
     data = yaml_load(opt.source)
@@ -406,13 +414,13 @@ def main(opt):
                                   label_name=data['target'])
 
     X_test, y_test = slicing_window(df, 
-                                  df_start_idx=VAL_END_IDX,
-                                  df_end_idx=None,
-                                  input_size=opt.inputsz,
-                                  label_size=opt.labelsz,
-                                  offset=opt.offset,
-                                  label_name=data['target'])
-    test_ds = tf.data.Dataset.from_tensor_slices((X_test, y_test)).batch(opt.batchsz)
+                                    df_start_idx=VAL_END_IDX,
+                                    df_end_idx=None,
+                                    input_size=opt.inputsz,
+                                    label_size=opt.labelsz,
+                                    offset=opt.offset,
+                                    label_name=data['target'])
+    # test_ds = tf.data.Dataset.from_tensor_slices((X_test, y_test)).batch(opt.batchsz)
 
     console = Console(record=True)
     table = Table(title="[cyan]Results", 
@@ -444,6 +452,8 @@ def main(opt):
                                                                file_name=model.name)
             if weight is not None: model.load(weight)
             yhat = model.predict(X=X_test)
+            # print(type(yhat))
+            # print(yhat)
             scores = calculate_score(y=y_test, yhat=yhat)
             table.add_row(model.name, *scores)
         except Exception as e:
