@@ -1,12 +1,5 @@
 import tensorflow as tf
-from keras import backend as K
-from keras.layers.core import Activation
-from keras.utils.generic_utils import get_custom_objects
 from models.Base import TensorflowModel
-
-def custom_activation(x):
-    return x + (K.sin(x)) ** 2
-get_custom_objects().update({'custom_activation': Activation(custom_activation)})  
 
 class VanillaLSTM__Tensorflow(TensorflowModel):
     def __init__(self, input_shape, output_shape, units, normalize_layer=None, seed=941, **kwargs):
@@ -14,16 +7,16 @@ class VanillaLSTM__Tensorflow(TensorflowModel):
         
     def build(self, input_shape, output_shape, units):
         self.model = tf.keras.Sequential(layers=None, 
-                                        name=self.__class__.__name__)
+                                         name=self.__class__.__name__)
         self.model.add(tf.keras.Input(shape=input_shape, 
-                                    name='Input_layer',
-                                    # default
-                                    batch_size=None,
-                                    dtype=None,
-                                    sparse=None,
-                                    tensor=None,
-                                    ragged=None,
-                                    type_spec=None))
+                                      name='Input_layer',
+                                      # default
+                                      batch_size=None,
+                                      dtype=None,
+                                      sparse=None,
+                                      tensor=None,
+                                      ragged=None,
+                                      type_spec=None))
         # Normalization
         if self.normalize_layer: self.model.add(self.normalize_layer)
         # LSTM Layer 1
@@ -54,22 +47,24 @@ class VanillaLSTM__Tensorflow(TensorflowModel):
                                             unroll=False))
         # FC Layer
         self.model.add(tf.keras.layers.Dense(units=units[1],
-                                            # activation='custom_activation',
-                                            activation='relu',
-                                            kernel_initializer=tf.initializers.GlorotUniform(seed=self.seed),
-                                            name='Fully_Connected_layer',
-                                            # defaut
-                                            use_bias=True,
-                                            bias_initializer="zeros",
-                                            kernel_regularizer=None,
-                                            bias_regularizer=None,
-                                            activity_regularizer=None,
-                                            kernel_constraint=None,
-                                            bias_constraint=None))
+                                             # activation='xsinsquared',
+                                             # activation='snake_a5',
+                                             activation='relu',
+                                             kernel_initializer=tf.initializers.GlorotUniform(seed=self.seed),
+                                             name='Fully_Connected_layer',
+                                             # defaut
+                                             use_bias=True,
+                                             bias_initializer="zeros",
+                                             kernel_regularizer=None,
+                                             bias_regularizer=None,
+                                             activity_regularizer=None,
+                                             kernel_constraint=None,
+                                             bias_constraint=None))
         # Output Layer
         self.model.add(tf.keras.layers.Dense(units=output_shape, 
-                                            kernel_initializer=tf.initializers.GlorotUniform(seed=self.seed),
-                                            name='Output_layer'))
+                                             kernel_initializer=tf.initializers.GlorotUniform(seed=self.seed),
+                                             # activation='snake_a1',
+                                             name='Output_layer'))
 
 class BiLSTM__Tensorflow(TensorflowModel):
     def __init__(self, input_shape, output_shape, units, normalize_layer=None, seed=941, **kwargs):

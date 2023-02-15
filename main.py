@@ -69,9 +69,9 @@ from lightgbm import LGBMRegressor
 from catboost import CatBoostRegressor
 # from sklearn.impute import KNNImputer
 
-from models.SVM import SupportVectorMachines
-from models.SVM import LinearSupportVectorMachines
-from models.XGBoost import ExtremeGradientBoosting
+from models.SVM import SupportVectorMachinesRegression
+from models.SVM import LinearSupportVectorMachinesRegression
+from models.XGBoost import ExtremeGradientBoostingRegression
 # deep learning models
 # from models.RNN import VanillaRNN__Tensorflow    
 # from models.RNN import BiRNN__Tensorflow
@@ -149,21 +149,21 @@ model_dict = [
     #     'model' : OrthogonalMatchingPursuitCV,
     #     'help' : ''
     # },{
-    #     'name' : 'XGBoost', 
-    #     'model' : ExtremeGradientBoosting,
-    #     'help' : '',
-    #     'config': 'configs/XGBoost.yaml'
-    # },{
-    #     'name' : 'SVM', 
-    #     'model' : SupportVectorMachines,
-    #     'help' : '',
-    #     'config': 'configs/SVM.yaml'
-    # },{
-    #     'name' : 'LinearSVR', 
-    #     'model' : LinearSupportVectorMachines,
-    #     'help' : '',
-    #     'config': 'configs/LinearSVR.yaml'
-    # },{
+        'model' : ExtremeGradientBoostingRegression,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/XGBoost.yaml'
+    },{
+        'model' : SupportVectorMachinesRegression,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/SVM.yaml'
+    },{
+        'model' : LinearSupportVectorMachinesRegression,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/LinearSVR.yaml'
+    },{
     #     'name' : 'LightGBM', 
     #     'model' : LGBMRegressor,
     #     'help' : ''
@@ -206,13 +206,13 @@ model_dict = [
     # },{
         'model' : VanillaLSTM__Tensorflow,
         'help' : '',
-        'units' : [128, 32],
-        'type' : 'Tensorflow'
+        'type' : 'Tensorflow',
+        'units' : [128, 32]
     },{ 
         'model' : BiLSTM__Tensorflow,
         'help' : '',
-        'units' : [128, 64, 32, 32],
-        'type' : 'Tensorflow'
+        'type' : 'Tensorflow',
+        'units' : [128, 64, 32, 32]
     # },{
     #     'name' : 'ConvLSTM__Tensorflow', 
     #     'model' : ConvLSTM__Tensorflow,
@@ -289,6 +289,7 @@ def parse_opt(known=False):
     parser.add_argument('--overwrite', action='store_true', help='existing project/name ok, do not increment')
     parser.add_argument('--optimizer', type=str, choices=['SGD', 'Adam'], default='Adam', help='optimizer')
     parser.add_argument('--loss', type=str, choices=['MSE'], default='MSE', help='losses')
+    # parser.add_argument('--activation', type=str, choices=['relu', 'xsinsquared', 'xsin', 'snake'], default='relu', help='Activatoin functions')
     parser.add_argument('--seed', type=int, default=941, help='Global training seed')
 
     parser.add_argument('--AutoInterpolate', type=str, choices=['', 'forward', 'backward'], default='', help='')
@@ -457,16 +458,17 @@ def main(opt):
             model.fit(patience=opt.patience, save_dir=save_dir, optimizer=opt.optimizer, loss=opt.loss, lr=opt.lr, epochs=opt.epochs, learning_rate=opt.lr, batchsz=opt.batchsz,
                       X_train=X_train, y_train=y_train,
                       X_val=X_val, y_val=y_val)
-            weight=os.path.join(save_dir, 'weights', f"{model.model.name}_best.h5")
+            weight=os.path.join(save_dir, 'weights', f"{model.__class__.__name__}_best.h5")
             if not os.path.exists(weight): weight = model.save(save_dir=os.path.join(save_dir, 'weights'),
-                                                               file_name=model.model.name)
+                                                               file_name=model.__class__.__name__)
             if weight is not None: model.load(weight)
             yhat = model.predict(X=X_test)
             scores = calculate_score(y=y_test, yhat=yhat)
-            table.add_row(model.model.name, *scores)
+            # table.add_row(model.model.name, *scores)
+            table.add_row(model.__class__.__name__, *scores)
         except Exception as e:
-            errors.append([model.model.name, str(e)])
-            table.add_row(model.model.name, *list('_' * len(used_metric())))
+            errors.append([model.__class__.__name__, str(e)])
+            table.add_row(model.__class__.__name__, *list('_' * len(used_metric())))
         console.print(table)
         console.save_svg(os.path.join(save_dir, 'results.svg'), theme=MONOKAI)
     for error in errors: print(f'{error[0]}\n{error[1]}', end='\n\n\n====================================================================\n\n\n')
