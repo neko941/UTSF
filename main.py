@@ -79,8 +79,8 @@ from models.LSTM import VanillaLSTM__Tensorflow
 from models.LSTM import BiLSTM__Tensorflow    
 from models.GRU import VanillaGRU__Tensorflow
 from models.GRU import BiGRU__Tensorflow
-from models.customized import RNNcLSTM__Tensorflow
-from models.customized import GRUcLSTM__Tensorflow
+# from models.customized import RNNcLSTM__Tensorflow
+# from models.customized import GRUcLSTM__Tensorflow
 from models.EncoderDecoder import EncoderDecoder__Tensorflow
 from models.EncoderDecoder import BiEncoderDecoder__Tensorflow
 from models.EncoderDecoder import CNNcLSTMcEncoderDecoder__Tensorflow
@@ -148,21 +148,21 @@ model_dict = [
     #     'model' : OrthogonalMatchingPursuitCV,
     #     'help' : ''
     # },{
-        'name' : 'XGBoost', 
-        'model' : ExtremeGradientBoosting,
-        'help' : '',
-        'config': 'configs/XGBoost.yaml'
-    },{
-        'name' : 'SVM', 
-        'model' : SupportVectorMachines,
-        'help' : '',
-        'config': 'configs/SVM.yaml'
-    },{
-        'name' : 'LinearSVR', 
-        'model' : LinearSupportVectorMachines,
-        'help' : '',
-        'config': 'configs/LinearSVR.yaml'
-    },{
+    #     'name' : 'XGBoost', 
+    #     'model' : ExtremeGradientBoosting,
+    #     'help' : '',
+    #     'config': 'configs/XGBoost.yaml'
+    # },{
+    #     'name' : 'SVM', 
+    #     'model' : SupportVectorMachines,
+    #     'help' : '',
+    #     'config': 'configs/SVM.yaml'
+    # },{
+    #     'name' : 'LinearSVR', 
+    #     'model' : LinearSupportVectorMachines,
+    #     'help' : '',
+    #     'config': 'configs/LinearSVR.yaml'
+    # },{
     #     'name' : 'LightGBM', 
     #     'model' : LGBMRegressor,
     #     'help' : ''
@@ -203,12 +203,10 @@ model_dict = [
     #     'model' : BiRNN__Tensorflow,
     #     'help' : ''
     # },{
-        'name' : 'VanillaLSTM__Tensorflow', 
         'model' : VanillaLSTM__Tensorflow,
         'help' : '',
         'units' : [128, 32]
-    },{
-        'name' : 'BiLSTM__Tensorflow', 
+    },{ 
         'model' : BiLSTM__Tensorflow,
         'help' : '',
         'units' : [128, 64, 32, 32]
@@ -299,7 +297,7 @@ def parse_opt(known=False):
     parser.add_argument('--Pytorch', action='store_true', help='')
 
     for item in model_dict:
-        parser.add_argument(f"--{item['name']}", action='store_true', help=f"{item['help']}")
+        parser.add_argument(f"--{item['model'].__name__}", action='store_true', help=f"{item['help']}")
 
     return parser.parse_known_args()[0] if known else parser.parse_args()
 
@@ -439,7 +437,7 @@ def main(opt):
 
     errors = []
     for item in model_dict:
-        if not vars(opt)[f'{item["name"]}']: continue
+        if not vars(opt)[f'{item["model"].__name__}']: continue
         model = item['model'](input_shape=X_train.shape[-2:], output_shape=opt.labelsz, seed=opt.seed,
                               config_path=item.get('config'), 
                               units=item.get('units'), normalize_layer=norm)
@@ -447,18 +445,16 @@ def main(opt):
             model.fit(patience=opt.patience, save_dir=save_dir, optimizer=opt.optimizer, loss=opt.loss, lr=opt.lr, epochs=opt.epochs, learning_rate=opt.lr, batchsz=opt.batchsz,
                       X_train=X_train, y_train=y_train,
                       X_val=X_val, y_val=y_val)
-            weight=os.path.join(save_dir, 'weights', f"{model.name}_best.h5")
+            weight=os.path.join(save_dir, 'weights', f"{model.model.name}_best.h5")
             if not os.path.exists(weight): weight = model.save(save_dir=os.path.join(save_dir, 'weights'),
-                                                               file_name=model.name)
+                                                               file_name=model.model.name)
             if weight is not None: model.load(weight)
             yhat = model.predict(X=X_test)
-            # print(type(yhat))
-            # print(yhat)
             scores = calculate_score(y=y_test, yhat=yhat)
-            table.add_row(model.name, *scores)
+            table.add_row(model.model.name, *scores)
         except Exception as e:
-            errors.append([model.name, str(e)])
-            table.add_row(model.name, *list('_' * len(used_metric())))
+            errors.append([model.model.name, str(e)])
+            table.add_row(model.model.name, *list('_' * len(used_metric())))
         console.print(table)
         console.save_svg(os.path.join(save_dir, 'results.svg'), theme=MONOKAI)
     for error in errors: print(f'{error[0]}\n{error[1]}', end='\n\n\n====================================================================\n\n\n')

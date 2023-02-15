@@ -2,20 +2,19 @@ import tensorflow as tf
 from keras import backend as K
 from keras.layers.core import Activation
 from keras.utils.generic_utils import get_custom_objects
+from models.Base import TensorflowModel
 
 def custom_activation(x):
     return x + (K.sin(x)) ** 2
 get_custom_objects().update({'custom_activation': Activation(custom_activation)})  
 
-from models.Base import TensorflowModel
 class VanillaLSTM__Tensorflow(TensorflowModel):
     def __init__(self, input_shape, output_shape, units, normalize_layer=None, seed=941, **kwargs):
         super().__init__(input_shape, output_shape, units, normalize_layer, seed)
-        self.name = 'VanillaLSTM__Tensorflow'
         
     def build(self, input_shape, output_shape, units):
         self.model = tf.keras.Sequential(layers=None, 
-                                        name='VanillaLSTM__Tensorflow')
+                                        name=self.__class__.__name__)
         self.model.add(tf.keras.Input(shape=input_shape, 
                                     name='Input_layer',
                                     # default
