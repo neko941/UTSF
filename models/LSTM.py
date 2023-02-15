@@ -74,11 +74,10 @@ class VanillaLSTM__Tensorflow(TensorflowModel):
 class BiLSTM__Tensorflow(TensorflowModel):
     def __init__(self, input_shape, output_shape, units, normalize_layer=None, seed=941, **kwargs):
         super().__init__(input_shape, output_shape, units, normalize_layer, seed)
-        self.name = 'BiLSTM__Tensorflow'
         
     def build(self, input_shape, output_shape, units):
         self.model = tf.keras.Sequential(layers=None, 
-                                    name='BiLSTM__Tensorflow')
+                                    name=self.__class__.__name__)
         self.model.add(tf.keras.Input(shape=input_shape, 
                                  name='Input_layer'))
         # Normalization
@@ -100,9 +99,9 @@ class BiLSTM__Tensorflow(TensorflowModel):
                                                 name='BiLSTM_layer_3'))
         # FC Layer
         self.model.add(tf.keras.layers.Dense(units=self.units[3],
-                                        activation='relu',
-                                        kernel_initializer=tf.initializers.GlorotUniform(seed=self.seed),
-                                        name='Fully_Connected_layer'))
+                                             activation='relu',
+                                             kernel_initializer=tf.initializers.GlorotUniform(seed=self.seed),
+                                             name='Fully_Connected_layer'))
 
         # Output Layer
         self.model.add(tf.keras.layers.Dense(units=output_shape, 

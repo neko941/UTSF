@@ -205,11 +205,13 @@ model_dict = [
     # },{
         'model' : VanillaLSTM__Tensorflow,
         'help' : '',
-        'units' : [128, 32]
+        'units' : [128, 32],
+        'type' : 'Tensorflow'
     },{ 
         'model' : BiLSTM__Tensorflow,
         'help' : '',
-        'units' : [128, 64, 32, 32]
+        'units' : [128, 64, 32, 32],
+        'type' : 'Tensorflow'
     # },{
     #     'name' : 'ConvLSTM__Tensorflow', 
     #     'model' : ConvLSTM__Tensorflow,
@@ -313,10 +315,11 @@ def main(opt):
         opt.Tensorflow = True
         opt.Pytorch = True
     for item in model_dict:
-        if any([opt.Tensorflow and 'Tensorflow' in item["name"],
-                opt.Pytorch and 'Tensorflow' in item["name"],
-                opt.MachineLearning and 'Tensorflow' not in item["name"] and 'Pytorch' not in item["name"]]): 
-            vars(opt)[f'{item["name"]}'] = True
+        if any([opt.Tensorflow and item['type']=='Tensorflow',
+                opt.Pytorch and item['type']=='Pytorch',
+                opt.MachineLearning and item['type']=='MachineLearning']): 
+            vars(opt)[f'{item["model"].__name__}'] = True
+    yaml_save(os.path.join(save_dir, 'updated_opt.yaml'), vars(opt))
 
     # set random seed
     set_seed(opt.seed)
