@@ -23,17 +23,17 @@ class VanillaLSTM__Tensorflow(TensorflowModel):
         # LSTM Layer 1
         self.model.add(LSTM(units=self.units[0],
                             kernel_initializer=GlorotUniform(seed=self.seed), 
-                            activation='tanh',
+                            activation=self.activations[0],
                             name='LSTM_layer'))
         # FC Layer
         self.model.add(Dense(units=self.units[1],
                              kernel_initializer=GlorotUniform(seed=self.seed),
-                             activation='relu',
+                             activation=self.activations[1],
                              name='Fully_Connected_layer'))
         # Output Layer
         self.model.add(Dense(units=self.output_shape, 
                              kernel_initializer=GlorotUniform(seed=self.seed),
-                             activation='relu',
+                             activation=self.activations[2],
                              name='Output_layer'))
 
 class BiLSTM__Tensorflow(TensorflowModel):
@@ -47,30 +47,30 @@ class BiLSTM__Tensorflow(TensorflowModel):
         self.model.add(Bidirectional(LSTM(units=self.units[0], 
                                           return_sequences=True,
                                           kernel_initializer=GlorotUniform(seed=self.seed),
-                                          activation='tanh'),
+                                          activation=self.activations[0]),
                                      name='BiLSTM_layer_1'))
         # BiLSTM Layer 2 
         self.model.add(Bidirectional(LSTM(units=self.units[1], 
                                           return_sequences=True,
                                           kernel_initializer=GlorotUniform(seed=self.seed),
-                                          activation='tanh'),
+                                          activation=self.activations[1]),
                                      name='BiLSTM_layer_2'))
         # BiLSTM Layer 3 
         self.model.add(Bidirectional(LSTM(units=self.units[2], 
                                           return_sequences=False,
                                           kernel_initializer=GlorotUniform(seed=self.seed),
-                                          activation='tanh'),
+                                          activation=self.activations[2]),
                                      name='BiLSTM_layer_3'))
         # FC Layer
         self.model.add(Dense(units=self.units[3],
                              kernel_initializer=GlorotUniform(seed=self.seed),
-                             activation='relu',
+                             activation=self.activations[3],
                              name='Fully_Connected_layer'))
 
         # Output Layer
         self.model.add(Dense(units=self.output_shape, 
                              kernel_initializer=GlorotUniform(seed=self.seed),
-                             activation='relu',
+                             activation=self.activations[4],
                              name='Output_layer'))
         
 # class ConvLSTM__Tensorflow(TensorflowModel):

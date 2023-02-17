@@ -33,6 +33,7 @@ from keras.losses import MeanSquaredError
 from utils.general import yaml_save
 from utils.general import yaml_load
 from utils.general import increment_path
+from utils.activations import get_custom_activations
 from tensorflow.random import set_seed 
 from tensorflow.data import AUTOTUNE
 
@@ -221,12 +222,14 @@ model_dict = [
         'model' : VanillaLSTM__Tensorflow,
         'help' : '',
         'type' : 'Tensorflow',
-        'units' : [128, 32]
+        'units' : [128, 32],
+        'activations': ['tanh', 'snake_a1', 'snake_a1']
     },{ 
         'model' : BiLSTM__Tensorflow,
         'help' : '',
         'type' : 'Tensorflow',
-        'units' : [128, 64, 32, 32]
+        'units' : [28, 64, 32, 32],
+        'activations': ['tanh', 'tanh', 'tanh', 'relu', 'relu']
     # },{
     #     'model' : VanillaGRU__Tensorflow,
     #     'help' : '',
@@ -465,10 +468,12 @@ def main(opt):
         norm = None
 
     errors = []
+    get_custom_activations()
     for item in model_dict:
         if not vars(opt)[f'{item["model"].__name__}']: continue
         model = item['model'](input_shape=X_train.shape[-2:], output_shape=opt.labelsz, seed=opt.seed,
                               config_path=item.get('config'), 
+                              activations=item.get('activations'),
                               units=item.get('units'), normalize_layer=norm)
         model.build()
         try:

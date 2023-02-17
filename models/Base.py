@@ -71,21 +71,8 @@ class MachineLearningModel(BaseModel):
     def predict(self, X):
         return self.model.predict(X=self.preprocessing(x=X))
 
-# from keras import backend as K
-# from keras.layers.core import Activation
-# from keras.utils.generic_utils import get_custom_objects
-
-# def SnakeActivation(x, a):
-#     return x - K.cos(2*a*x)/(2*a) + 1/(2*a)
-
-# get_custom_objects().update({'xsinsquared': Activation(lambda x: x + (K.sin(x)) ** 2),
-#                              'xsin': Activation(lambda x: x + (K.sin(x))),
-#                              'snake_a.5': Activation(lambda x: SnakeActivation(x=x, a=0.5)),
-#                              'snake_a1': Activation(lambda x: SnakeActivation(x=x, a=1)),
-#                              'snake_a5': Activation(lambda x: SnakeActivation(x=x, a=5)),
-#                              })  
 class TensorflowModel(BaseModel):
-    def __init__(self, input_shape, output_shape, units, normalize_layer=None, seed=941, **kwargs):
+    def __init__(self, input_shape, output_shape, units, activations, normalize_layer=None, seed=941, **kwargs):
         self.function_dict = {
             'Adam' : Adam,
             'MSE' : MeanSquaredError,
@@ -97,6 +84,7 @@ class TensorflowModel(BaseModel):
         self.input_shape = input_shape
         self.output_shape = output_shape
         self.units = units
+        self.activations = activations
 
     def callbacks(self, patience, save_dir, min_delta=0.001, epochs=10_000_000):
         weight_path = os.path.join(save_dir, 'weights')
