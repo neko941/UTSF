@@ -1,115 +1,104 @@
+import numpy as np
 import tensorflow as tf
+
 from models.Base import TensorflowModel
 
+from keras.models import Sequential
+from keras.layers import Input
+from keras.layers import LSTM
+from keras.layers import Dense
+from keras.layers import Conv3D
+from keras.layers import ConvLSTM2D
+from keras.layers import Bidirectional
+from keras.layers import BatchNormalization
+from keras.initializers import GlorotUniform
+
 class VanillaLSTM__Tensorflow(TensorflowModel):
-    def __init__(self, input_shape, output_shape, units, normalize_layer=None, seed=941, **kwargs):
-        super().__init__(input_shape, output_shape, units, normalize_layer, seed)
-        
-    def build(self, input_shape, output_shape, units):
-        self.model = tf.keras.Sequential(layers=None, 
-                                         name=self.__class__.__name__)
-        self.model.add(tf.keras.Input(shape=input_shape, 
-                                      name='Input_layer',
-                                      # default
-                                      batch_size=None,
-                                      dtype=None,
-                                      sparse=None,
-                                      tensor=None,
-                                      ragged=None,
-                                      type_spec=None))
+    def build(self):
+        self.model = Sequential(layers=None, name=self.__class__.__name__)
+        # Input layer
+        self.model.add(Input(shape=self.input_shape, name='Input_layer'))
         # Normalization
         if self.normalize_layer: self.model.add(self.normalize_layer)
         # LSTM Layer 1
-        self.model.add(tf.keras.layers.LSTM(units=units[0],
-                                            kernel_initializer=tf.initializers.GlorotUniform(seed=self.seed), 
-                                            name='LSTM_layer',
-                                            # defaut
-                                            activation='tanh',
-                                            recurrent_activation='sigmoid',
-                                            use_bias=True,
-                                            recurrent_initializer='orthogonal',
-                                            bias_initializer='zeros',
-                                            unit_forget_bias=True,
-                                            kernel_regularizer=None,
-                                            recurrent_regularizer=None,
-                                            bias_regularizer=None,
-                                            activity_regularizer=None,
-                                            kernel_constraint=None,
-                                            recurrent_constraint=None,
-                                            bias_constraint=None,
-                                            dropout=0.0,
-                                            recurrent_dropout=0.0,
-                                            return_sequences=False,
-                                            return_state=False,
-                                            go_backwards=False,
-                                            stateful=False,
-                                            time_major=False,
-                                            unroll=False))
+        self.model.add(LSTM(units=self.units[0],
+                            kernel_initializer=GlorotUniform(seed=self.seed), 
+                            activation='tanh',
+                            name='LSTM_layer'))
         # FC Layer
-        self.model.add(tf.keras.layers.Dense(units=units[1],
-                                             # activation='xsinsquared',
-                                             # activation='snake_a5',
-                                             activation='relu',
-                                             kernel_initializer=tf.initializers.GlorotUniform(seed=self.seed),
-                                             name='Fully_Connected_layer',
-                                             # defaut
-                                             use_bias=True,
-                                             bias_initializer="zeros",
-                                             kernel_regularizer=None,
-                                             bias_regularizer=None,
-                                             activity_regularizer=None,
-                                             kernel_constraint=None,
-                                             bias_constraint=None))
+        self.model.add(Dense(units=self.units[1],
+                             kernel_initializer=GlorotUniform(seed=self.seed),
+                             activation='relu',
+                             name='Fully_Connected_layer'))
         # Output Layer
-        self.model.add(tf.keras.layers.Dense(units=output_shape, 
-                                             kernel_initializer=tf.initializers.GlorotUniform(seed=self.seed),
-                                             # activation='snake_a1',
-                                             name='Output_layer'))
+        self.model.add(Dense(units=self.output_shape, 
+                             kernel_initializer=GlorotUniform(seed=self.seed),
+                             activation='relu',
+                             name='Output_layer'))
 
 class BiLSTM__Tensorflow(TensorflowModel):
-    def __init__(self, input_shape, output_shape, units, normalize_layer=None, seed=941, **kwargs):
-        super().__init__(input_shape, output_shape, units, normalize_layer, seed)
-        
-    def build(self, input_shape, output_shape, units):
-        self.model = tf.keras.Sequential(layers=None, 
-                                         name=self.__class__.__name__)
-        self.model.add(tf.keras.Input(shape=input_shape, 
-                                      name='Input_layer'))
+    def build(self):
+        self.model = Sequential(layers=None, name=self.__class__.__name__)
+        # Input layer
+        self.model.add(Input(shape=self.input_shape, name='Input_layer'))
         # Normalization
         if self.normalize_layer: self.model.add(self.normalize_layer)
         # BiLSTM Layer 1 
-        self.model.add(tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(units=self.units[0], 
-                                                                     return_sequences=True,
-                                                                     kernel_initializer=tf.initializers.GlorotUniform(seed=self.seed)),
-                                                name='BiLSTM_layer_1'))
+        self.model.add(Bidirectional(LSTM(units=self.units[0], 
+                                          return_sequences=True,
+                                          kernel_initializer=GlorotUniform(seed=self.seed),
+                                          activation='tanh'),
+                                     name='BiLSTM_layer_1'))
         # BiLSTM Layer 2 
-        self.model.add(tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(units=self.units[1], 
-                                                                     return_sequences=True,
-                                                                     kernel_initializer=tf.initializers.GlorotUniform(seed=self.seed)),
-                                                name='BiLSTM_layer_2'))
+        self.model.add(Bidirectional(LSTM(units=self.units[1], 
+                                          return_sequences=True,
+                                          kernel_initializer=GlorotUniform(seed=self.seed),
+                                          activation='tanh'),
+                                     name='BiLSTM_layer_2'))
         # BiLSTM Layer 3 
-        self.model.add(tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(units=self.units[2], 
-                                                                     return_sequences=False,
-                                                                     kernel_initializer=tf.initializers.GlorotUniform(seed=self.seed)),
-                                                name='BiLSTM_layer_3'))
+        self.model.add(Bidirectional(LSTM(units=self.units[2], 
+                                          return_sequences=False,
+                                          kernel_initializer=GlorotUniform(seed=self.seed),
+                                          activation='tanh'),
+                                     name='BiLSTM_layer_3'))
         # FC Layer
-        self.model.add(tf.keras.layers.Dense(units=self.units[3],
-                                             activation='relu',
-                                             kernel_initializer=tf.initializers.GlorotUniform(seed=self.seed),
-                                             name='Fully_Connected_layer'))
+        self.model.add(Dense(units=self.units[3],
+                             kernel_initializer=GlorotUniform(seed=self.seed),
+                             activation='relu',
+                             name='Fully_Connected_layer'))
 
         # Output Layer
-        self.model.add(tf.keras.layers.Dense(units=output_shape, 
-                                        kernel_initializer=tf.initializers.GlorotUniform(seed=self.seed),
-                                        name='Output_layer'))
+        self.model.add(Dense(units=self.output_shape, 
+                             kernel_initializer=GlorotUniform(seed=self.seed),
+                             activation='relu',
+                             name='Output_layer'))
+        
+# class ConvLSTM__Tensorflow(TensorflowModel):
+#     def build(self, input_shape, output_shape, units):
+#         self.model = tf.keras.Sequential(layers=None, 
+#                                          name=self.__class__.__name__)
+#         self.model.add(tf.keras.Input(shape=(None, *X_train.shape[-3:]),, 
+#                                       name='Input_layer'))
+#         # Normalization
+#         if self.normalize_layer: self.model.add(self.normalize_layer)
 
-# def ConvLSTM__Tensorflow(input_shape, output_size, normalize_layer=None, seed=941):
-#     # input_shape = list(input_shape)
-#     # while len(input_shape) < 5-1: input_shape.insert(0, None)
-#     model = tf.keras.Sequential(layers=None, name='ConvLSTM__Tensorflow')
-#     model.add(tf.keras.Input(shape=input_shape, name='input_layer'))
-#     if normalize_layer: model.add(normalize_layer)
-#     model.add(tf.keras.layers.ConvLSTM2D(filters=64, kernel_size=(1,2), activation='relu'))
-#     model.add(tf.keras.layers.Flatten())
-#     model.add(tf.keras.layers.Dense(output_size))
-#     return model
+#         self.model.add(ConvLSTM2D(filters=40, kernel_size=(3, 3), padding='same', return_self.modeluences=True))
+#         self.model.add(BatchNormalization())
+#         self.model.add(ConvLSTM2D(filters=40, kernel_size=(3, 3), padding='same', return_self.modeluences=True))
+#         self.model.add(BatchNormalization())
+#         self.model.add(ConvLSTM2D(filters=40, kernel_size=(3, 3), padding='same', return_self.modeluences=True))
+#         self.model.add(BatchNormalization())
+#         self.model.add(ConvLSTM2D(filters=40, kernel_size=(3, 3), padding='same', return_self.modeluences=True))
+#         self.model.add(BatchNormalization())
+#         self.model.add(Conv3D(filters=output_shape, kernel_size=(3, 3, 3), activation='sigmoid', padding='same', data_format='channels_last'))
+
+#     def preprocessing(self, x, y, batchsz):
+#         return tf.data.Dataset.from_tensor_slices((np.array(x)[:,:, np.newaxis, np.newaxis], np.array(y)[:,:, np.newaxis, np.newaxis])).batch(batchsz).cache().prefetch(buffer_size=AUTOTUNE)
+
+#     def fit(self, X_train, y_train, X_val, y_val, patience, learning_rate, epochs, save_dir, batchsz, optimizer='Adam', loss='MSE', **kwargs):
+#         # print(self.function_dict[optimizer](learning_rate=learning_rate), self.function_dict[loss]())
+#         self.model.compile(optimizer=self.function_dict[optimizer](learning_rate=learning_rate), loss=self.function_dict[loss]())
+#         self.model.fit(self.preprocessing(x=X_train, y=y_train, batchsz=batchsz), 
+#                        validation_data=self.preprocessing(x=X_val, y=y_val, batchsz=batchsz),
+#                        epochs=epochs, 
+#                        callbacks=self.callbacks(patience=patience, save_dir=save_dir, min_delta=0.001, epochs=epochs))

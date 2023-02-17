@@ -79,10 +79,10 @@ from models.RNN import VanillaRNN__Tensorflow
 from models.RNN import BiRNN__Tensorflow
 from models.LSTM import VanillaLSTM__Tensorflow    
 from models.LSTM import BiLSTM__Tensorflow    
+from models.GRU import VanillaGRU__Tensorflow
+from models.GRU import BiGRU__Tensorflow
 from models.Concatenated import RNNcLSTM__Tensorflow
 from models.Concatenated import LSTMcGRU__Tensorflow
-# from models.GRU import VanillaGRU__Tensorflow
-# from models.GRU import BiGRU__Tensorflow
 # from models.customized import GRUcLSTM__Tensorflow
 # from models.EncoderDecoder import EncoderDecoder__Tensorflow
 # from models.EncoderDecoder import BiEncoderDecoder__Tensorflow
@@ -208,16 +208,16 @@ model_dict = [
     #     'model' : KNNImputer,
     #     'help' : ''
     # },{ 
-        'model' : VanillaRNN__Tensorflow,
-        'help' : '',
-        'type' : 'Tensorflow',
-        'units' : [128, 32]
-    },{
-        'model' : BiRNN__Tensorflow,
-        'help' : '',
-        'type' : 'Tensorflow',
-        'units' : [128, 64, 32, 32]
-    },{
+    #     'model' : VanillaRNN__Tensorflow,
+    #     'help' : '',
+    #     'type' : 'Tensorflow',
+    #     'units' : [128, 32]
+    # },{
+    #     'model' : BiRNN__Tensorflow,
+    #     'help' : '',
+    #     'type' : 'Tensorflow',
+    #     'units' : [128, 64, 32, 32]
+    # },{
         'model' : VanillaLSTM__Tensorflow,
         'help' : '',
         'type' : 'Tensorflow',
@@ -228,16 +228,28 @@ model_dict = [
         'type' : 'Tensorflow',
         'units' : [128, 64, 32, 32]
     # },{
+    #     'model' : VanillaGRU__Tensorflow,
+    #     'help' : '',
+    #     'type' : 'Tensorflow',
+    #     'units' : [128, 32]
+    # },{
+    #     'model' : BiGRU__Tensorflow,
+    #     'help' : '',
+    #     'type' : 'Tensorflow',
+    #     'units' : [128, 64, 32, 32]
+    # },{
+    #     'model' : RNNcLSTM__Tensorflow,
+    #     'help' : '',
+    #     'units' : [128, 64, 32],
+    #     'type' : 'Tensorflow'
+    # },{
+    #     'model' : LSTMcGRU__Tensorflow,
+    #     'help' : '',
+    #     'units' : [128, 64, 32],
+    #     'type' : 'Tensorflow'
+    # },{
     #     'name' : 'ConvLSTM__Tensorflow', 
     #     'model' : ConvLSTM__Tensorflow,
-    #     'help' : ''
-    # },{
-    #     'name' : 'VanillaGRU__Tensorflow', 
-    #     'model' : VanillaGRU__Tensorflow,
-    #     'help' : ''
-    # },{
-    #     'name' : 'BiGRU__Tensorflow', 
-    #     'model' : BiGRU__Tensorflow,
     #     'help' : ''
     # },{
     #     'name' : 'EncoderDecoder__Tensorflow', 
@@ -251,16 +263,6 @@ model_dict = [
     #     'name' : 'CNNcLSTMcEncoderDecoder__Tensorflow', 
     #     'model' : CNNcLSTMcEncoderDecoder__Tensorflow,
     #     'help' : ''
-    },{
-        'model' : RNNcLSTM__Tensorflow,
-        'help' : '',
-        'units' : [128, 64, 32],
-        'type' : 'Tensorflow'
-    },{
-        'model' : LSTMcGRU__Tensorflow,
-        'help' : '',
-        'units' : [128, 64, 32],
-        'type' : 'Tensorflow'
     # },{
     #     'name' : 'NBeats', 
     #     'model' : NBeats,
@@ -468,6 +470,7 @@ def main(opt):
         model = item['model'](input_shape=X_train.shape[-2:], output_shape=opt.labelsz, seed=opt.seed,
                               config_path=item.get('config'), 
                               units=item.get('units'), normalize_layer=norm)
+        model.build()
         try:
             model.fit(patience=opt.patience, save_dir=save_dir, optimizer=opt.optimizer, loss=opt.loss, lr=opt.lr, epochs=opt.epochs, learning_rate=opt.lr, batchsz=opt.batchsz,
                       X_train=X_train, y_train=y_train,

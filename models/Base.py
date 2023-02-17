@@ -20,6 +20,14 @@ from pathlib import Path
 
 class BaseModel:
     @abstractmethod
+    def build(self, *inputs):
+        raise NotImplementedError 
+
+    @abstractmethod
+    def preprocessing(self, *inputs):
+        raise NotImplementedError
+
+    @abstractmethod
     def fit(self, *inputs):
         raise NotImplementedError
 
@@ -35,14 +43,13 @@ class BaseModel:
     def predict(self, *inputs):
         raise NotImplementedError
 
-    @abstractmethod
-    def preprocessing(self, *inputs):
-        raise NotImplementedError
-
 class MachineLearningModel(BaseModel):
-    def __init__(self):
-        pass
+    def __init__(self, config_path, **kwargs):
+        self.config_path = config_path
     
+    def build(self):
+        pass
+
     def preprocessing(self, x):
         return [i.flatten() for i in x]
 
@@ -78,7 +85,7 @@ class MachineLearningModel(BaseModel):
 #                              'snake_a5': Activation(lambda x: SnakeActivation(x=x, a=5)),
 #                              })  
 class TensorflowModel(BaseModel):
-    def __init__(self, input_shape, output_shape, units, normalize_layer=None, seed=941):
+    def __init__(self, input_shape, output_shape, units, normalize_layer=None, seed=941, **kwargs):
         self.function_dict = {
             'Adam' : Adam,
             'MSE' : MeanSquaredError,
@@ -87,12 +94,9 @@ class TensorflowModel(BaseModel):
         self.units = units
         self.seed = seed
         self.normalize_layer = normalize_layer
-        self.build(input_shape, output_shape, units)
-        self.model.summary()
-
-    @abstractmethod
-    def build(self, *inputs):
-        raise NotImplementedError 
+        self.input_shape = input_shape
+        self.output_shape = output_shape
+        self.units = units
 
     def callbacks(self, patience, save_dir, min_delta=0.001, epochs=10_000_000):
         weight_path = os.path.join(save_dir, 'weights')
@@ -124,6 +128,7 @@ class TensorflowModel(BaseModel):
 
     def fit(self, X_train, y_train, X_val, y_val, patience, learning_rate, epochs, save_dir, batchsz, optimizer='Adam', loss='MSE', **kwargs):
         # print(self.function_dict[optimizer](learning_rate=learning_rate), self.function_dict[loss]())
+        self.model.summary()
         self.model.compile(optimizer=self.function_dict[optimizer](learning_rate=learning_rate), loss=self.function_dict[loss]())
         self.model.fit(self.preprocessing(x=X_train, y=y_train, batchsz=batchsz), 
                        validation_data=self.preprocessing(x=X_val, y=y_val, batchsz=batchsz),
@@ -140,21 +145,9 @@ class TensorflowModel(BaseModel):
         return file_path
     
     def load(self, weight):
-        self.model.load_weights(weight)
+        if os.path.exists(weight): self.model.load_weights(weight)
 
 class PytorchModel(BaseModel):
-    def fit(self):
-        pass
-
-    def save(self):
-        pass
-
-    def load(self):
-        pass
-
-    def predict(self):
-        pass
-
     def preprocessing(self, x, y, batchsz):
         # Convert numpy arrays to PyTorch tensors
         X_train = torch.from_numpy(x)
