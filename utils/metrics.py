@@ -36,13 +36,3 @@ metric_dict = {
 
 def used_metric():
     return metric_dict.keys()
-
-def calculate_score(y, yhat):
-    if len(yhat.shape) > 2: 
-        nsamples, nx, ny = yhat.shape
-        yhat = yhat.reshape((nsamples,nx*ny))
-    results = []
-    for metric, func in metric_dict.items():
-        result = func(y, yhat)
-        results.append(str(result))
-    return results

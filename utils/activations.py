@@ -12,4 +12,3 @@ def get_custom_activations():
                                  'snake_a1': Activation(lambda x: SnakeActivation(x=x, a=1)),
                                  'snake_a5': Activation(lambda x: SnakeActivation(x=x, a=5)),
                                  })  
-

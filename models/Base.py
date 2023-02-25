@@ -10,6 +10,10 @@ from keras.callbacks import EarlyStopping
 from keras.callbacks import ModelCheckpoint
 from keras.callbacks import ReduceLROnPlateau
 from tensorflow.data import AUTOTUNE
+from keras.models import Sequential 
+from keras.layers import Input
+
+from utils.metrics import metric_dict
 
 import torch
 from torch.utils.data import DataLoader
@@ -42,6 +46,16 @@ class BaseModel:
     @abstractmethod
     def predict(self, *inputs):
         raise NotImplementedError
+
+    def score(self, y, yhat):
+        if len(yhat.shape) > 2: 
+            nsamples, nx, ny = yhat.shape
+            yhat = yhat.reshape((nsamples,nx*ny))
+        results = []
+        for metric, func in metric_dict.items():
+            result = func(y, yhat)
+            results.append(str(result))
+        return results
 
 class MachineLearningModel(BaseModel):
     def __init__(self, config_path, **kwargs):
@@ -114,9 +128,18 @@ class TensorflowModel(BaseModel):
     def preprocessing(self, x, y, batchsz):
         return tf.data.Dataset.from_tensor_slices((x, y)).batch(batchsz).cache().prefetch(buffer_size=AUTOTUNE)
 
+    def build(self):
+        try:
+            self.model = Sequential(layers=None, name=self.__class__.__name__)
+            # Input layer
+            self.model.add(Input(shape=self.input_shape, name='Input_layer'))
+            self.body()
+            self.model.summary()
+        except Exception as e:
+            print(e)
+            self.model = None
+
     def fit(self, X_train, y_train, X_val, y_val, patience, learning_rate, epochs, save_dir, batchsz, optimizer='Adam', loss='MSE', **kwargs):
-        # print(self.function_dict[optimizer](learning_rate=learning_rate), self.function_dict[loss]())
-        self.model.summary()
         self.model.compile(optimizer=self.function_dict[optimizer](learning_rate=learning_rate), loss=self.function_dict[loss]())
         self.model.fit(self.preprocessing(x=X_train, y=y_train, batchsz=batchsz), 
                        validation_data=self.preprocessing(x=X_val, y=y_val, batchsz=batchsz),
@@ -135,16 +158,98 @@ class TensorflowModel(BaseModel):
     def load(self, weight):
         if os.path.exists(weight): self.model.load_weights(weight)
 
+import torch.optim as optim
+import torch.nn as nn
+
 class PytorchModel(BaseModel):
+    def __init__(self, model):
+        self.model = model
+        self.function_dict = {
+            'Adam' : optim.Adam,
+            'MSE' : nn.MSELoss,
+            'SGD' : optim.SGD
+        }
+
     def preprocessing(self, x, y, batchsz):
         # Convert numpy arrays to PyTorch tensors
         X_train = torch.from_numpy(x)
         y_train = torch.from_numpy(y)
 
         # Combine the features and labels into a single tensor
-        train_dataset = torch.utils.data.TensorDataset(x, y)
+        train_dataset = torch.utils.data.TensorDataset(X_train, y_train)
 
         # Create the data loader
         train_dataloader = DataLoader(train_dataset, batch_size=batchsz, shuffle=True, num_workers=0)
 
-        pass
+        return train_dataloader
+
+    def fit(self, X_train, y_train, X_val, y_val, patience, learning_rate, epochs, save_dir, batchsz, optimizer='Adam', loss='MSE'):
+        # Preprocess data
+        train_dataloader = self.preprocessing(X_train, y_train, batchsz)
+        val_dataloader = self.preprocessing(X_val, y_val, batchsz)
+
+        # Set optimizer and loss function
+        self.optimizer = self.function_dict[optimizer](params=self.model.parameters(), lr=learning_rate)
+        self.loss_fn = self.function_dict[loss]()
+
+        # Train the model
+        best_loss = float('inf')
+        early_stop_count = 0
+        for epoch in range(epochs):
+            train_loss = 0.0
+            val_loss = 0.0
+
+            # Train step
+            self.model.train()
+            for i, (inputs, targets) in enumerate(train_dataloader):
+                self.optimizer.zero_grad()
+                outputs = self.model(inputs)
+                loss = self.loss_fn(outputs, targets)
+                loss.backward()
+                self.optimizer.step()
+                train_loss += loss.item()
+
+            # Validation step
+            self.model.eval()
+            with torch.no_grad():
+                for inputs, targets in val_dataloader:
+                    outputs = self.model(inputs)
+                    loss = self.loss_fn(outputs, targets)
+                    val_loss += loss.item()
+
+            train_loss /= len(train_dataloader)
+            val_loss /= len(val_dataloader)
+            print(f'Epoch {epoch+1}: Train Loss = {train_loss:.4f}, Val Loss = {val_loss:.4f}')
+
+            # Save the best model
+            if val_loss < best_loss:
+                print('Saving model...')
+                torch.save(self.model.state_dict(), save_dir)
+                best_loss = val_loss
+                early_stop_count = 0
+            else:
+                early_stop_count += 1
+                if early_stop_count >= patience:
+                    print('Stopping early.')
+                    break
+
+    def save(self, save_dir):
+        torch.save(self.model.state_dict(), save_dir)
+
+    def load(self, save_dir):
+        self.model.load_state_dict(torch.load(save_dir))
+
+    def predict(self, X_test):
+        # Preprocess test data
+        test_dataset = torch.utils.data.TensorDataset(torch.from_numpy(X_test))
+        test_dataloader = DataLoader(test_dataset, batch_size=1)
+
+        # Make predictions
+        self.model.eval()
+        predictions = []
+        with torch.no_grad():
+            for inputs in test_dataloader:
+                outputs = self.model(inputs[0])
+                predictions.append(outputs.numpy())
+                
+        return np.array(predictions).squeeze()

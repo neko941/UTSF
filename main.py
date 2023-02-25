@@ -39,7 +39,7 @@ from tensorflow.data import AUTOTUNE
 
 # performance metrics
 from utils.metrics import used_metric
-from utils.metrics import calculate_score
+# from utils.metrics import calculate_score
 
 # dataset slicing 
 from utils.dataset import slicing_window
@@ -79,7 +79,7 @@ from models.SVM import LinearSupportVectorMachinesRegression
 from models.RNN import VanillaRNN__Tensorflow    
 from models.RNN import BiRNN__Tensorflow
 from models.LSTM import VanillaLSTM__Tensorflow    
-from models.LSTM import BiLSTM__Tensorflow    
+from models.LSTM import BiLSTM__Tensorflow 
 from models.GRU import VanillaGRU__Tensorflow
 from models.GRU import BiGRU__Tensorflow
 from models.Concatenated import RNNcLSTM__Tensorflow
@@ -90,6 +90,7 @@ from models.Concatenated import LSTMcGRU__Tensorflow
 # from models.EncoderDecoder import CNNcLSTMcEncoderDecoder__Tensorflow
 """ 
 TODO:
+    from models.LSTM import ConvLSTM__Tensorflow   
     from models.TabTransformer import TabTransformer
     from models.NBeats import NBeats
     from models.LSTM import ConvLSTM__Tensorflow    
@@ -209,16 +210,18 @@ model_dict = [
     #     'model' : KNNImputer,
     #     'help' : ''
     # },{ 
-    #     'model' : VanillaRNN__Tensorflow,
-    #     'help' : '',
-    #     'type' : 'Tensorflow',
-    #     'units' : [128, 32]
-    # },{
-    #     'model' : BiRNN__Tensorflow,
-    #     'help' : '',
-    #     'type' : 'Tensorflow',
-    #     'units' : [128, 64, 32, 32]
-    # },{
+        'model' : VanillaRNN__Tensorflow,
+        'help' : '',
+        'type' : 'Tensorflow',
+        'units' : [128, 32],
+        'activations': ['tanh', 'snake_a1', 'snake_a1']
+    },{
+        'model' : BiRNN__Tensorflow,
+        'help' : '',
+        'type' : 'Tensorflow',
+        'units' : [128, 64, 32, 32],
+        'activations': ['tanh', 'tanh', 'tanh', 'relu', 'relu']
+    },{
         'model' : VanillaLSTM__Tensorflow,
         'help' : '',
         'type' : 'Tensorflow',
@@ -230,6 +233,12 @@ model_dict = [
         'type' : 'Tensorflow',
         'units' : [28, 64, 32, 32],
         'activations': ['tanh', 'tanh', 'tanh', 'relu', 'relu']
+    # },{
+    #     'model' : ConvLSTM__Tensorflow,
+    #     'help' : '',
+    #     'type' : 'Tensorflow',
+    #     'units' : [28, 64, 32, 32],
+    #     'activations': ['tanh', 'tanh', 'tanh', 'relu', 'relu']
     # },{
     #     'model' : VanillaGRU__Tensorflow,
     #     'help' : '',
@@ -485,7 +494,7 @@ def main(opt):
                                                                file_name=model.__class__.__name__)
             if weight is not None: model.load(weight)
             yhat = model.predict(X=X_test)
-            scores = calculate_score(y=y_test, yhat=yhat)
+            scores = model.score(y=y_test, yhat=yhat)
             # table.add_row(model.model.name, *scores)
             table.add_row(model.__class__.__name__, *scores)
         except Exception as e:
