@@ -35,7 +35,6 @@ from utils.general import yaml_load
 from utils.general import increment_path
 from utils.activations import get_custom_activations
 from tensorflow.random import set_seed 
-from tensorflow.data import AUTOTUNE
 
 # performance metrics
 from utils.metrics import used_metric
@@ -88,13 +87,14 @@ from models.Concatenated import LSTMcGRU__Tensorflow
 # from models.EncoderDecoder import EncoderDecoder__Tensorflow
 # from models.EncoderDecoder import BiEncoderDecoder__Tensorflow
 # from models.EncoderDecoder import CNNcLSTMcEncoderDecoder__Tensorflow
+
 """ 
 TODO:
+    from models.LSTNet import LSTNet__Tensorflow
     from models.LSTM import ConvLSTM__Tensorflow   
     from models.TabTransformer import TabTransformer
     from models.NBeats import NBeats
     from models.LSTM import ConvLSTM__Tensorflow    
-    from models.LSTNet import LSTNet__Pytorch
     from models.Averaging import StackingAveragedModels
     from models.Averaging import AveragingModels
 """
@@ -227,7 +227,14 @@ model_dict = [
         'type' : 'Tensorflow',
         'units' : [128, 32],
         'activations': ['tanh', 'snake_a1', 'snake_a1']
-    },{ 
+    },{
+    #     'model' : LSTNet__Tensorflow,
+    #     'help' : '',
+    #     'type' : 'Tensorflow',
+    #     'units' : [32, 32, 32, 32],
+    #     'activations': ['relu', 'relu', 'sigmoid', 'tanh', 'relu'],
+    #     'kernels' : [5, 1, 1]
+    # },{ 
         'model' : BiLSTM__Tensorflow,
         'help' : '',
         'type' : 'Tensorflow',
@@ -239,16 +246,18 @@ model_dict = [
     #     'type' : 'Tensorflow',
     #     'units' : [28, 64, 32, 32],
     #     'activations': ['tanh', 'tanh', 'tanh', 'relu', 'relu']
-    # },{
-    #     'model' : VanillaGRU__Tensorflow,
-    #     'help' : '',
-    #     'type' : 'Tensorflow',
-    #     'units' : [128, 32]
-    # },{
-    #     'model' : BiGRU__Tensorflow,
-    #     'help' : '',
-    #     'type' : 'Tensorflow',
-    #     'units' : [128, 64, 32, 32]
+    },{
+        'model' : VanillaGRU__Tensorflow,
+        'help' : '',
+        'type' : 'Tensorflow',
+        'units' : [128, 32],
+        'activations': ['tanh', 'relu', 'relu']
+    },{
+        'model' : BiGRU__Tensorflow,
+        'help' : '',
+        'type' : 'Tensorflow',
+        'units' : [128, 64, 32, 32],
+        'activations': ['tanh', 'tanh', 'tanh', 'relu', 'relu']
     # },{
     #     'model' : RNNcLSTM__Tensorflow,
     #     'help' : '',
@@ -483,7 +492,9 @@ def main(opt):
         model = item['model'](input_shape=X_train.shape[-2:], output_shape=opt.labelsz, seed=opt.seed,
                               config_path=item.get('config'), 
                               activations=item.get('activations'),
-                              units=item.get('units'), normalize_layer=norm)
+                              units=item.get('units'), 
+                              kernels=item.get('kernels'), 
+                              normalize_layer=norm)
         model.build()
         try:
             model.fit(patience=opt.patience, save_dir=save_dir, optimizer=opt.optimizer, loss=opt.loss, lr=opt.lr, epochs=opt.epochs, learning_rate=opt.lr, batchsz=opt.batchsz,

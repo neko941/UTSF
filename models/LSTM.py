@@ -23,22 +23,22 @@ class VanillaLSTM__Tensorflow(TensorflowModel):
         # Normalization
         if self.normalize_layer: self.model.add(self.normalize_layer)
         # LSTM Layer 1
-        self.model.add(LSTM(units=self.units[0],
+        self.model.add(LSTM(name='LSTM_layer',
+                            units=self.units[0],
                             kernel_initializer=GlorotUniform(seed=self.seed), 
-                            activation=self.activations[0],
-                            name='LSTM_layer'))
+                            activation=self.activations[0]))
         # FC Layer
-        self.model.add(Dense(units=self.units[1],
+        self.model.add(Dense(name='Fully_Connected_layer',
+                             units=self.units[1],
                              kernel_initializer=GlorotUniform(seed=self.seed),
-                             activation=self.activations[1],
-                             name='Fully_Connected_layer'))
+                             activation=self.activations[1]))
         # Output Layer
-        self.model.add(Dense(units=self.output_shape, 
+        self.model.add(Dense(name='Output_layer',
+                             units=self.output_shape, 
                              kernel_initializer=GlorotUniform(seed=self.seed),
-                             activation=self.activations[2],
-                             name='Output_layer'))
+                             activation=self.activations[2]))
 
-class VanillaLSTM__Tensorflow(PytorchModel):
+class VanillaLSTM__Pytorch(PytorchModel):
     def build(self):
         self.model = nn.Sequential(
             nn.LSTM(input_size=self.input_shape[1], hidden_size=self.units, batch_first=True),
@@ -53,34 +53,34 @@ class BiLSTM__Tensorflow(TensorflowModel):
         # Normalization
         if self.normalize_layer: self.model.add(self.normalize_layer)
         # BiLSTM Layer 1 
-        self.model.add(Bidirectional(LSTM(units=self.units[0], 
-                                          return_sequences=True,
-                                          kernel_initializer=GlorotUniform(seed=self.seed),
-                                          activation=self.activations[0]),
-                                     name='BiLSTM_layer_1'))
+        self.model.add(Bidirectional(name='BiLSTM_layer_1',
+                                     layer=LSTM(units=self.units[0],
+                                                return_sequences=True,
+                                                kernel_initializer=GlorotUniform(seed=self.seed),
+                                                activation=self.activations[0])))
         # BiLSTM Layer 2 
-        self.model.add(Bidirectional(LSTM(units=self.units[1], 
-                                          return_sequences=True,
-                                          kernel_initializer=GlorotUniform(seed=self.seed),
-                                          activation=self.activations[1]),
-                                     name='BiLSTM_layer_2'))
+        self.model.add(Bidirectional(name='BiLSTM_layer_2',
+                                     layer=LSTM(units=self.units[1],
+                                                return_sequences=True,
+                                                kernel_initializer=GlorotUniform(seed=self.seed),
+                                                activation=self.activations[1])))
         # BiLSTM Layer 3 
-        self.model.add(Bidirectional(LSTM(units=self.units[2], 
-                                          return_sequences=False,
-                                          kernel_initializer=GlorotUniform(seed=self.seed),
-                                          activation=self.activations[2]),
-                                     name='BiLSTM_layer_3'))
+        self.model.add(Bidirectional(name='BiLSTM_layer_3',
+                                     layer=LSTM(units=self.units[2],
+                                                return_sequences=False,
+                                                kernel_initializer=GlorotUniform(seed=self.seed),
+                                                activation=self.activations[2])))
         # FC Layer
-        self.model.add(Dense(units=self.units[3],
+        self.model.add(Dense(name='Fully_Connected_layer',
+                             units=self.units[3],
                              kernel_initializer=GlorotUniform(seed=self.seed),
-                             activation=self.activations[3],
-                             name='Fully_Connected_layer'))
+                             activation=self.activations[3]))
 
         # Output Layer
-        self.model.add(Dense(units=self.output_shape, 
+        self.model.add(Dense(name='Output_layer',
+                             units=self.output_shape, 
                              kernel_initializer=GlorotUniform(seed=self.seed),
-                             activation=self.activations[4],
-                             name='Output_layer'))
+                             activation=self.activations[4]))
         
 class ConvLSTM__Tensorflow(TensorflowModel):
     def body(self): 

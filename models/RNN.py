@@ -8,17 +8,21 @@ from keras.initializers import GlorotUniform
 
 class VanillaRNN__Tensorflow(TensorflowModel):
     def body(self):
+        # Normalization
         if self.normalize_layer: self.model.add(self.normalize_layer)
+
         # RNN Layer 1
         self.model.add(SimpleRNN(name='RNN_layer',
                                  units=self.units[0],
                                  kernel_initializer=GlorotUniform(seed=self.seed),  
                                  activation=self.activations[0]))
+        
         # FC Layer
         self.model.add(Dense(name='Fully_Connected_layer',
                              units=self.units[1],
                              kernel_initializer=GlorotUniform(seed=self.seed), 
                              activation=self.activations[1]))
+        
         # Output Layer
         self.model.add(Dense(name='Output_layer',
                              units=self.output_shape, 
