@@ -81,3 +81,40 @@ class DLinear(tf.keras.Model):
 
         x = seasonal_output + trend_output
         return tf.transpose(x, perm=[0,2,1]) # to [Batch, Output length, Channel]
+
+
+class NLinear(tf.keras.Model):
+    """
+    Normalization-Linear
+    """
+    def __init__(self, configs):
+        super(Model, self).__init__()
+        self.seq_len = configs.seq_len
+        self.pred_len = configs.pred_len
+        
+        # Use this line if you want to visualize the weights
+        # self.Linear.weights = (1/self.seq_len)*tf.ones([self.seq_len, self.pred_len])
+        self.channels = configs.enc_in
+        self.individual = configs.individual
+        if self.individual:
+            self.Linear = []
+            for i in range(self.channels):
+                self.Linear.append(tf.keras.layers.Dense(self.pred_len))
+        else:
+            self.Linear = tf.keras.layers.Dense(self.pred_len)
+
+    def call(self, x):
+        # x: [Batch, Input length, Channel]
+        seq_last = x[:,-1:,:]
+        x = x - seq_last
+        if self.individual:
+            output = tf.zeros([tf.shape(x)[0], self.pred_len, self.channels], dtype=x.dtype)
+            for i in range(self.channels):
+                output[:,:,i] = self.Linear[i](x[:,:,i])
+            x = tf.transpose(output, perm=[0, 2, 1])
+        else:
+            x = tf.transpose(x, perm=[0, 2, 1])
+            x = self.Linear(x)
+            x = tf.transpose(x, perm=[0, 2, 1])
+        x = x + seq_last
+        return x  # [Batch, Output length, Channel]
