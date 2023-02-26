@@ -130,16 +130,13 @@ class _NLinear(tf.keras.Model):
     #     return config
 
 from models.Base import TensorflowModel
+from keras.callbacks import CSVLogger
+from keras.callbacks import EarlyStopping
+from keras.callbacks import ReduceLROnPlateau
 class NLinear(TensorflowModel):
     def build(self):
         self.model = _NLinear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=7, individual=False)
         # self.model.summary()
-
-    def fit(self, X_train, y_train, X_val, y_val, patience, learning_rate, epochs, save_dir, batchsz, optimizer='Adam', loss='MSE', **kwargs):
-        self.model.compile(optimizer=self.function_dict[optimizer](learning_rate=learning_rate), loss=self.function_dict[loss]())
-        self.model.fit(self.preprocessing(x=X_train, y=y_train, batchsz=batchsz), 
-                       validation_data=self.preprocessing(x=X_val, y=y_val, batchsz=batchsz),
-                       epochs=epochs)
 
     def save(self, file_name:str, save_dir:str='.'):
         os.makedirs(name=save_dir, exist_ok=True)
@@ -148,6 +145,21 @@ class NLinear(TensorflowModel):
         # tf.saved_model.save(self.model, Path(file_path).absolute())
         self.model.save_weights(Path(file_path).absolute())
         return file_path
+
+    def callbacks(self, patience, save_dir, min_delta=0.001, epochs=10_000_000):
+        log_path = os.path.join(save_dir, 'logs')
+        os.makedirs(name=log_path, exist_ok=True)
+
+        return [EarlyStopping(monitor='val_loss', patience=patience, min_delta=min_delta), 
+                ReduceLROnPlateau(monitor='val_loss',
+                                    factor=0.1,
+                                    patience=patience / 5,
+                                    verbose=0,
+                                    mode='auto',
+                                    min_delta=min_delta * 10,
+                                    cooldown=0,
+                                    min_lr=0), 
+                CSVLogger(filename=os.path.join(log_path, f'{self.model.name}.csv'), separator=',', append=False)]  
 
     # def get_config(self):
     #     return super().get_config()
