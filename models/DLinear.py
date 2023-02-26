@@ -38,7 +38,7 @@ class DLinear(tf.keras.Model):
     Decomposition-Linear
     """
     def __init__(self, configs):
-        super(Model, self).__init__()
+        super(DLinear, self).__init__()
         self.seq_len = configs.seq_len
         self.pred_len = configs.pred_len
 
@@ -83,19 +83,19 @@ class DLinear(tf.keras.Model):
         return tf.transpose(x, perm=[0,2,1]) # to [Batch, Output length, Channel]
 
 
-class NLinear(tf.keras.Model):
+class _NLinear(tf.keras.Model):
     """
     Normalization-Linear
     """
-    def __init__(self, configs):
-        super(Model, self).__init__()
-        self.seq_len = configs.seq_len
-        self.pred_len = configs.pred_len
+    def __init__(self, seq_len, pred_len, enc_in, individual):
+        super(_NLinear, self).__init__()
+        self.seq_len = seq_len
+        self.pred_len = pred_len
         
         # Use this line if you want to visualize the weights
         # self.Linear.weights = (1/self.seq_len)*tf.ones([self.seq_len, self.pred_len])
-        self.channels = configs.enc_in
-        self.individual = configs.individual
+        self.channels = enc_in
+        self.individual = individual
         if self.individual:
             self.Linear = []
             for i in range(self.channels):
@@ -118,3 +118,16 @@ class NLinear(tf.keras.Model):
             x = tf.transpose(x, perm=[0, 2, 1])
         x = x + seq_last
         return x  # [Batch, Output length, Channel]
+
+from models.Base import TensorflowModel
+class NLinear(TensorflowModel):
+    def build(self):
+        self.model = _NLinear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=7, individual=False)
+        # self.model.summary()
+
+    def fit(self, X_train, y_train, X_val, y_val, patience, learning_rate, epochs, save_dir, batchsz, optimizer='Adam', loss='MSE', **kwargs):
+        self.model.compile(optimizer=self.function_dict[optimizer](learning_rate=learning_rate), loss=self.function_dict[loss]())
+        self.model.fit(self.preprocessing(x=X_train, y=y_train, batchsz=batchsz), 
+                       validation_data=self.preprocessing(x=X_val, y=y_val, batchsz=batchsz),
+                       epochs=epochs)
+
