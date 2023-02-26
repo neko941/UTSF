@@ -1,4 +1,6 @@
 import tensorflow as tf
+from pathlib import Path
+import os
 
 class MovingAvg(tf.keras.layers.Layer):
     """
@@ -119,6 +121,14 @@ class _NLinear(tf.keras.Model):
         x = x + seq_last
         return x  # [Batch, Output length, Channel]
 
+    # def get_config(self):
+    #     config = super().get_config()
+    #     config.update({'seq_len' : self.seq_len.numpy(),
+    #             'pred_len' : self.pred_len.numpy(),
+    #             'channels' : self.channels.numpy(),
+    #             'individual' : self.individual.numpy()})
+    #     return config
+
 from models.Base import TensorflowModel
 class NLinear(TensorflowModel):
     def build(self):
@@ -131,3 +141,13 @@ class NLinear(TensorflowModel):
                        validation_data=self.preprocessing(x=X_val, y=y_val, batchsz=batchsz),
                        epochs=epochs)
 
+    def save(self, file_name:str, save_dir:str='.'):
+        os.makedirs(name=save_dir, exist_ok=True)
+        file_path = os.path.join(save_dir, "ckpt")
+        # pickle.dump(self.model, open(Path(file_path).absolute(), "wb"))
+        # tf.saved_model.save(self.model, Path(file_path).absolute())
+        self.model.save_weights(Path(file_path).absolute())
+        return file_path
+
+    # def get_config(self):
+    #     return super().get_config()

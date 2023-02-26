@@ -31,7 +31,7 @@ metric_dict = {
     'RMSE' : RMSE, 
     'MAPE' : MAPE, 
     'SMAPE' : SMAPE,
-    'R2' : R2
+    # 'R2' : R2
 }
 
 def used_metric():
