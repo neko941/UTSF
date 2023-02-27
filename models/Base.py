@@ -47,19 +47,20 @@ class BaseModel:
     def predict(self, *inputs):
         raise NotImplementedError
 
-    def score(self, y, yhat):
+    def score(self, y, yhat, r):
         if len(yhat.shape) > 2: 
             nsamples, nx, ny = yhat.shape
             yhat = yhat.reshape((nsamples,nx*ny))
-        results = []
-        for metric, func in metric_dict.items():
-            result = func(y, yhat)
-            results.append(str(result))
+        if r != -1:
+            results = [str(np.round(np.float64(func(y, yhat)), r)) for metric, func in metric_dict.items()]
+        else:
+            results = [str(func(y, yhat)) for metric, func in metric_dict.items()]
         return results
 
 class MachineLearningModel(BaseModel):
     def __init__(self, config_path, **kwargs):
         self.config_path = config_path
+        self.is_classifier = False
     
     def build(self):
         pass
@@ -68,8 +69,12 @@ class MachineLearningModel(BaseModel):
         return [i.flatten() for i in x]
 
     def fit(self, X_train, y_train, **kwargs):
+        if self.is_classifier:
+            y_train = np.ravel([i.astype(int) for i in self.preprocessing(x=y_train)], order='C') 
+        else:
+            y_train = np.ravel(self.preprocessing(x=y_train), order='C')
         self.model.fit(X=self.preprocessing(x=X_train), 
-                       y=np.ravel(self.preprocessing(x=y_train), order='C'))
+                       y=y_train)
         # self.model.fit(self.preprocessing(x=X_train), self.preprocessing(x=y_train))
     
     def save(self, file_name:str, save_dir:str='.', extension:str='.pkl'):
@@ -83,7 +88,7 @@ class MachineLearningModel(BaseModel):
         self.model = pickle.load(open(weight, "rb"))
 
     def predict(self, X):
-        return self.model.predict(X=self.preprocessing(x=X))
+        return self.model.predict(self.preprocessing(x=X))
 
 class TensorflowModel(BaseModel):
     def __init__(self, input_shape, output_shape, units, activations, normalize_layer=None, seed=941, **kwargs):

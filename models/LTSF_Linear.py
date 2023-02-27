@@ -104,6 +104,7 @@ class _NLinear(tf.keras.Model):
                 self.Linear.append(tf.keras.layers.Dense(self.pred_len))
         else:
             self.Linear = tf.keras.layers.Dense(self.pred_len)
+        self.final_layer = tf.keras.layers.Dense(self.pred_len)
 
     def call(self, x):
         # x: [Batch, Input length, Channel]
@@ -119,7 +120,7 @@ class _NLinear(tf.keras.Model):
             x = self.Linear(x)
             x = tf.transpose(x, perm=[0, 2, 1])
         x = x + seq_last
-        return x  # [Batch, Output length, Channel]
+        return tf.squeeze(self.final_layer(x), axis=-1)  # [Batch, Output length, Channel]
 
     # def get_config(self):
     #     config = super().get_config()

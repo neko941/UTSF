@@ -51,7 +51,7 @@ from rich.terminal_theme import MONOKAI
 
 # machine learning models
 from sklearn.linear_model import ElasticNet
-from sklearn.linear_model import Lasso
+
 from sklearn.linear_model import LassoCV
 from sklearn.linear_model import Ridge
 from sklearn.linear_model import RidgeCV
@@ -61,19 +61,22 @@ from sklearn.linear_model import LarsCV
 from sklearn.linear_model import OrthogonalMatchingPursuit
 from sklearn.linear_model import OrthogonalMatchingPursuitCV
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.linear_model import LinearRegression
+
 from sklearn.linear_model import SGDRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.ensemble import GradientBoostingRegressor
 from lightgbm import LGBMRegressor
-from catboost import CatBoostRegressor
+
 # from sklearn.impute import KNNImputer
 
-from models.XGBoost import ExtremeGradientBoostingRegression
-from models.SVM import SupportVectorMachinesClassification
-from models.SVM import SupportVectorMachinesRegression
-from models.SVM import NuSupportVectorMachinesRegression
-from models.SVM import LinearSupportVectorMachinesRegression
+from models.MachineLearning import ExtremeGradientBoostingRegression
+from models.MachineLearning import SupportVectorMachinesClassification
+from models.MachineLearning import SupportVectorMachinesRegression
+from models.MachineLearning import NuSupportVectorMachinesRegression
+from models.MachineLearning import LinearSupportVectorMachinesRegression
+from models.MachineLearning import LinearRegressionWrapper
+from models.MachineLearning import LassoWrapper
+from models.MachineLearning import CatBoostRegression
 # deep learning models
 from models.RNN import VanillaRNN__Tensorflow    
 from models.RNN import BiRNN__Tensorflow
@@ -101,11 +104,12 @@ TODO:
 """
 
 model_dict = [
-    {
-    #     'name' : 'LinearRegression', 
-    #     'model' : LinearRegression,
-    #     'help' : ''
-    # },{
+    { 
+        'model' : LinearRegressionWrapper,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/LinearRegression.yaml'
+    },{
     #     'name' : 'ElasticNet', 
     #     'model' : ElasticNet,
     #     'help' : ''
@@ -114,10 +118,11 @@ model_dict = [
     #     'model' : SGDRegressor,
     #     'help' : ''
     # },{
-    #     'name' : 'Lasso', 
-    #     'model' : Lasso,
-    #     'help' : ''
-    # },{
+        'model' : LassoWrapper,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/Lasso.yaml'
+    },{
     #     'name' : 'LassoCV', 
     #     'model' : LassoCV,
     #     'help' : 'Lasso linear model with iterative fitting along a regularization path'
@@ -183,10 +188,11 @@ model_dict = [
     #     'model' : LGBMRegressor,
     #     'help' : ''
     # },{
-    #     'name' : 'CatBoost', 
-    #     'model' : CatBoostRegressor,
-    #     'help' : ''
-    # },{
+        'model' : CatBoostRegression,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/CatBoost.yaml'
+    },{
     #     'name' : 'RandomForest', 
     #     'model' : RandomForestRegressor,
     #     'help' : ''
@@ -215,7 +221,7 @@ model_dict = [
         'help' : '',
         'type' : 'Tensorflow',
         'units' : [128, 32],
-        'activations': ['tanh', 'snake_a1', 'snake_a1']
+        'activations': ['tanh', 'relu', 'relu']
     },{
         'model' : BiRNN__Tensorflow,
         'help' : '',
@@ -227,7 +233,7 @@ model_dict = [
         'help' : '',
         'type' : 'Tensorflow',
         'units' : [128, 32],
-        'activations': ['tanh', 'snake_a1', 'snake_a1']
+        'activations': ['tanh', None, 'relu']
     },{
     #     'model' : LSTNet__Tensorflow,
     #     'help' : '',
@@ -333,6 +339,7 @@ def parse_opt(known=False):
     parser.add_argument('--loss', type=str, choices=['MSE'], default='MSE', help='losses')
     # parser.add_argument('--activation', type=str, choices=['relu', 'xsinsquared', 'xsin', 'snake'], default='relu', help='Activatoin functions')
     parser.add_argument('--seed', type=int, default=941, help='Global training seed')
+    parser.add_argument('--round', type=int, default=4, help='Round decimals in results, -1 to disable')
 
     parser.add_argument('--AutoInterpolate', type=str, choices=['', 'forward', 'backward'], default='', help='')
     parser.add_argument('--CyclicalPattern', action='store_true', help='Add sin cos cyclical feature')
@@ -510,7 +517,7 @@ def main(opt):
                                                                file_name=model.__class__.__name__)
             if weight is not None: model.load(weight)
             yhat = model.predict(X=X_test)
-            scores = model.score(y=y_test, yhat=yhat)
+            scores = model.score(y=y_test, yhat=yhat, r=opt.round)
             # table.add_row(model.model.name, *scores)
             table.add_row(model.__class__.__name__, *scores)
         except Exception as e:

@@ -1,6 +1,9 @@
 import tensorflow as tf
 
 def EncoderDecoder__Tensorflow(input_shape, output_size, normalize_layer=None, seed=941):
+    """
+        https://github.com/davide-burba/forecasting_models/blob/master/python_models.ipynb
+    """
     model = tf.keras.Sequential(layers=None, name='EncoderDecoder__Tensorflow')
     model.add(tf.keras.Input(shape=input_shape, 
                              name='Input_layer'))

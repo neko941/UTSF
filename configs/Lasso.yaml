@@ -1,0 +1,46 @@
+# https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Lasso.html
+
+alpha: 1.0
+# description: 
+# default: 
+# options: 
+
+fit_intercept: True
+# description: 
+# default: 
+# options: 
+
+precompute: False
+# description: 
+# default: 
+# options: 
+
+copy_X: True
+# description: 
+# default: 
+# options: 
+
+max_iter: 2000
+# description: 
+# default: 1000
+# options: 
+
+tol: 0.0001
+# description: 
+# default: 
+# options: 
+
+warm_start: False
+# description: 
+# default: 
+# options: 
+
+random_state:
+# description: 
+# default: 
+# options: 
+
+selection: 'cyclic'
+# description: 
+# default: 
+# options: ['cyclic', 'random']
