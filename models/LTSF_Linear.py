@@ -93,11 +93,11 @@ class NLinear(tf.keras.Model):
         super(NLinear, self).__init__()
         self.seq_len = seq_len
         self.pred_len = pred_len
+        self.channels = enc_in
+        self.individual = individual
         
         # Use this line if you want to visualize the weights
         # self.Linear.weights = (1/self.seq_len)*tf.ones([self.seq_len, self.pred_len])
-        self.channels = enc_in
-        self.individual = individual
         if self.individual:
             self.Linear = []
             for i in range(self.channels):
@@ -130,18 +130,49 @@ class NLinear(tf.keras.Model):
     #             'individual' : self.individual.numpy()})
     #     return config
 
+class Linear(tf.keras.Model):
+    """
+    Just one Linear layer
+    """
+    def __init__(self, seq_len, pred_len, enc_in, individual):
+        super(Linear, self).__init__()
+        self.seq_len = seq_len
+        self.pred_len = pred_len
+        self.channels = enc_in
+        self.individual = individual
+            # Use this line if you want to visualize the weights
+        # self.Linear.weight = nn.Parameter((1/self.seq_len)*torch.ones([self.pred_len,self.seq_len]))
+        
+        if self.individual:
+            self.Linear = []
+            for i in range(self.channels):
+                self.Linear.append(tf.keras.layers.Dense(units=self.pred_len))
+        else:
+            self.Linear = tf.keras.layers.Dense(units=self.pred_len)
+        self.final_layer = tf.keras.layers.Dense(self.pred_len)
+
+    def call(self, x):
+        # x: [Batch, Input length, Channel]
+        if self.individual:
+            output = tf.zeros(shape=[x.shape[0], self.pred_len, x.shape[2]], dtype=x.dtype)
+            for i in range(self.channels):
+                output[:,:,i] = self.Linear[i](x[:,:,i])
+            x = output
+        else:
+            x = self.Linear(tf.transpose(x, perm=[0,2,1]))
+            x = tf.transpose(x, perm=[0,2,1])
+        return tf.squeeze(self.final_layer(x), axis=-1) # [Batch, Output length, Channel]
+
+
 from models.Base import TensorflowModel
 from keras.callbacks import CSVLogger
 from keras.callbacks import EarlyStopping
 from keras.callbacks import ReduceLROnPlateau
-class LTSF_NLinear__Tensorflow(TensorflowModel):
-    def build(self):
-        self.model = NLinear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=7, individual=False)
-        # self.model.summary()
 
+class LTSF_Linear_Base(TensorflowModel):
     def save(self, file_name:str, save_dir:str='.'):
         os.makedirs(name=save_dir, exist_ok=True)
-        file_path = os.path.join(save_dir, "ckpt")
+        file_path = os.path.join(save_dir, file_name, "ckpt")
         # pickle.dump(self.model, open(Path(file_path).absolute(), "wb"))
         # tf.saved_model.save(self.model, Path(file_path).absolute())
         self.model.save_weights(Path(file_path).absolute())
@@ -161,6 +192,16 @@ class LTSF_NLinear__Tensorflow(TensorflowModel):
                                     cooldown=0,
                                     min_lr=0), 
                 CSVLogger(filename=os.path.join(log_path, f'{self.model.name}.csv'), separator=',', append=False)]  
+
+class LTSF_Linear__Tensorflow(LTSF_Linear_Base):
+    def build(self):
+        self.model = Linear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=7, individual=False)
+
+class LTSF_NLinear__Tensorflow(LTSF_Linear_Base):
+    def build(self):
+        self.model = NLinear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=7, individual=False)
+
+    
 
     # def get_config(self):
     #     return super().get_config()

@@ -93,6 +93,7 @@ from models.GRU import BiGRU__Tensorflow
 from models.Concatenated import RNNcLSTM__Tensorflow
 from models.Concatenated import LSTMcGRU__Tensorflow
 from models.LTSF_Linear import LTSF_NLinear__Tensorflow
+from models.LTSF_Linear import LTSF_Linear__Tensorflow
 # from models.customized import GRUcLSTM__Tensorflow
 # from models.EncoderDecoder import EncoderDecoder__Tensorflow
 # from models.EncoderDecoder import BiEncoderDecoder__Tensorflow
@@ -242,19 +243,19 @@ model_dict = [
         'help' : '',
         'type' : 'Tensorflow',
         'units' : [128, 32],
-        'activations': ['tanh', 'relu', 'relu']
+        'activations': ['tanh', None, None]
     },{
         'model' : BiRNN__Tensorflow,
         'help' : '',
         'type' : 'Tensorflow',
         'units' : [128, 64, 32, 32],
-        'activations': ['tanh', 'tanh', 'tanh', 'relu', 'relu']
+        'activations': ['tanh', 'tanh', 'tanh', None, None]
     },{
         'model' : VanillaLSTM__Tensorflow,
         'help' : '',
         'type' : 'Tensorflow',
         'units' : [128, 32],
-        'activations': ['tanh', None, 'relu']
+        'activations': ['tanh', None, None]
     },{
     #     'model' : LSTNet__Tensorflow,
     #     'help' : '',
@@ -267,7 +268,7 @@ model_dict = [
         'help' : '',
         'type' : 'Tensorflow',
         'units' : [28, 64, 32, 32],
-        'activations': ['tanh', 'tanh', 'tanh', 'relu', 'relu']
+        'activations': ['tanh', 'tanh', 'tanh', None, None]
     # },{
     #     'model' : ConvLSTM__Tensorflow,
     #     'help' : '',
@@ -279,13 +280,17 @@ model_dict = [
         'help' : '',
         'type' : 'Tensorflow',
         'units' : [128, 32],
-        'activations': ['tanh', 'relu', 'relu']
+        'activations': ['tanh', None, None]
     },{
         'model' : BiGRU__Tensorflow,
         'help' : '',
         'type' : 'Tensorflow',
         'units' : [128, 64, 32, 32],
-        'activations': ['tanh', 'tanh', 'tanh', 'relu', 'relu']
+        'activations': ['tanh', 'tanh', 'tanh', None, None]
+    },{
+        'model' : LTSF_Linear__Tensorflow,
+        'help' : '',
+        'type' : 'Tensorflow',
     },{
         'model' : LTSF_NLinear__Tensorflow,
         'help' : '',
@@ -339,6 +344,8 @@ model_dict = [
     #     'help' : ''
     },
 ]
+for model in model_dict:
+    model.setdefault("activations", [None])
 
 def parse_opt(known=False):
     parser = argparse.ArgumentParser()
@@ -507,9 +514,10 @@ def main(opt):
     table = Table(title="[cyan]Results", 
                   show_header=True, 
                   header_style="bold magenta",
-                  box=rbox.ROUNDED)
+                  box=rbox.ROUNDED,
+                  show_lines=True)
     # table header
-    for name in ['Name', *list(used_metric())]: table.add_column(f'[green]{name}', justify='center')
+    for name in ['Name', 'Activations', *list(used_metric())]: table.add_column(f'[green]{name}', justify='center')
 
     # Normalization
     if opt.Normalization:
@@ -529,6 +537,7 @@ def main(opt):
                               kernels=item.get('kernels'), 
                               normalize_layer=norm)
         model.build()
+        activations = '\n'.join(['None' if a == None else a for a in item.get('activations')])
         try:
             model.fit(patience=opt.patience, save_dir=save_dir, optimizer=opt.optimizer, loss=opt.loss, lr=opt.lr, epochs=opt.epochs, learning_rate=opt.lr, batchsz=opt.batchsz,
                       X_train=X_train, y_train=y_train,
@@ -540,12 +549,13 @@ def main(opt):
             yhat = model.predict(X=X_test)
             scores = model.score(y=y_test, yhat=yhat, r=opt.round)
             # table.add_row(model.model.name, *scores)
-            table.add_row(model.__class__.__name__, *scores)
+            table.add_row(model.__class__.__name__, activations, *scores)
         except Exception as e:
             errors.append([model.__class__.__name__, str(e)])
-            table.add_row(model.__class__.__name__, *list('_' * len(used_metric())))
+            table.add_row(model.__class__.__name__, activations, *list('_' * len(used_metric())))
         console.print(table)
         console.save_svg(os.path.join(save_dir, 'results.svg'), theme=MONOKAI)
+    print(f'\n\n{opt}', end='\n\n\n\n')
     for error in errors: print(f'{error[0]}\n{error[1]}', end='\n\n\n====================================================================\n\n\n')
 
 def run(**kwargs):
