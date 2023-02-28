@@ -92,7 +92,7 @@ from models.GRU import VanillaGRU__Tensorflow
 from models.GRU import BiGRU__Tensorflow
 from models.Concatenated import RNNcLSTM__Tensorflow
 from models.Concatenated import LSTMcGRU__Tensorflow
-from models.LTSF_Linear import NLinear
+from models.LTSF_Linear import LTSF_NLinear__Tensorflow
 # from models.customized import GRUcLSTM__Tensorflow
 # from models.EncoderDecoder import EncoderDecoder__Tensorflow
 # from models.EncoderDecoder import BiEncoderDecoder__Tensorflow
@@ -287,7 +287,7 @@ model_dict = [
         'units' : [128, 64, 32, 32],
         'activations': ['tanh', 'tanh', 'tanh', 'relu', 'relu']
     },{
-        'model' : NLinear,
+        'model' : LTSF_NLinear__Tensorflow,
         'help' : '',
         'type' : 'Tensorflow',
     # },{

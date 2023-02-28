@@ -85,12 +85,12 @@ class DLinear(tf.keras.Model):
         return tf.transpose(x, perm=[0,2,1]) # to [Batch, Output length, Channel]
 
 
-class _NLinear(tf.keras.Model):
+class NLinear(tf.keras.Model):
     """
     Normalization-Linear
     """
     def __init__(self, seq_len, pred_len, enc_in, individual):
-        super(_NLinear, self).__init__()
+        super(NLinear, self).__init__()
         self.seq_len = seq_len
         self.pred_len = pred_len
         
@@ -134,9 +134,9 @@ from models.Base import TensorflowModel
 from keras.callbacks import CSVLogger
 from keras.callbacks import EarlyStopping
 from keras.callbacks import ReduceLROnPlateau
-class NLinear(TensorflowModel):
+class LTSF_NLinear__Tensorflow(TensorflowModel):
     def build(self):
-        self.model = _NLinear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=7, individual=False)
+        self.model = NLinear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=7, individual=False)
         # self.model.summary()
 
     def save(self, file_name:str, save_dir:str='.'):
