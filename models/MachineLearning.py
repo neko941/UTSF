@@ -16,6 +16,16 @@ class Lasso_(MachineLearningModel):
     def build(self):
         self.model = Lasso(**yaml_load(self.config_path))
 
+from sklearn.linear_model import LassoCV
+class LassoCrossValidation(MachineLearningModel):
+    def build(self):
+        self.model = LassoCV(**yaml_load(self.config_path))
+
+# from sklearn.linear_model import MultiTaskLasso
+# class MultiTaskLasso_(MachineLearningModel):
+#     def build(self):
+#         self.model = MultiTaskLasso(**yaml_load(self.config_path))
+
 from sklearn.svm import SVC
 class SupportVectorMachinesClassification(MachineLearningModel):
     def build(self):
@@ -42,6 +52,11 @@ class CatBoostRegression(MachineLearningModel):
     def build(self):
         self.model = CatBoostRegressor(**yaml_load(self.config_path))
 
+from lightgbm import LGBMRegressor
+class LightGBM(MachineLearningModel):
+    def build(self):
+        self.model = LGBMRegressor(**yaml_load(self.config_path))
+
 from sklearn.linear_model import Ridge
 class Ridge_(MachineLearningModel):
     def build(self):
@@ -57,3 +72,8 @@ from sklearn.linear_model import RidgeCV
 class RidgeCrossValidation(MachineLearningModel):
     def build(self):
         self.model = RidgeCV(**yaml_load(self.config_path))
+
+from sklearn.kernel_ridge import KernelRidge
+class KernelRidge_(MachineLearningModel):
+    def build(self):
+        self.model = KernelRidge(**yaml_load(self.config_path))

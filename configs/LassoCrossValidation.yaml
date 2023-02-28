@@ -1,0 +1,71 @@
+# https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LassoCV.html
+
+eps: 0.001
+# description:
+# default:
+# options:
+
+n_alphas: 100
+# description:
+# default:
+# options:
+
+alphas:
+# description:
+# default:
+# options:
+
+fit_intercept: True
+# description:
+# default:
+# options:
+
+precompute: "auto"
+# description:
+# default:
+# options:
+
+max_iter: 2000
+# description:
+# default: 1000
+# options:
+
+tol: 0.0001
+# description:
+# default:
+# options:
+
+copy_X: True
+# description:
+# default:
+# options:
+
+cv:
+# description:
+# default:
+# options:
+
+verbose: False
+# description:
+# default:
+# options:
+
+n_jobs:
+# description:
+# default:
+# options:
+
+positive: False
+# description:
+# default:
+# options:
+
+random_state:
+# description:
+# default:
+# options:
+
+selection: "cyclic"
+# description:
+# default: 'cyclic'
+# options: 'cyclic', 'random'

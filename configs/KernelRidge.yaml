@@ -1,0 +1,31 @@
+# https://scikit-learn.org/stable/modules/generated/sklearn.kernel_ridge.KernelRidge.html
+
+alpha: 1.0
+# description:
+# default:
+# options:
+
+kernel: "linear"
+# description:
+# default:
+# options:
+
+gamma:
+# description:
+# default:
+# options:
+
+degree: 3
+# description:
+# default:
+# options:
+
+coef0: 1
+# description:
+# default:
+# options:
+
+kernel_params:
+# description:
+# default:
+# options:

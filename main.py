@@ -52,9 +52,9 @@ from rich.terminal_theme import MONOKAI
 # machine learning models
 from sklearn.linear_model import ElasticNet
 
-from sklearn.linear_model import LassoCV
 
-from sklearn.kernel_ridge import KernelRidge
+
+
 from sklearn.linear_model import Lars
 from sklearn.linear_model import LarsCV
 from sklearn.linear_model import OrthogonalMatchingPursuit
@@ -64,7 +64,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import SGDRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.ensemble import GradientBoostingRegressor
-from lightgbm import LGBMRegressor
+
 
 # from sklearn.impute import KNNImputer
 
@@ -75,10 +75,14 @@ from models.MachineLearning import NuSupportVectorMachinesRegression
 from models.MachineLearning import LinearSupportVectorMachinesRegression
 from models.MachineLearning import LinearRegression_
 from models.MachineLearning import Lasso_
-from models.MachineLearning import CatBoostRegression
+from models.MachineLearning import LassoCrossValidation
+# from models.MachineLearning import MultiTaskLasso_
 from models.MachineLearning import Ridge_
 from models.MachineLearning import RidgeClassifier_
 from models.MachineLearning import RidgeCrossValidation
+from models.MachineLearning import KernelRidge_
+from models.MachineLearning import CatBoostRegression
+from models.MachineLearning import LightGBM
 # deep learning models
 from models.RNN import VanillaRNN__Tensorflow    
 from models.RNN import BiRNN__Tensorflow
@@ -125,9 +129,15 @@ model_dict = [
         'type' : 'MachineLearning',
         'config': 'configs/Lasso.yaml'
     },{
-    #     'name' : 'LassoCV', 
-    #     'model' : LassoCV,
-    #     'help' : 'Lasso linear model with iterative fitting along a regularization path'
+        'model' : LassoCrossValidation,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/LassoCrossValidation.yaml'
+    },{
+    #     'model' : MultiTaskLasso_,
+    #     'help' : '',
+    #     'type' : 'MachineLearning',
+    #     'config': 'configs/MultiTaskLasso.yaml'
     # },{
     #     'name' : 'LassoRobustScaler', 
     #     'model' : lambda: make_pipeline(RobustScaler(), Lasso(alpha=0.0005, random_state=1)),
@@ -148,10 +158,11 @@ model_dict = [
         'type' : 'MachineLearning',
         'config': 'configs/RidgeCrossValidation.yaml'
     },{
-    #     'name' : 'KernelRidge', 
-    #     'model' : KernelRidge,
-    #     'help' : ''
-    # },{
+        'model' : KernelRidge_,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/KernelRidge.yaml'
+    },{
     #     'name' : 'Lars', 
     #     'model' : Lars,
     #     'help' : ''
@@ -193,10 +204,11 @@ model_dict = [
         'type' : 'MachineLearning',
         'config': 'configs/LinearSVR.yaml'
     },{
-    #     'name' : 'LightGBM', 
-    #     'model' : LGBMRegressor,
-    #     'help' : ''
-    # },{
+        'model' : LightGBM,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/LightGBM.yaml'
+    },{
         'model' : CatBoostRegression,
         'help' : '',
         'type' : 'MachineLearning',
