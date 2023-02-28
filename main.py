@@ -53,8 +53,7 @@ from rich.terminal_theme import MONOKAI
 from sklearn.linear_model import ElasticNet
 
 from sklearn.linear_model import LassoCV
-from sklearn.linear_model import Ridge
-from sklearn.linear_model import RidgeCV
+
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.linear_model import Lars
 from sklearn.linear_model import LarsCV
@@ -74,9 +73,12 @@ from models.MachineLearning import SupportVectorMachinesClassification
 from models.MachineLearning import SupportVectorMachinesRegression
 from models.MachineLearning import NuSupportVectorMachinesRegression
 from models.MachineLearning import LinearSupportVectorMachinesRegression
-from models.MachineLearning import LinearRegressionWrapper
-from models.MachineLearning import LassoWrapper
+from models.MachineLearning import LinearRegression_
+from models.MachineLearning import Lasso_
 from models.MachineLearning import CatBoostRegression
+from models.MachineLearning import Ridge_
+from models.MachineLearning import RidgeClassifier_
+from models.MachineLearning import RidgeCrossValidation
 # deep learning models
 from models.RNN import VanillaRNN__Tensorflow    
 from models.RNN import BiRNN__Tensorflow
@@ -105,7 +107,7 @@ TODO:
 
 model_dict = [
     { 
-        'model' : LinearRegressionWrapper,
+        'model' : LinearRegression_,
         'help' : '',
         'type' : 'MachineLearning',
         'config': 'configs/LinearRegression.yaml'
@@ -118,7 +120,7 @@ model_dict = [
     #     'model' : SGDRegressor,
     #     'help' : ''
     # },{
-        'model' : LassoWrapper,
+        'model' : Lasso_,
         'help' : '',
         'type' : 'MachineLearning',
         'config': 'configs/Lasso.yaml'
@@ -131,14 +133,21 @@ model_dict = [
     #     'model' : lambda: make_pipeline(RobustScaler(), Lasso(alpha=0.0005, random_state=1)),
     #     'help' : ''
     # },{
-    #     'name' : 'Ridge', 
-    #     'model' : Ridge,
-    #     'help' : ''
-    # },{
-    #     'name' : 'RidgeCV', 
-    #     'model' : RidgeCV,
-    #     'help' : 'Ridge regression with built-in cross-validation'
-    # },{
+        'model' : Ridge_,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/Ridge.yaml'
+    },{
+        'model' : RidgeClassifier_,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/RidgeClassifier.yaml'
+    },{
+        'model' : RidgeCrossValidation,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/RidgeCrossValidation.yaml'
+    },{
     #     'name' : 'KernelRidge', 
     #     'model' : KernelRidge,
     #     'help' : ''
@@ -339,7 +348,7 @@ def parse_opt(known=False):
     parser.add_argument('--loss', type=str, choices=['MSE'], default='MSE', help='losses')
     # parser.add_argument('--activation', type=str, choices=['relu', 'xsinsquared', 'xsin', 'snake'], default='relu', help='Activatoin functions')
     parser.add_argument('--seed', type=int, default=941, help='Global training seed')
-    parser.add_argument('--round', type=int, default=4, help='Round decimals in results, -1 to disable')
+    parser.add_argument('--round', type=int, default=-1, help='Round decimals in results, -1 to disable')
 
     parser.add_argument('--AutoInterpolate', type=str, choices=['', 'forward', 'backward'], default='', help='')
     parser.add_argument('--CyclicalPattern', action='store_true', help='Add sin cos cyclical feature')

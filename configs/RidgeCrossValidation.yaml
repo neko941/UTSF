@@ -1,0 +1,39 @@
+# https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.RidgeCV.html
+
+alphas:
+  - 0.1
+  - 1.0
+  - 10.0
+# description:
+# default:
+# options:
+
+fit_intercept: True
+# description:
+# default:
+# options:
+
+scoring:
+# description:
+# default:
+# options:
+
+cv:
+# description:
+# default:
+# options:
+
+gcv_mode: "auto"
+# description:
+# default:
+# options: 'auto', 'svd', 'eigen'
+
+store_cv_values: False
+# description:
+# default:
+# options:
+
+alpha_per_target: False
+# description:
+# default:
+# options:

@@ -1,0 +1,41 @@
+# https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html
+
+alpha: 1.0
+# description:
+# default:
+# options:
+
+fit_intercept: True
+# description:
+# default:
+# options:
+
+copy_X: True
+# description:
+# default:
+# options:
+
+max_iter: 15000
+# description:
+# default:
+# options:
+
+tol: 0.0001
+# description:
+# default:
+# options:
+
+solver: "auto"
+# description:
+# default:
+# options: 'auto', 'svd', 'cholesky', 'lsqr', 'sparse_cg', 'sag', 'saga', 'lbfgs'
+
+positive: False
+# description:
+# default: False
+# options:
+
+random_state:
+# description:
+# default: None
+# options:

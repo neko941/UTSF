@@ -1,18 +1,18 @@
 from utils.general import yaml_load
 from models.Base import MachineLearningModel
-
 from xgboost import XGBRegressor
+
 class ExtremeGradientBoostingRegression(MachineLearningModel):
     def build(self):
         self.model = XGBRegressor(**yaml_load(self.config_path))
 
 from sklearn.linear_model import LinearRegression
-class LinearRegressionWrapper(MachineLearningModel):
+class LinearRegression_(MachineLearningModel):
     def build(self):
         self.model = LinearRegression(**yaml_load(self.config_path))
 
 from sklearn.linear_model import Lasso
-class LassoWrapper(MachineLearningModel):
+class Lasso_(MachineLearningModel):
     def build(self):
         self.model = Lasso(**yaml_load(self.config_path))
 
@@ -41,3 +41,19 @@ from catboost import CatBoostRegressor
 class CatBoostRegression(MachineLearningModel):
     def build(self):
         self.model = CatBoostRegressor(**yaml_load(self.config_path))
+
+from sklearn.linear_model import Ridge
+class Ridge_(MachineLearningModel):
+    def build(self):
+        self.model = Ridge(**yaml_load(self.config_path))
+
+from sklearn.linear_model import RidgeClassifier
+class RidgeClassifier_(MachineLearningModel):
+    def build(self):
+        self.is_classifier = True
+        self.model = RidgeClassifier(**yaml_load(self.config_path))
+
+from sklearn.linear_model import RidgeCV
+class RidgeCrossValidation(MachineLearningModel):
+    def build(self):
+        self.model = RidgeCV(**yaml_load(self.config_path))
