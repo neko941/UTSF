@@ -331,16 +331,18 @@ model_dict = [
         'model' : LTSF_NLinear__Tensorflow,
         'help' : '',
         'type' : 'Tensorflow',
-    # },{
-    #     'model' : RNNcLSTM__Tensorflow,
-    #     'help' : '',
-    #     'units' : [128, 64, 32],
-    #     'type' : 'Tensorflow'
-    # },{
-    #     'model' : LSTMcGRU__Tensorflow,
-    #     'help' : '',
-    #     'units' : [128, 64, 32],
-    #     'type' : 'Tensorflow'
+    },{
+        'model' : RNNcLSTM__Tensorflow,
+        'help' : '',
+        'units' : [128, 64, 32],
+        'type' : 'Tensorflow',
+        'activations': ['tanh', 'tanh', 'tanh', 'tanh', 'relu', None]
+    },{
+        'model' : LSTMcGRU__Tensorflow,
+        'help' : '',
+        'units' : [128, 64, 32],
+        'type' : 'Tensorflow',
+        'activations': ['tanh', 'tanh', 'tanh', 'tanh', 'relu', None]
     # },{
     #     'name' : 'ConvLSTM__Tensorflow', 
     #     'model' : ConvLSTM__Tensorflow,
@@ -408,6 +410,7 @@ def parse_opt(known=False):
     parser.add_argument('--AutoInterpolate', type=str, choices=['', 'forward', 'backward'], default='', help='')
     parser.add_argument('--CyclicalPattern', action='store_true', help='Add sin cos cyclical feature')
     parser.add_argument('--Normalization', action='store_true', help='')
+    # parser.add_argument('--DirAsFeature', type=int, defaut=0, help='')
 
     parser.add_argument('--all', action='store_true', help='Use all available models')
     parser.add_argument('--MachineLearning', action='store_true', help='')
