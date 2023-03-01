@@ -63,7 +63,7 @@ class Ridge_(MachineLearningModel):
         self.model = Ridge(**yaml_load(self.config_path))
 
 from sklearn.linear_model import RidgeClassifier
-class RidgeClassifier_(MachineLearningModel):
+class RidgeClassification(MachineLearningModel):
     def build(self):
         self.is_classifier = True
         self.model = RidgeClassifier(**yaml_load(self.config_path))
@@ -77,3 +77,59 @@ from sklearn.kernel_ridge import KernelRidge
 class KernelRidge_(MachineLearningModel):
     def build(self):
         self.model = KernelRidge(**yaml_load(self.config_path))
+
+
+from sklearn.ensemble import RandomForestRegressor
+class RandomForestRegression(MachineLearningModel):
+    def build(self):
+        self.model = RandomForestRegressor(**yaml_load(self.config_path))
+
+from sklearn.ensemble import RandomForestClassifier
+class RandomForestClassification(MachineLearningModel):
+    def build(self):
+        self.is_classifier = True
+        self.model = RandomForestClassifier(**yaml_load(self.config_path))
+
+from sklearn.ensemble import GradientBoostingRegressor
+class GradientBoostingRegression(MachineLearningModel):
+    def build(self):
+        self.model = GradientBoostingRegressor(**yaml_load(self.config_path))
+
+from sklearn.ensemble import GradientBoostingClassifier
+class GradientBoostingClassification(MachineLearningModel):
+    def build(self):
+        self.is_classifier = True
+        self.model = GradientBoostingClassifier(**yaml_load(self.config_path))
+
+from sklearn.ensemble import ExtraTreesRegressor
+class ExtraTreesRegression(MachineLearningModel):
+    def build(self):
+        self.model = ExtraTreesRegressor(**yaml_load(self.config_path))
+
+from sklearn.ensemble import ExtraTreesClassifier
+class ExtraTreesClassification(MachineLearningModel):
+    def build(self):
+        self.is_classifier = True
+        self.model = ExtraTreesClassifier(**yaml_load(self.config_path))
+
+from sklearn.ensemble import BaggingRegressor
+class BaggingRegression(MachineLearningModel):
+    def build(self):
+        self.model = BaggingRegressor(**yaml_load(self.config_path))
+
+from sklearn.ensemble import BaggingClassifier
+class BaggingClassification(MachineLearningModel):
+    def build(self):
+        self.is_classifier = True
+        self.model = BaggingClassifier(**yaml_load(self.config_path))
+
+from sklearn.ensemble import AdaBoostRegressor
+class AdaBoostRegression(MachineLearningModel):
+    def build(self):
+        self.model = AdaBoostRegressor(**yaml_load(self.config_path))
+
+from sklearn.ensemble import AdaBoostClassifier
+class AdaBoostClassification(MachineLearningModel):
+    def build(self):
+        self.is_classifier = True
+        self.model = AdaBoostClassifier(**yaml_load(self.config_path))

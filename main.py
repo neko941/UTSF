@@ -20,15 +20,6 @@ from keras.layers import Normalization
 from keras.optimizers import SGD
 from keras.optimizers import Adam
 
-# callback functions
-from keras.callbacks import CSVLogger
-from keras.callbacks import EarlyStopping
-from keras.callbacks import ModelCheckpoint
-from keras.callbacks import ReduceLROnPlateau
-
-# loss function
-from keras.losses import MeanSquaredError
-
 # general utils
 from utils.general import yaml_save
 from utils.general import yaml_load
@@ -51,19 +42,13 @@ from rich.terminal_theme import MONOKAI
 
 # machine learning models
 from sklearn.linear_model import ElasticNet
-
-
-
-
 from sklearn.linear_model import Lars
 from sklearn.linear_model import LarsCV
 from sklearn.linear_model import OrthogonalMatchingPursuit
 from sklearn.linear_model import OrthogonalMatchingPursuitCV
 from sklearn.tree import DecisionTreeClassifier
-
 from sklearn.linear_model import SGDRegressor
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.ensemble import GradientBoostingRegressor
+
 
 
 # from sklearn.impute import KNNImputer
@@ -76,13 +61,22 @@ from models.MachineLearning import LinearSupportVectorMachinesRegression
 from models.MachineLearning import LinearRegression_
 from models.MachineLearning import Lasso_
 from models.MachineLearning import LassoCrossValidation
-# from models.MachineLearning import MultiTaskLasso_
 from models.MachineLearning import Ridge_
-from models.MachineLearning import RidgeClassifier_
+from models.MachineLearning import RidgeClassification
 from models.MachineLearning import RidgeCrossValidation
 from models.MachineLearning import KernelRidge_
 from models.MachineLearning import CatBoostRegression
 from models.MachineLearning import LightGBM
+from models.MachineLearning import RandomForestRegression
+from models.MachineLearning import RandomForestClassification
+from models.MachineLearning import GradientBoostingRegression
+from models.MachineLearning import GradientBoostingClassification
+from models.MachineLearning import ExtraTreesRegression
+from models.MachineLearning import ExtraTreesClassification
+from models.MachineLearning import BaggingRegression
+from models.MachineLearning import BaggingClassification
+from models.MachineLearning import AdaBoostRegression
+from models.MachineLearning import AdaBoostClassification
 # deep learning models
 from models.RNN import VanillaRNN__Tensorflow    
 from models.RNN import BiRNN__Tensorflow
@@ -149,10 +143,10 @@ model_dict = [
         'type' : 'MachineLearning',
         'config': 'configs/Ridge.yaml'
     },{
-        'model' : RidgeClassifier_,
+        'model' : RidgeClassification,
         'help' : '',
         'type' : 'MachineLearning',
-        'config': 'configs/RidgeClassifier.yaml'
+        'config': 'configs/RidgeClassification.yaml'
     },{
         'model' : RidgeCrossValidation,
         'help' : '',
@@ -198,7 +192,7 @@ model_dict = [
         'model' : NuSupportVectorMachinesRegression,
         'help' : '',
         'type' : 'MachineLearning',
-        'config': 'configs/NuSVR.yaml'
+        'config': 'configs/NuSVR.yaml' #TODO: finish this file
     },{
         'model' : LinearSupportVectorMachinesRegression,
         'help' : '',
@@ -215,14 +209,56 @@ model_dict = [
         'type' : 'MachineLearning',
         'config': 'configs/CatBoost.yaml'
     },{
-    #     'name' : 'RandomForest', 
-    #     'model' : RandomForestRegressor,
-    #     'help' : ''
-    # },{
-    #     'name' : 'GradientBoosting', 
-    #     'model' : GradientBoostingRegressor,
-    #     'help' : ''
-    # },{
+        'model' : RandomForestRegression,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/RandomForestRegression.yaml' #TODO: finish this file
+    },{
+        'model' : RandomForestClassification,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/RandomForestClassification.yaml' #TODO: finish this file
+    },{
+        'model' : GradientBoostingRegression,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/GradientBoostingRegression.yaml' #TODO: finish this file
+    },{
+        'model' : GradientBoostingClassification,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/GradientBoostingClassification.yaml' #TODO: finish this file
+    },{
+        'model' : ExtraTreesRegression,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/ExtraTreesRegression.yaml' #TODO: finish this file
+    },{
+        'model' : ExtraTreesClassification,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/ExtraTreesClassification.yaml' #TODO: finish this file
+    },{
+        'model' : BaggingRegression,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/BaggingRegression.yaml' #TODO: finish this file
+    },{
+        'model' : BaggingClassification,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/BaggingClassification.yaml' #TODO: finish this file
+    },{
+        'model' : AdaBoostRegression,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/AdaBoostRegression.yaml' #TODO: finish this file
+    },{
+        'model' : AdaBoostClassification,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/AdaBoostClassification.yaml' #TODO: finish this file
+    },{
     #     'name' : 'StackingAveragedModels', 
     #     'model' : StackingAveragedModels,
     #     'help' : ''

@@ -6,6 +6,6 @@ nu: 0.5
 # options: range (0, 1]
 
 C: 1.0
-# description: Penalty parameter C of the error term.
-# default: 1.0
+# description:
+# default:
 # options:
