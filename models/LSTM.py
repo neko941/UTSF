@@ -1,12 +1,10 @@
 import numpy as np
-import tensorflow as tf
 
 from models.Base import TensorflowModel
 from models.Base import PytorchModel
 
 from utils.metrics import metric_dict
 
-from keras.models import Sequential
 
 from keras.layers import LSTM
 from keras.layers import Dense

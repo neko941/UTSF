@@ -41,18 +41,6 @@ from rich.console import Console
 from rich.terminal_theme import MONOKAI
 
 # machine learning models
-from sklearn.linear_model import ElasticNet
-from sklearn.linear_model import Lars
-from sklearn.linear_model import LarsCV
-from sklearn.linear_model import OrthogonalMatchingPursuit
-from sklearn.linear_model import OrthogonalMatchingPursuitCV
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.linear_model import SGDRegressor
-
-
-
-# from sklearn.impute import KNNImputer
-
 from models.MachineLearning import ExtremeGradientBoostingRegression
 from models.MachineLearning import SupportVectorMachinesClassification
 from models.MachineLearning import SupportVectorMachinesRegression
@@ -77,6 +65,7 @@ from models.MachineLearning import BaggingRegression
 from models.MachineLearning import BaggingClassification
 from models.MachineLearning import AdaBoostRegression
 from models.MachineLearning import AdaBoostClassification
+
 # deep learning models
 from models.RNN import VanillaRNN__Tensorflow    
 from models.RNN import BiRNN__Tensorflow
@@ -84,17 +73,27 @@ from models.LSTM import VanillaLSTM__Tensorflow
 from models.LSTM import BiLSTM__Tensorflow 
 from models.GRU import VanillaGRU__Tensorflow
 from models.GRU import BiGRU__Tensorflow
-from models.Concatenated import RNNcLSTM__Tensorflow
-from models.Concatenated import LSTMcGRU__Tensorflow
-from models.LTSF_Linear import LTSF_NLinear__Tensorflow
 from models.LTSF_Linear import LTSF_Linear__Tensorflow
-# from models.customized import GRUcLSTM__Tensorflow
-# from models.EncoderDecoder import EncoderDecoder__Tensorflow
-# from models.EncoderDecoder import BiEncoderDecoder__Tensorflow
-# from models.EncoderDecoder import CNNcLSTMcEncoderDecoder__Tensorflow
+from models.LTSF_Linear import LTSF_NLinear__Tensorflow
+from models.Concatenated import RNNcLSTM__Tensorflow
+from models.Concatenated import BiRNNcBiLSTM__Tensorflow
+from models.Concatenated import LSTMcGRU__Tensorflow
+from models.Concatenated import BiLSTMcBiGRU__Tensorflow
+from models.EncoderDecoder import EncoderDecoder__Tensorflow
+from models.EncoderDecoder import BiEncoderDecoder__Tensorflow
 
 """ 
 TODO:
+    from sklearn.linear_model import ElasticNet
+    from sklearn.linear_model import Lars
+    from sklearn.linear_model import LarsCV
+    from sklearn.linear_model import OrthogonalMatchingPursuit
+    from sklearn.linear_model import OrthogonalMatchingPursuitCV
+    from sklearn.tree import DecisionTreeClassifier
+    from sklearn.linear_model import SGDRegressor
+    from sklearn.impute import KNNImputer
+
+    from models.EncoderDecoder import CNNcLSTMcEncoderDecoder__Tensorflow
     from models.LSTNet import LSTNet__Tensorflow
     from models.LSTM import ConvLSTM__Tensorflow   
     from models.TabTransformer import TabTransformer
@@ -111,14 +110,6 @@ model_dict = [
         'type' : 'MachineLearning',
         'config': 'configs/LinearRegression.yaml'
     },{
-    #     'name' : 'ElasticNet', 
-    #     'model' : ElasticNet,
-    #     'help' : ''
-    # },{
-    #     'name' : 'SGDRegressor', 
-    #     'model' : SGDRegressor,
-    #     'help' : ''
-    # },{
         'model' : Lasso_,
         'help' : '',
         'type' : 'MachineLearning',
@@ -129,15 +120,6 @@ model_dict = [
         'type' : 'MachineLearning',
         'config': 'configs/LassoCrossValidation.yaml'
     },{
-    #     'model' : MultiTaskLasso_,
-    #     'help' : '',
-    #     'type' : 'MachineLearning',
-    #     'config': 'configs/MultiTaskLasso.yaml'
-    # },{
-    #     'name' : 'LassoRobustScaler', 
-    #     'model' : lambda: make_pipeline(RobustScaler(), Lasso(alpha=0.0005, random_state=1)),
-    #     'help' : ''
-    # },{
         'model' : Ridge_,
         'help' : '',
         'type' : 'MachineLearning',
@@ -158,22 +140,6 @@ model_dict = [
         'type' : 'MachineLearning',
         'config': 'configs/KernelRidge.yaml'
     },{
-    #     'name' : 'Lars', 
-    #     'model' : Lars,
-    #     'help' : ''
-    # },{
-    #     'name' : 'LarsCV', 
-    #     'model' : LarsCV,
-    #     'help' : ''
-    # },{
-    #     'name' : 'OrthogonalMatchingPursuit', 
-    #     'model' : OrthogonalMatchingPursuit,
-    #     'help' : ''
-    # },{
-    #     'name' : 'OrthogonalMatchingPursuitCV', 
-    #     'model' : OrthogonalMatchingPursuitCV,
-    #     'help' : ''
-    # },{
         'model' : ExtremeGradientBoostingRegression,
         'help' : '',
         'type' : 'MachineLearning',
@@ -259,22 +225,6 @@ model_dict = [
         'type' : 'MachineLearning',
         'config': 'configs/AdaBoostClassification.yaml' #TODO: finish this file
     },{
-    #     'name' : 'StackingAveragedModels', 
-    #     'model' : StackingAveragedModels,
-    #     'help' : ''
-    # },{
-    #     'name' : 'AveragingModels', 
-    #     'model' : AveragingModels,
-    #     'help' : ''
-    # },{
-    #     'name' : 'DecisionTree', 
-    #     'model' : DecisionTreeClassifier,
-    #     'help' : ''
-    # },{
-    #     'name' : 'KNNImputer', 
-    #     'model' : KNNImputer,
-    #     'help' : ''
-    # },{ 
         'model' : VanillaRNN__Tensorflow,
         'help' : '',
         'type' : 'Tensorflow',
@@ -292,25 +242,12 @@ model_dict = [
         'type' : 'Tensorflow',
         'units' : [128, 32],
         'activations': ['tanh', None, None]
-    },{
-    #     'model' : LSTNet__Tensorflow,
-    #     'help' : '',
-    #     'type' : 'Tensorflow',
-    #     'units' : [32, 32, 32, 32],
-    #     'activations': ['relu', 'relu', 'sigmoid', 'tanh', 'relu'],
-    #     'kernels' : [5, 1, 1]
-    # },{ 
+    },{ 
         'model' : BiLSTM__Tensorflow,
         'help' : '',
         'type' : 'Tensorflow',
         'units' : [28, 64, 32, 32],
         'activations': ['tanh', 'tanh', 'tanh', None, None]
-    # },{
-    #     'model' : ConvLSTM__Tensorflow,
-    #     'help' : '',
-    #     'type' : 'Tensorflow',
-    #     'units' : [28, 64, 32, 32],
-    #     'activations': ['tanh', 'tanh', 'tanh', 'relu', 'relu']
     },{
         'model' : VanillaGRU__Tensorflow,
         'help' : '',
@@ -336,50 +273,37 @@ model_dict = [
         'help' : '',
         'units' : [128, 64, 32],
         'type' : 'Tensorflow',
-        'activations': ['tanh', 'tanh', 'tanh', 'tanh', 'relu', None]
+        'activations': ['tanh', 'tanh', 'tanh', 'tanh', None, None]
+    },{
+        'model' : BiRNNcBiLSTM__Tensorflow,
+        'help' : '',
+        'units' : [128, 64, 32],
+        'type' : 'Tensorflow',
+        'activations': ['tanh', 'tanh', 'tanh', 'tanh', None, None]
     },{
         'model' : LSTMcGRU__Tensorflow,
         'help' : '',
         'units' : [128, 64, 32],
         'type' : 'Tensorflow',
-        'activations': ['tanh', 'tanh', 'tanh', 'tanh', 'relu', None]
-    # },{
-    #     'name' : 'ConvLSTM__Tensorflow', 
-    #     'model' : ConvLSTM__Tensorflow,
-    #     'help' : ''
-    # },{
-    #     'name' : 'EncoderDecoder__Tensorflow', 
-    #     'model' : EncoderDecoder__Tensorflow,
-    #     'help' : ''
-    # },{
-    #     'name' : 'BiEncoderDecoder__Tensorflow', 
-    #     'model' : BiEncoderDecoder__Tensorflow,
-    #     'help' : ''
-    # },{
-    #     'name' : 'CNNcLSTMcEncoderDecoder__Tensorflow', 
-    #     'model' : CNNcLSTMcEncoderDecoder__Tensorflow,
-    #     'help' : ''
-    # },{
-    #     'name' : 'NBeats', 
-    #     'model' : NBeats,
-    #     'help' : ''
-    # },{
-    #     'name' : 'TabTransformer', 
-    #     'model' : lambda: TabTransformer(numerical_features = NUMERIC_FEATURES,  # List with names of numeric features
-    #                                     categorical_features = CATEGORICAL_FEATURES, # List with names of categorical feature
-    #                                     categorical_lookup=category_prep_layers,   # Dict with StringLookup layers 
-    #                                     numerical_discretisers=None,  # None, we are simply passing the numeric features
-    #                                     embedding_dim=32,  # Dimensionality of embeddings
-    #                                     out_dim=1,  # Dimensionality of output (binary task)
-    #                                     out_activation='sigmoid',  # Activation of output layer
-    #                                     depth=4,  # Number of Transformer Block layers
-    #                                     heads=8,  # Number of attention heads in the Transformer Blocks
-    #                                     attn_dropout=0.1,  # Dropout rate in Transformer Blocks
-    #                                     ff_dropout=0.1,  # Dropout rate in the final MLP
-    #                                     mlp_hidden_factors=[2, 4],  # Factors by which we divide final embeddings for each layer
-    #                                     use_column_embedding=True,  # If we want to use column embeddings
-    #                                 ),
-    #     'help' : ''
+        'activations': ['tanh', 'tanh', 'tanh', 'tanh', None, None]
+    },{
+        'model' : BiLSTMcBiGRU__Tensorflow,
+        'help' : '',
+        'units' : [128, 64, 32],
+        'type' : 'Tensorflow',
+        'activations': ['tanh', 'tanh', 'tanh', 'tanh', None, None]
+    },{
+        'model' : EncoderDecoder__Tensorflow,
+        'help' : '',
+        'units' : [256, 128],
+        'type' : 'Tensorflow',
+        'activations': ['tanh', 'tanh', None]
+    },{
+        'model' : BiEncoderDecoder__Tensorflow,
+        'help' : '',
+        'units' : [256, 128],
+        'type' : 'Tensorflow',
+        'activations': ['tanh', 'tanh', None]
     },
 ]
 for model in model_dict:
