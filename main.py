@@ -81,6 +81,7 @@ from models.Concatenated import LSTMcGRU__Tensorflow
 from models.Concatenated import BiLSTMcBiGRU__Tensorflow
 from models.EncoderDecoder import EncoderDecoder__Tensorflow
 from models.EncoderDecoder import BiEncoderDecoder__Tensorflow
+from models.EncoderDecoder import CNNcLSTMcEncoderDecoder__Tensorflow
 
 """ 
 TODO:
@@ -304,6 +305,15 @@ model_dict = [
         'units' : [256, 128],
         'type' : 'Tensorflow',
         'activations': ['tanh', 'tanh', None]
+    },{
+        'model' : CNNcLSTMcEncoderDecoder__Tensorflow,
+        'help' : '',
+        'units' : [128, 64],
+        'filters' : [64, 64],
+        'kernels' : [3, 3],
+        'dropouts' : [0.1, 0.1, 0.1],
+        'type' : 'Tensorflow',
+        'activations': ['relu', 'relu', 'relu', 'relu']
     },
 ]
 for model in model_dict:
@@ -480,7 +490,8 @@ def main(opt):
                   box=rbox.ROUNDED,
                   show_lines=True)
     # table header
-    for name in ['Name', 'Activations', *list(used_metric())]: table.add_column(f'[green]{name}', justify='center')
+    # for name in ['Name', 'Activations', *list(used_metric())]: table.add_column(f'[green]{name}', justify='center')
+    for name in ['Name', *list(used_metric())]: table.add_column(f'[green]{name}', justify='center')
 
     # Normalization
     if opt.Normalization:
@@ -498,9 +509,11 @@ def main(opt):
                               activations=item.get('activations'),
                               units=item.get('units'), 
                               kernels=item.get('kernels'), 
+                              filters=item.get('filters'),
+                              dropouts=item.get('dropouts'),
                               normalize_layer=norm)
         model.build()
-        activations = '\n'.join(['None' if a == None else a for a in item.get('activations')])
+        # activations = '\n'.join(['None' if a == None else a for a in item.get('activations')])
         try:
             model.fit(patience=opt.patience, save_dir=save_dir, optimizer=opt.optimizer, loss=opt.loss, lr=opt.lr, epochs=opt.epochs, learning_rate=opt.lr, batchsz=opt.batchsz,
                       X_train=X_train, y_train=y_train,
@@ -512,10 +525,12 @@ def main(opt):
             yhat = model.predict(X=X_test)
             scores = model.score(y=y_test, yhat=yhat, r=opt.round)
             # table.add_row(model.model.name, *scores)
-            table.add_row(model.__class__.__name__, activations, *scores)
+            # table.add_row(model.__class__.__name__, activations, *scores)
+            table.add_row(model.__class__.__name__, *scores)
         except Exception as e:
             errors.append([model.__class__.__name__, str(e)])
-            table.add_row(model.__class__.__name__, activations, *list('_' * len(used_metric())))
+            # table.add_row(model.__class__.__name__, activations, *list('_' * len(used_metric())))
+            table.add_row(model.__class__.__name__, *list('_' * len(used_metric())))
         console.print(table)
         console.save_svg(os.path.join(save_dir, 'results.svg'), theme=MONOKAI)
     print(f'\n\n{opt}', end='\n\n\n\n')

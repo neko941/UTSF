@@ -91,7 +91,7 @@ class MachineLearningModel(BaseModel):
         return self.model.predict(self.preprocessing(x=X))
 
 class TensorflowModel(BaseModel):
-    def __init__(self, input_shape, output_shape, units, activations, normalize_layer=None, seed=941, **kwargs):
+    def __init__(self, input_shape, output_shape, units, activations, dropouts, normalize_layer=None, seed=941, **kwargs):
         self.function_dict = {
             'Adam' : Adam,
             'MSE' : MeanSquaredError,
@@ -104,6 +104,7 @@ class TensorflowModel(BaseModel):
         self.output_shape = output_shape
         self.units = units
         self.activations = activations
+        self.dropouts = dropouts
 
     def callbacks(self, patience, save_dir, min_delta=0.001, epochs=10_000_000):
         weight_path = os.path.join(save_dir, 'weights')
