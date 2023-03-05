@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 import torch
-# import random
+import random
 from keras.layers import Normalization
 
 # optimizers
@@ -78,6 +78,7 @@ from models.GRU import VanillaGRU__Tensorflow
 from models.GRU import BiGRU__Tensorflow
 from models.LTSF_Linear import LTSF_Linear__Tensorflow
 from models.LTSF_Linear import LTSF_NLinear__Tensorflow
+from models.LTSF_Linear import LTSF_DLinear__Tensorflow
 from models.Concatenated import RNNcLSTM__Tensorflow
 from models.Concatenated import BiRNNcBiLSTM__Tensorflow
 from models.Concatenated import LSTMcGRU__Tensorflow
@@ -277,6 +278,10 @@ model_dict = [
         'help' : '',
         'type' : 'Tensorflow',
     },{
+        'model' : LTSF_DLinear__Tensorflow,
+        'help' : '',
+        'type' : 'Tensorflow',
+    },{
         'model' : RNNcLSTM__Tensorflow,
         'help' : '',
         'units' : [128, 64, 32],
@@ -390,8 +395,8 @@ def main(opt):
         https://pytorch.org/docs/stable/notes/randomness.html
     """
     set_seed(opt.seed)
-    # random.seed(opt.seed)
-    # np.random.seed(opt.seed)
+    random.seed(opt.seed)
+    np.random.seed(opt.seed)
     torch.manual_seed(opt.seed)
     torch.cuda.manual_seed(opt.seed)
     torch.cuda.manual_seed_all(opt.seed)  # for Multi-GPU, exception safe
@@ -432,10 +437,10 @@ def main(opt):
         # auto fill missing data
         if opt.AutoInterpolate != '':
             df = pd.merge(df,
-                     pd.DataFrame(pd.date_range(min(df[data['date']]), max(df[data['date']])), columns=[data['date']]),
-                     how='right',
-                     left_on=[data['date']],
-                     right_on = [data['date']])
+                          pd.DataFrame(pd.date_range(min(df[data['date']]), max(df[data['date']])), columns=[data['date']]),
+                          how='right',
+                          left_on=[data['date']],
+                          right_on = [data['date']])
             df.fillna(method=f'{list(opt.AutoInterpolate)[0].lower()}fill', inplace=True)
 
         # sort data by date

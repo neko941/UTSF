@@ -48,6 +48,7 @@ class BaseModel:
         raise NotImplementedError
 
     def score(self, y, yhat, r):
+        # print(y.shape, yhat.shape)
         if len(yhat.shape) > 2: 
             nsamples, nx, ny = yhat.shape
             yhat = yhat.reshape((nsamples,nx*ny))
@@ -113,11 +114,11 @@ class TensorflowModel(BaseModel):
         os.makedirs(name=log_path, exist_ok=True)
 
         return [EarlyStopping(monitor='val_loss', patience=patience, min_delta=min_delta), 
-                ModelCheckpoint(filepath=os.path.join(weight_path, f"{self.model.name}_best.h5"),
+                ModelCheckpoint(filepath=os.path.join(weight_path, f"{self.__class__.__name__}_best.h5"),
                                 save_best_only=True,
                                 save_weights_only=False,
                                 verbose=0), 
-                ModelCheckpoint(filepath=os.path.join(weight_path, f"{self.model.name}_last.h5"),
+                ModelCheckpoint(filepath=os.path.join(weight_path, f"{self.__class__.__name__}_last.h5"),
                                 save_best_only=False,
                                 save_weights_only=False,
                                 verbose=0),
@@ -129,7 +130,7 @@ class TensorflowModel(BaseModel):
                                     min_delta=min_delta * 10,
                                     cooldown=0,
                                     min_lr=0), 
-                CSVLogger(filename=os.path.join(log_path, f'{self.model.name}.csv'), separator=',', append=False)]  
+                CSVLogger(filename=os.path.join(log_path, f'{self.__class__.__name__}.csv'), separator=',', append=False)]  
         
     def preprocessing(self, x, y, batchsz):
         return tf.data.Dataset.from_tensor_slices((x, y)).batch(batchsz).cache().prefetch(buffer_size=AUTOTUNE)
