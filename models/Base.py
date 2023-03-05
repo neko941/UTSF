@@ -52,9 +52,9 @@ class BaseModel:
             nsamples, nx, ny = yhat.shape
             yhat = yhat.reshape((nsamples,nx*ny))
         if r != -1:
-            results = [str(np.round(np.float64(func(y, yhat)), r)) for metric, func in metric_dict.items()]
+            results = [str(np.round(np.float64(metric_dict[key](y, yhat)), r)) for key in metric_dict.keys()]
         else:
-            results = [str(func(y, yhat)) for metric, func in metric_dict.items()]
+            results = [str(metric_dict[key](y, yhat)) for key in metric_dict.keys()]
         return results
 
 class MachineLearningModel(BaseModel):

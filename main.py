@@ -8,6 +8,7 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))  # add ROOT to PATH
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
+import time
 import argparse
 import numpy as np
 import pandas as pd
@@ -24,6 +25,7 @@ from keras.optimizers import Adam
 from utils.general import yaml_save
 from utils.general import yaml_load
 from utils.general import increment_path
+from utils.general import convert_seconds
 from utils.activations import get_custom_activations
 from tensorflow.random import set_seed 
 
@@ -71,6 +73,7 @@ from models.RNN import VanillaRNN__Tensorflow
 from models.RNN import BiRNN__Tensorflow
 from models.LSTM import VanillaLSTM__Tensorflow    
 from models.LSTM import BiLSTM__Tensorflow 
+from models.LSTM import ConvLSTM__Tensorflow   
 from models.GRU import VanillaGRU__Tensorflow
 from models.GRU import BiGRU__Tensorflow
 from models.LTSF_Linear import LTSF_Linear__Tensorflow
@@ -96,10 +99,8 @@ TODO:
 
     from models.EncoderDecoder import CNNcLSTMcEncoderDecoder__Tensorflow
     from models.LSTNet import LSTNet__Tensorflow
-    from models.LSTM import ConvLSTM__Tensorflow   
     from models.TabTransformer import TabTransformer
     from models.NBeats import NBeats
-    from models.LSTM import ConvLSTM__Tensorflow    
     from models.Averaging import StackingAveragedModels
     from models.Averaging import AveragingModels
 """
@@ -249,7 +250,13 @@ model_dict = [
         'type' : 'Tensorflow',
         'units' : [28, 64, 32, 32],
         'activations': ['tanh', 'tanh', 'tanh', None, None]
-    },{
+    },{ 
+    #     'model' : ConvLSTM__Tensorflow,
+    #     'help' : '',
+    #     'type' : 'Tensorflow',
+    #     'units' : [28, 64, 32, 32],
+    #     'activations': ['tanh', 'tanh', 'tanh', None, None]
+    # },{
         'model' : VanillaGRU__Tensorflow,
         'help' : '',
         'type' : 'Tensorflow',
@@ -491,7 +498,7 @@ def main(opt):
                   show_lines=True)
     # table header
     # for name in ['Name', 'Activations', *list(used_metric())]: table.add_column(f'[green]{name}', justify='center')
-    for name in ['Name', *list(used_metric())]: table.add_column(f'[green]{name}', justify='center')
+    for name in ['Name', 'Time', *list(used_metric())]: table.add_column(f'[green]{name}', justify='center')
 
     # Normalization
     if opt.Normalization:
@@ -503,6 +510,7 @@ def main(opt):
     errors = []
     get_custom_activations()
     for item in model_dict:
+        start = time.time()
         if not vars(opt)[f'{item["model"].__name__}']: continue
         model = item['model'](input_shape=X_train.shape[-2:], output_shape=opt.labelsz, seed=opt.seed,
                               config_path=item.get('config'), 
@@ -526,11 +534,11 @@ def main(opt):
             scores = model.score(y=y_test, yhat=yhat, r=opt.round)
             # table.add_row(model.model.name, *scores)
             # table.add_row(model.__class__.__name__, activations, *scores)
-            table.add_row(model.__class__.__name__, *scores)
+            table.add_row(model.__class__.__name__, convert_seconds(time.time()-start), *scores)
         except Exception as e:
             errors.append([model.__class__.__name__, str(e)])
             # table.add_row(model.__class__.__name__, activations, *list('_' * len(used_metric())))
-            table.add_row(model.__class__.__name__, *list('_' * len(used_metric())))
+            table.add_row(model.__class__.__name__, convert_seconds(time.time()-start), *list('_' * len(used_metric())))
         console.print(table)
         console.save_svg(os.path.join(save_dir, 'results.svg'), theme=MONOKAI)
     print(f'\n\n{opt}', end='\n\n\n\n')

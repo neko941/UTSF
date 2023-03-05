@@ -30,6 +30,21 @@ def increment_path(path, overwrite=False, sep='', mkdir=False):
 
     return path
 
+def convert_seconds(seconds):
+    hours = int(seconds // 3600)
+    minutes = int((seconds % 3600) // 60)
+    seconds = round(seconds % 60)
+    
+    time_units = []
+    if hours > 0:
+        time_units.append(f"{hours}h")
+    if minutes > 0:
+        time_units.append(f"{minutes}m")
+    if seconds > 0:
+        time_units.append(f"{seconds}s")
+    
+    return "".join(time_units)
+
 # def display(history, save_name):
 #     fig, ax = plt.subplots(1, 2, figsize=(10, 3))
 #     ax = ax.ravel()

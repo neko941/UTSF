@@ -9,6 +9,7 @@ from utils.metrics import metric_dict
 from keras.layers import LSTM
 from keras.layers import Dense
 from keras.layers import Conv3D
+from keras.layers import Flatten
 from keras.layers import ConvLSTM2D
 from keras.layers import Bidirectional
 from keras.layers import BatchNormalization
@@ -91,6 +92,10 @@ class ConvLSTM__Tensorflow(TensorflowModel):
         self.model.add(ConvLSTM2D(filters=40, kernel_size=(3, 3), padding='same', return_sequences=True))
         self.model.add(BatchNormalization())
         self.model.add(Conv3D(filters=self.output_shape, kernel_size=(3, 3, 3), activation='sigmoid', padding='same', data_format='channels_last'))
+        # self.model.add(Flatten())
+        # self.model.add(Dense(name='Output_layer',
+        #                      units=self.output_shape, 
+        #                      kernel_initializer=GlorotUniform(seed=self.seed)))
         
     def fit(self, X_train, y_train, X_val, y_val, patience, learning_rate, epochs, save_dir, batchsz, optimizer='Adam', loss='MSE', **kwargs):
         if self.model == None:
@@ -110,10 +115,11 @@ class ConvLSTM__Tensorflow(TensorflowModel):
     def predict(self, X):
         return self.model.predict(np.array(X)[:,:, np.newaxis, np.newaxis])
 
-    def score(self, y, yhat):
+    def score(self, y, yhat, r):
         y = np.array(y)[:,:, np.newaxis, np.newaxis]
-        results = []
-        for metric, func in metric_dict.items():
-            result = func(y, yhat)
-            results.append(str(result))
+        if r != -1:
+            results = [str(np.round(np.float64(metric_dict[key](y, yhat)), r)) for key in metric_dict.keys()]
+        else:
+            results = [str(metric_dict[key](y, yhat)) for key in metric_dict.keys()]
+        return results
         return results
