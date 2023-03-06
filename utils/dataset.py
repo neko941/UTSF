@@ -1,4 +1,26 @@
+import os
 import numpy as np
+import pandas as pd
+
+def ReadFileAddFetures(csvs, DirAsFeature, ColName):
+    # path = os.path.abspath(filename)
+    # features = [int(p) if p.isdigit() else p for p in path.split(os.sep)[-DirAsFeature-1:-1]]
+    # print(features)
+    # df = pd.read_csv(path)
+    # for idx, f in enumerate(features): df[f'Dir{idx}'] = f
+    # print(df)
+    if DirAsFeature == 0: df = pd.concat([pd.read_csv(filename) for filename in csvs], axis=0, ignore_index=True)
+    else:
+        dfs = []
+        for csv in csvs:
+            path = os.path.abspath(csv)
+            features = [int(p) if p.isdigit() else p for p in path.split(os.sep)[-DirAsFeature-1:-1]]
+            df = pd.read_csv(path)
+            for idx, f in enumerate(features):
+                df[f'{ColName}{idx}'] = f
+            dfs.append(df)
+        df = pd.concat(dfs, axis=0, ignore_index=True)
+    return df
 
 # Khai báo hàm Windowing (dùng để tạo các cặp X, y cho time series data)
 def slicing_window(df, df_start_idx, df_end_idx, input_size, label_size, offset, label_name):
@@ -30,3 +52,5 @@ def slicing_window(df, df_start_idx, df_end_idx, input_size, label_size, offset,
     labels = np.array(labels)
 
     return features, labels
+
+# def slicing_window(df, df_start_idx, df_end_idx, input_size, label_size, offset, label_name):

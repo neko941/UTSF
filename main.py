@@ -35,6 +35,7 @@ from utils.metrics import used_metric
 
 # dataset slicing 
 from utils.dataset import slicing_window
+from utils.dataset import ReadFileAddFetures
 
 # display results
 from rich import box as rbox
@@ -86,6 +87,7 @@ from models.Concatenated import BiLSTMcBiGRU__Tensorflow
 from models.EncoderDecoder import EncoderDecoder__Tensorflow
 from models.EncoderDecoder import BiEncoderDecoder__Tensorflow
 from models.EncoderDecoder import CNNcLSTMcEncoderDecoder__Tensorflow
+from models.LSTNet import LSTNet__TensorFlow
 
 """ 
 TODO:
@@ -326,6 +328,14 @@ model_dict = [
         'dropouts' : [0.1, 0.1, 0.1],
         'type' : 'Tensorflow',
         'activations': ['relu', 'relu', 'relu', 'relu']
+    # },{
+    #     'model' : LSTNet__TensorFlow,
+    #     'help' : '',
+    #     'filters' : [100],
+    #     'kernels' : [3],
+    #     'dropouts' : [0, 0, 0],
+    #     'type' : 'Tensorflow',
+    #     # 'activations': ['relu', 'relu', 'relu', 'relu']
     },
 ]
 for model in model_dict:
@@ -356,7 +366,9 @@ def parse_opt(known=False):
     parser.add_argument('--AutoInterpolate', type=str, choices=['', 'forward', 'backward'], default='', help='')
     parser.add_argument('--CyclicalPattern', action='store_true', help='Add sin cos cyclical feature')
     parser.add_argument('--Normalization', action='store_true', help='')
-    # parser.add_argument('--DirAsFeature', type=int, defaut=0, help='')
+    parser.add_argument('--DirAsFeature', type=int, default=0, help='')
+    parser.add_argument('--DirFeatureName', type=str, default='dir', help='')
+    parser.add_argument('--SplitDirFeature', type=int, default=0, help='')
 
     parser.add_argument('--all', action='store_true', help='Use all available models')
     parser.add_argument('--MachineLearning', action='store_true', help='')
@@ -418,10 +430,10 @@ def main(opt):
                     if file.endswith(extensions): csvs.append(os.path.join(root, file))
         if i.endswith(extensions) and os.path.exists(i): csvs.append(i)
     assert len(csvs) > 0, 'No csv file(s)'
-    df = pd.read_csv(csvs[0])
-    for i in csvs[1:]: df = pd.concat([df, pd.read_csv(i)])
-    df.reset_index(drop=True, inplace=True)
-
+    df = ReadFileAddFetures(csvs=csvs, 
+                            DirAsFeature=opt.DirAsFeature,
+                            ColName=opt.DirFeatureName)
+    
     """ Data preprocessing """
     if data['date'] is not None:
         # get used cols
@@ -524,6 +536,7 @@ def main(opt):
                               kernels=item.get('kernels'), 
                               filters=item.get('filters'),
                               dropouts=item.get('dropouts'),
+                              lag=opt.inputsz,
                               normalize_layer=norm)
         model.build()
         # activations = '\n'.join(['None' if a == None else a for a in item.get('activations')])
