@@ -9,6 +9,7 @@ def ReadFileAddFetures(csvs, DirAsFeature, ColName):
     # df = pd.read_csv(path)
     # for idx, f in enumerate(features): df[f'Dir{idx}'] = f
     # print(df)
+    dir_features = []
     if DirAsFeature == 0: df = pd.concat([pd.read_csv(filename) for filename in csvs], axis=0, ignore_index=True)
     else:
         dfs = []
@@ -18,11 +19,12 @@ def ReadFileAddFetures(csvs, DirAsFeature, ColName):
             df = pd.read_csv(path)
             for idx, f in enumerate(features):
                 df[f'{ColName}{idx}'] = f
+            dir_features.append(f'{ColName}{idx}')
             dfs.append(df)
         df = pd.concat(dfs, axis=0, ignore_index=True)
-    return df
+    return df, list(set(dir_features))
 
-# Khai báo hàm Windowing (dùng để tạo các cặp X, y cho time series data)
+# # Khai báo hàm Windowing (dùng để tạo các cặp X, y cho time series data)
 def slicing_window(df, df_start_idx, df_end_idx, input_size, label_size, offset, label_name):
     features = [] # Khai báo list dùng để lưu trữ các X
     labels = [] # Khai báo list dùng để lưu trữ các y
@@ -53,4 +55,27 @@ def slicing_window(df, df_start_idx, df_end_idx, input_size, label_size, offset,
 
     return features, labels
 
-# def slicing_window(df, df_start_idx, df_end_idx, input_size, label_size, offset, label_name):
+def _slicing_window(df, df_start_idx, df_end_idx, input_size, label_size, offset, label_name):
+    features = [] 
+    labels = []
+    if df_end_idx == None:
+        df_end_idx = len(df) - label_size - offset
+    df_start_idx = df_start_idx + input_size + offset
+    for idx in range(df_start_idx, df_end_idx):
+        feature_start_idx = idx - input_size - offset
+        feature_end_idx = feature_start_idx + input_size
+
+        label_start_idx = idx - 1
+        label_end_idx = label_start_idx + label_size
+
+        feature = df[feature_start_idx:feature_end_idx] # Lấy X
+        label = df[label_name][label_start_idx:label_end_idx] # Lấy y
+
+        features.append(feature) 
+        labels.append(label)
+    features = np.array(features)
+    labels = np.array(labels)
+
+    return features, labels
+
+# def slicing_window(df, ratio, input_size, label_size, offset, label_name):

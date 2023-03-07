@@ -362,6 +362,7 @@ def parse_opt(known=False):
     # parser.add_argument('--activation', type=str, choices=['relu', 'xsinsquared', 'xsin', 'snake'], default='relu', help='Activatoin functions')
     parser.add_argument('--seed', type=int, default=941, help='Global training seed')
     parser.add_argument('--round', type=int, default=-1, help='Round decimals in results, -1 to disable')
+    parser.add_argument('--individual', action='store_true', help='for LTSF Linear models')
 
     parser.add_argument('--AutoInterpolate', type=str, choices=['', 'forward', 'backward'], default='', help='')
     parser.add_argument('--CyclicalPattern', action='store_true', help='Add sin cos cyclical feature')
@@ -416,7 +417,7 @@ def main(opt):
     """ Read data config """
     data = yaml_load(opt.source)
     if data['features'] is None: 
-        opt.CyclicalPattern = True
+        # opt.CyclicalPattern = True
         data['features'] = []
 
     """ Get all files with given extensions and read """
@@ -430,10 +431,11 @@ def main(opt):
                     if file.endswith(extensions): csvs.append(os.path.join(root, file))
         if i.endswith(extensions) and os.path.exists(i): csvs.append(i)
     assert len(csvs) > 0, 'No csv file(s)'
-    df = ReadFileAddFetures(csvs=csvs, 
-                            DirAsFeature=opt.DirAsFeature,
-                            ColName=opt.DirFeatureName)
-    
+    df, dir_feature = ReadFileAddFetures(csvs=csvs, 
+                                         DirAsFeature=opt.DirAsFeature,
+                                         ColName=opt.DirFeatureName)
+    data['features'].extend(dir_feature)
+
     """ Data preprocessing """
     if data['date'] is not None:
         # get used cols
@@ -456,7 +458,7 @@ def main(opt):
             df.fillna(method=f'{list(opt.AutoInterpolate)[0].lower()}fill', inplace=True)
 
         # sort data by date
-        df.sort_values(data['date'], inplace=True)
+        df.sort_values(data['date'], inplace=True, ignore_index=True)
 
         # add month sin, month cos (cyclical pattern)
         if opt.CyclicalPattern:
@@ -475,6 +477,13 @@ def main(opt):
         # remove date col
         df.drop([data['date']], axis=1, inplace=True)
 
+    # df.sort_values(by=[dir_feature[0], data['date']], inplace=True, ignore_index=True)
+    # # print(df)
+    # for i in df[dir_feature[0]].unique():
+    #    print(df.loc[df[dir_feature[0]] == i])
+    # #    print()
+    #    break
+    # exit()
     # get dataset length
     dataset_length = len(df)
 
@@ -526,6 +535,8 @@ def main(opt):
 
     errors = []
     get_custom_activations()
+    # print(X_train.shape[-2:][-1])
+    # exit()
     for item in model_dict:
         start = time.time()
         if not vars(opt)[f'{item["model"].__name__}']: continue
@@ -537,6 +548,7 @@ def main(opt):
                               filters=item.get('filters'),
                               dropouts=item.get('dropouts'),
                               lag=opt.inputsz,
+                              individual=opt.individual,
                               normalize_layer=norm)
         model.build()
         # activations = '\n'.join(['None' if a == None else a for a in item.get('activations')])

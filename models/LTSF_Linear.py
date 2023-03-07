@@ -166,52 +166,32 @@ from keras.callbacks import EarlyStopping
 from keras.callbacks import ReduceLROnPlateau
 
 class LTSF_Linear_Base(TensorflowModel):
+    def __init__(self, input_shape, output_shape, units, activations, dropouts, individual, normalize_layer=None, seed=941, **kwargs):
+        super().__init__(input_shape, output_shape, units, activations, dropouts, normalize_layer=normalize_layer, seed=seed)
+        self.individual = individual
+
     def save(self, file_name:str, save_dir:str='.'):
         os.makedirs(name=save_dir, exist_ok=True)
         file_path = os.path.join(save_dir, file_name, "ckpt")
-        # pickle.dump(self.model, open(Path(file_path).absolute(), "wb"))
-        # tf.saved_model.save(self.model, Path(file_path).absolute())
         self.model.save_weights(Path(file_path).absolute())
         return file_path
 
-    def callbacks(self, patience, save_dir, min_delta=0.001, epochs=10_000_000):
-        log_path = os.path.join(save_dir, 'logs')
-        os.makedirs(name=log_path, exist_ok=True)
-        weight_path = os.path.join(save_dir, 'weights')
-        os.makedirs(name=weight_path, exist_ok=True)
-
-        return [EarlyStopping(monitor='val_loss', patience=patience, min_delta=min_delta), 
-                ModelCheckpoint(filepath=os.path.join(weight_path, f"{self.__class__.__name__}_best"),
-                                save_best_only=True,
-                                save_weights_only=False,
-                                verbose=0), 
-                ModelCheckpoint(filepath=os.path.join(weight_path, f"{self.__class__.__name__}_last"),
-                                save_best_only=False,
-                                save_weights_only=False,
-                                verbose=0),
-                ReduceLROnPlateau(monitor='val_loss',
-                                    factor=0.1,
-                                    patience=patience / 5,
-                                    verbose=0,
-                                    mode='auto',
-                                    min_delta=min_delta * 10,
-                                    cooldown=0,
-                                    min_lr=0), 
-                CSVLogger(filename=os.path.join(log_path, f'{self.__class__.__name__}.csv'), separator=',', append=False)]  
+    def callbacks(self, patience, save_dir, min_delta=0.001, extension=''):
+        return super().callbacks(patience=patience, save_dir=save_dir, min_delta=min_delta, extension=extension)  
 
 class LTSF_Linear__Tensorflow(LTSF_Linear_Base):
     def build(self):
-        self.model = Linear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=3, individual=True)
+        self.model = Linear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=self.input_shape[-1], individual=self.individual)
         # self.model = Linear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=7, individual=False)
 
 class LTSF_NLinear__Tensorflow(LTSF_Linear_Base):
     def build(self):
-        self.model = NLinear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=3, individual=True)
+        self.model = NLinear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=self.input_shape[-1], individual=self.individual)
         # self.model = NLinear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=7, individual=False)
 
 class LTSF_DLinear__Tensorflow(LTSF_Linear_Base):
     def build(self):
-        self.model = DLinear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=3, individual=True)
+        self.model = DLinear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=self.input_shape[-1], individual=self.individual)
         # self.model = DLinear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=7, individual=False)
 
 
