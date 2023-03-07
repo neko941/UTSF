@@ -117,7 +117,7 @@ class NLinear(tf.keras.Model):
         if self.individual:
             x = tf.concat([tf.expand_dims(self.Linear[i](x[:,:,i]), axis=-1) for i in range(self.channels)], axis=-1)
         else:
-            print(x.shape)
+            # print(x.shape)
             x = tf.transpose(x, perm=[0, 2, 1])
             x = self.Linear(x)
             x = tf.transpose(x, perm=[0, 2, 1])

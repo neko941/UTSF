@@ -369,7 +369,8 @@ def parse_opt(known=False):
     parser.add_argument('--Normalization', action='store_true', help='')
     parser.add_argument('--DirAsFeature', type=int, default=0, help='')
     parser.add_argument('--DirFeatureName', type=str, default='dir', help='')
-    parser.add_argument('--SplitDirFeature', type=int, default=0, help='')
+    parser.add_argument('--SplitDirFeature', type=int, default=0, help='Segmentation using dir feature')
+    parser.add_argument('--SplitFeature', type=str, default=None, help='Segmentation using feature')
 
     parser.add_argument('--all', action='store_true', help='Use all available models')
     parser.add_argument('--MachineLearning', action='store_true', help='')
@@ -475,7 +476,7 @@ def main(opt):
             df.insert(loc=0, column='month_sin', value=[np.sin((x) * (2 * np.pi / year)) for x in d]) 
 
         # remove date col
-        df.drop([data['date']], axis=1, inplace=True)
+        # df.drop([data['date']], axis=1, inplace=True)
 
     # df.sort_values(by=[dir_feature[0], data['date']], inplace=True, ignore_index=True)
     # # print(df)
@@ -485,35 +486,52 @@ def main(opt):
     #    break
     # exit()
     # get dataset length
-    dataset_length = len(df)
+    # print(df)
+    assert not all([opt.DirAsFeature != 0, opt.SplitFeature is not None])
 
-    # get train, val indices
-    TRAIN_END_IDX = int(opt.trainsz * dataset_length) 
-    VAL_END_IDX = int(opt.valsz * dataset_length) + TRAIN_END_IDX
+    if opt.DirAsFeature != 0 and opt.SplitDirFeature != -1: segment_feature = dir_feature[opt.SplitDirFeature]
+    elif opt.SplitFeature is not None: segment_feature = opt.SplitFeature
+    else:
+        segment_feature = None
 
-    X_train, y_train = slicing_window(df, 
-                                      df_start_idx=0,
-                                      df_end_idx=TRAIN_END_IDX,
-                                      input_size=opt.inputsz,
-                                      label_size=opt.labelsz,
-                                      offset=opt.offset,
-                                      label_name=data['target'])
+    # dataset_length = len(df)
+    # TRAIN_END_IDX = int(opt.trainsz * dataset_length) 
+    # VAL_END_IDX = int(opt.valsz * dataset_length) + TRAIN_END_IDX
 
-    X_val, y_val = slicing_window(df, 
-                                  df_start_idx=TRAIN_END_IDX,
-                                  df_end_idx=VAL_END_IDX,
-                                  input_size=opt.inputsz,
-                                  label_size=opt.labelsz,
-                                  offset=opt.offset,
-                                  label_name=data['target'])
+    X_train, y_train, X_val, y_val, X_test, y_test = slicing_window(df, 
+                              data['date'],
+                              segment_feature,
+                              (opt.trainsz, opt.valsz, 1-opt.trainsz-opt.valsz), 
+                              opt.inputsz, 
+                              opt.labelsz, 
+                              opt.offset, 
+                              data['target'])
+    # print(X_test.shape, y_test.shape)
+    # exit()
+    
+    # X_train, y_train = slicing_window(df, 
+    #                                   df_start_idx=0,
+    #                                   df_end_idx=TRAIN_END_IDX,
+    #                                   input_size=opt.inputsz,
+    #                                   label_size=opt.labelsz,
+    #                                   offset=opt.offset,
+    #                                   label_name=data['target'])
 
-    X_test, y_test = slicing_window(df, 
-                                    df_start_idx=VAL_END_IDX,
-                                    df_end_idx=None,
-                                    input_size=opt.inputsz,
-                                    label_size=opt.labelsz,
-                                    offset=opt.offset,
-                                    label_name=data['target'])
+    # X_val, y_val = slicing_window(df, 
+    #                               df_start_idx=TRAIN_END_IDX,
+    #                               df_end_idx=VAL_END_IDX,
+    #                               input_size=opt.inputsz,
+    #                               label_size=opt.labelsz,
+    #                               offset=opt.offset,
+    #                               label_name=data['target'])
+
+    # X_test, y_test = slicing_window(df, 
+    #                                 df_start_idx=VAL_END_IDX,
+    #                                 df_end_idx=None,
+    #                                 input_size=opt.inputsz,
+    #                                 label_size=opt.labelsz,
+    #                                 offset=opt.offset,
+    #                                 label_name=data['target'])
     # test_ds = tf.data.Dataset.from_tensor_slices((X_test, y_test)).batch(opt.batchsz)
 
     console = Console(record=True)

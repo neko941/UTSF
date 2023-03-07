@@ -35,11 +35,14 @@ data:
 target: average
 date: dt
 features:
+# """ """
 # data:
 #   - .\data\salinity\2019_all.csv
 # target: average
 # date: dt
 # features:
+#   - station
+# """ """
 # data: train.csv
 # target: type
 # date:
