@@ -74,7 +74,6 @@ from models.RNN import VanillaRNN__Tensorflow
 from models.RNN import BiRNN__Tensorflow
 from models.LSTM import VanillaLSTM__Tensorflow    
 from models.LSTM import BiLSTM__Tensorflow 
-from models.LSTM import ConvLSTM__Tensorflow   
 from models.GRU import VanillaGRU__Tensorflow
 from models.GRU import BiGRU__Tensorflow
 from models.LTSF_Linear import LTSF_Linear__Tensorflow
@@ -87,7 +86,6 @@ from models.Concatenated import BiLSTMcBiGRU__Tensorflow
 from models.EncoderDecoder import EncoderDecoder__Tensorflow
 from models.EncoderDecoder import BiEncoderDecoder__Tensorflow
 from models.EncoderDecoder import CNNcLSTMcEncoderDecoder__Tensorflow
-from models.LSTNet import LSTNet__TensorFlow
 
 """ 
 TODO:
@@ -100,8 +98,32 @@ TODO:
     from sklearn.linear_model import SGDRegressor
     from sklearn.impute import KNNImputer
 
-    from models.EncoderDecoder import CNNcLSTMcEncoderDecoder__Tensorflow
-    from models.LSTNet import LSTNet__Tensorflow
+    from models.LSTNet import LSTNet__TensorFlow
+    {
+        'model' : LSTNet__TensorFlow,
+        'help' : '',
+        'filters' : [100],
+        'kernels' : [3],
+        'dropouts' : [0, 0, 0],
+        'type' : 'Tensorflow',
+        'activations': ['relu', 'relu', 'relu', 'relu']
+    }
+    from models.AutoEncoders import StackedAutoEncoders__TensorFlow
+    {
+        'model' : StackedAutoEncoders__TensorFlow,
+        'help' : '',
+        'units' : [12, 400, 400, 400],
+        'type' : 'Tensorflow',
+    }
+    from models.LSTM import ConvLSTM__Tensorflow   
+    }
+        'model' : ConvLSTM__Tensorflow,
+        'help' : '',
+        'type' : 'Tensorflow',
+        'units' : [28, 64, 32, 32],
+        'activations': ['tanh', 'tanh', 'tanh', None, None]
+    }
+    
     from models.TabTransformer import TabTransformer
     from models.NBeats import NBeats
     from models.Averaging import StackingAveragedModels
@@ -254,12 +276,6 @@ model_dict = [
         'units' : [28, 64, 32, 32],
         'activations': ['tanh', 'tanh', 'tanh', None, None]
     },{ 
-    #     'model' : ConvLSTM__Tensorflow,
-    #     'help' : '',
-    #     'type' : 'Tensorflow',
-    #     'units' : [28, 64, 32, 32],
-    #     'activations': ['tanh', 'tanh', 'tanh', None, None]
-    # },{
         'model' : VanillaGRU__Tensorflow,
         'help' : '',
         'type' : 'Tensorflow',
@@ -328,15 +344,7 @@ model_dict = [
         'dropouts' : [0.1, 0.1, 0.1],
         'type' : 'Tensorflow',
         'activations': ['relu', 'relu', 'relu', 'relu']
-    # },{
-    #     'model' : LSTNet__TensorFlow,
-    #     'help' : '',
-    #     'filters' : [100],
-    #     'kernels' : [3],
-    #     'dropouts' : [0, 0, 0],
-    #     'type' : 'Tensorflow',
-    #     # 'activations': ['relu', 'relu', 'relu', 'relu']
-    },
+    }
 ]
 for model in model_dict:
     model.setdefault("activations", [None])

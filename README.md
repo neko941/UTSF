@@ -38,3 +38,20 @@ main.run(all=True,
 ```bash
 python main.py --all --labelsz=7
 ```
+
+# Case 1: Multiple ids, split by id (second last component in the data path)
+
+```data.yaml
+data:
+  - .\data\salinity\602\2019.csv
+  - .\data\salinity\614\2019.csv
+  - .\data\salinity\615\2019.csv
+  - .\data\salinity\616\2019.csv
+target: average
+date: dt
+features:
+```
+
+```
+python .\main.py --inputsz=15 --DirAsFeature=1 --SplitDirFeature=0
+```

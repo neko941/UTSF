@@ -1,4 +1,3 @@
-import tensorflow as tf
 from models.Base import TensorflowModel
 
 from keras.layers import LSTM
