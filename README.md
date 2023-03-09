@@ -55,3 +55,17 @@ features:
 ```
 python .\main.py --inputsz=15 --DirAsFeature=1 --SplitDirFeature=0
 ```
+
+# Case 2: Multiple ids, split by column
+
+```data.yaml
+data:
+  - .\data\salinity\2019_all.csv
+target: average
+date: dt
+features:
+```
+
+```
+python .\main.py --inputsz=15 --DirAsFeature=0 --SplitDirFeature=-1 --SplitFeature='station'
+```

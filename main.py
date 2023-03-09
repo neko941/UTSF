@@ -499,21 +499,20 @@ def main(opt):
 
     if opt.DirAsFeature != 0 and opt.SplitDirFeature != -1: segment_feature = dir_feature[opt.SplitDirFeature]
     elif opt.SplitFeature is not None: segment_feature = opt.SplitFeature
-    else:
-        segment_feature = None
+    else: segment_feature = None
 
     # dataset_length = len(df)
     # TRAIN_END_IDX = int(opt.trainsz * dataset_length) 
     # VAL_END_IDX = int(opt.valsz * dataset_length) + TRAIN_END_IDX
 
     X_train, y_train, X_val, y_val, X_test, y_test = slicing_window(df, 
-                              data['date'],
-                              segment_feature,
-                              (opt.trainsz, opt.valsz, 1-opt.trainsz-opt.valsz), 
-                              opt.inputsz, 
-                              opt.labelsz, 
-                              opt.offset, 
-                              data['target'])
+                                                                    data['date'],
+                                                                    segment_feature,
+                                                                    (opt.trainsz, opt.valsz, 1-opt.trainsz-opt.valsz), 
+                                                                    opt.inputsz, 
+                                                                    opt.labelsz, 
+                                                                    opt.offset, 
+                                                                    data['target'])
     # print(X_test.shape, y_test.shape)
     # exit()
     
