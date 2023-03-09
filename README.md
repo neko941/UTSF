@@ -41,7 +41,8 @@ python main.py --all --labelsz=7
 
 # Case 1: Multiple ids, split by id (second last component in the data path)
 
-```data.yaml
+```
+# file: data.yaml
 data:
   - .\data\salinity\602\2019.csv
   - .\data\salinity\614\2019.csv
@@ -58,7 +59,8 @@ python .\main.py --inputsz=15 --DirAsFeature=1 --SplitDirFeature=0
 
 # Case 2: Multiple ids, split by column
 
-```data.yaml
+```
+# file: data.yaml
 data:
   - .\data\salinity\2019_all.csv
 target: average
