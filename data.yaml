@@ -15,26 +15,25 @@
 # features:
 
 # """ Multiple csv files at 1 station """
-# data:
-#   - .\data\salinity\615\2014.csv
-#   - .\data\salinity\615\2015.csv
-#   - .\data\salinity\615\2016.csv
-#   - .\data\salinity\615\2017.csv
-#   - .\data\salinity\615\2018.csv
-#   - .\data\salinity\615\2019.csv
-# target: average
-# date: dt
-# features:
-
-# """ Multiple csv files at multiple stations """
 data:
-  - .\data\salinity\602\2019.csv
-  - .\data\salinity\614\2019.csv
+  - .\data\salinity\615\2014.csv
+  - .\data\salinity\615\2015.csv
+  - .\data\salinity\615\2016.csv
+  - .\data\salinity\615\2017.csv
+  - .\data\salinity\615\2018.csv
   - .\data\salinity\615\2019.csv
-  - .\data\salinity\616\2019.csv
 target: average
 date: dt
 features:
+# """ Multiple csv files at multiple stations """
+# data:
+#   - .\data\salinity\602\2019.csv
+#   - .\data\salinity\614\2019.csv
+#   - .\data\salinity\615\2019.csv
+#   - .\data\salinity\616\2019.csv
+# target: average
+# date: dt
+# features:
 # """ """
 # data:
 #   - .\data\salinity\2019_all.csv

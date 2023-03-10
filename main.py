@@ -515,7 +515,8 @@ def main(opt):
                                                                     data['target'])
     # print(X_test.shape, y_test.shape)
     # exit()
-    
+    # print(X_train.shape)
+    # exit()
     # X_train, y_train = slicing_window(df, 
     #                                   df_start_idx=0,
     #                                   df_end_idx=TRAIN_END_IDX,

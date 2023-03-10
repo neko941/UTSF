@@ -54,7 +54,7 @@ features:
 ```
 
 ```
-python .\main.py --inputsz=15 --DirAsFeature=1 --SplitDirFeature=0
+python .\main.py --inputsz=15 --labelsz=1 --DirAsFeature=1 --SplitDirFeature=0
 ```
 
 # Case 2: Multiple ids, split by column
@@ -69,5 +69,25 @@ features:
 ```
 
 ```
-python .\main.py --inputsz=15 --DirAsFeature=0 --SplitDirFeature=-1 --SplitFeature='station'
+python .\main.py --inputsz=15 --labelsz=1 --DirAsFeature=0 --SplitDirFeature=-1 --SplitFeature='station'
+```
+
+# Case 2: One id, multi-step forecasting
+
+```
+# file: data.yaml
+data:
+  - .\data\salinity\615\2014.csv
+  - .\data\salinity\615\2015.csv
+  - .\data\salinity\615\2016.csv
+  - .\data\salinity\615\2017.csv
+  - .\data\salinity\615\2018.csv
+  - .\data\salinity\615\2019.csv
+target: average
+date: dt
+features:
+```
+
+```
+python .\main.py --inputsz=15 --labelsz=2 --DirAsFeature=0 --SplitDirFeature=-1
 ```
