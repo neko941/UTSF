@@ -86,6 +86,7 @@ from models.Concatenated import BiLSTMcBiGRU__Tensorflow
 from models.EncoderDecoder import EncoderDecoder__Tensorflow
 from models.EncoderDecoder import BiEncoderDecoder__Tensorflow
 from models.EncoderDecoder import CNNcLSTMcEncoderDecoder__Tensorflow
+from models.Transformer import VanillaTransformer__Tensorflow
 
 """ 
 TODO:
@@ -344,6 +345,13 @@ model_dict = [
         'dropouts' : [0.1, 0.1, 0.1],
         'type' : 'Tensorflow',
         'activations': ['relu', 'relu', 'relu', 'relu']
+    },{
+        'model' : VanillaTransformer__Tensorflow,
+        'help' : '',
+        'type' : 'Tensorflow',
+        'units' : [512, 512, 512, 512, 512, 512, 512],
+        'dropouts' : [0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05],
+        'activations' : ['gelu', 'gelu']
     }
 ]
 for model in model_dict:
@@ -385,6 +393,7 @@ def parse_opt(known=False):
     parser.add_argument('--DeepLearning', action='store_true', help='')
     parser.add_argument('--Tensorflow', action='store_true', help='')
     parser.add_argument('--Pytorch', action='store_true', help='')
+    parser.add_argument('--LTSF', action='store_true', help='')
 
     for item in model_dict:
         parser.add_argument(f"--{item['model'].__name__}", action='store_true', help=f"{item['help']}")
@@ -405,6 +414,10 @@ def main(opt):
     if opt.DeepLearning:
         opt.Tensorflow = True
         opt.Pytorch = True
+    if opt.LTSF:
+        opt.LTSF_Linear__Tensorflow = True
+        opt.LTSF_NLinear__Tensorflow = True
+        opt.LTSF_DLinear__Tensorflow = True
     for item in model_dict:
         if any([opt.Tensorflow and item['type']=='Tensorflow',
                 opt.Pytorch and item['type']=='Pytorch',

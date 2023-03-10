@@ -3,7 +3,7 @@ from pathlib import Path
 
 import tensorflow as tf
 from keras.layers import Dense
-from keras.callbacks import ModelCheckpoint
+from models.Base import TensorflowModel
 
 class MovingAvg(tf.keras.layers.Layer):
     """
@@ -85,7 +85,8 @@ class DLinear(tf.keras.Model):
             x = tf.transpose(x, perm=[0,2,1]) # to [Batch, Output length, Channel]
 
         # print(x.shape)
-        return tf.squeeze(self.final_layer(x), axis=-1)
+        # return tf.squeeze(self.final_layer(x), axis=-1)
+        return x
 
 
 class NLinear(tf.keras.Model):
@@ -122,8 +123,8 @@ class NLinear(tf.keras.Model):
             x = self.Linear(x)
             x = tf.transpose(x, perm=[0, 2, 1])
         x = x + seq_last
-        # print(tf.squeeze(self.final_layer(x), axis=-1).shape)
-        return tf.squeeze(self.final_layer(x), axis=-1)  # [Batch, Output length, Channel]
+        # return tf.squeeze(self.final_layer(x), axis=-1)  
+        return x # [Batch, Output length, Channel]
 
 class Linear(tf.keras.Model):
     """
@@ -157,13 +158,8 @@ class Linear(tf.keras.Model):
         else:
             x = self.Linear(tf.transpose(x, perm=[0,2,1]))
             x = tf.transpose(x, perm=[0,2,1])
-        return tf.squeeze(self.final_layer(x), axis=-1) # [Batch, Output length, Channel]
-
-
-from models.Base import TensorflowModel
-from keras.callbacks import CSVLogger
-from keras.callbacks import EarlyStopping
-from keras.callbacks import ReduceLROnPlateau
+        # return tf.squeeze(self.final_layer(x), axis=-1) 
+        return x # [Batch, Output length, Channel]
 
 class LTSF_Linear_Base(TensorflowModel):
     def __init__(self, input_shape, output_shape, units, activations, dropouts, individual, normalize_layer=None, seed=941, **kwargs):
