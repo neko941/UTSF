@@ -100,10 +100,9 @@ def slicing_window(df,
                                    label_name=label_name)
             X_test.extend(x)
             y_test.extend(y)
-            assert dataset_length-VAL_END_IDX > input_size, f'{input_size = } and for testset we have {dataset_length-VAL_END_IDX} samples ==> cannot widow slide ==> final testset sample = 0'
+            assert dataset_length-VAL_END_IDX >= input_size, f'{input_size = } and for testset we have {dataset_length-VAL_END_IDX} samples ==> cannot widow slide ==> final testset sample = 0'
         X_train, y_train, X_val, y_val, X_test, y_test = np.array(X_train), np.array(y_train), np.array(X_val), np.array(y_val), np.array(X_test), np.array(y_test)
     else:
-        # print('dasdsdasdsad')
         df.drop([date_feature], axis=1, inplace=True)
         dataset_length = len(df)
         TRAIN_END_IDX = int(split_ratio[0] * dataset_length) 

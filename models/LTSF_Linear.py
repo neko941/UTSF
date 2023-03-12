@@ -85,7 +85,8 @@ class DLinear(tf.keras.Model):
             x = tf.transpose(x, perm=[0,2,1]) # to [Batch, Output length, Channel]
 
         # print(x.shape)
-        return tf.squeeze(self.final_layer(x), axis=-1)
+        if self.pred_len==1: tf.squeeze(self.final_layer(x), axis=-1)
+        return x # [Batch, Output length, Channel]
 
 
 class NLinear(tf.keras.Model):
@@ -123,7 +124,8 @@ class NLinear(tf.keras.Model):
             x = tf.transpose(x, perm=[0, 2, 1])
         x = x + seq_last
         # print(tf.squeeze(self.final_layer(x), axis=-1).shape)
-        return tf.squeeze(self.final_layer(x), axis=-1)  # [Batch, Output length, Channel]
+        if self.pred_len==1: tf.squeeze(self.final_layer(x), axis=-1)
+        return x # [Batch, Output length, Channel]
 
 class Linear(tf.keras.Model):
     """
@@ -135,16 +137,13 @@ class Linear(tf.keras.Model):
         self.pred_len = pred_len
         self.channels = enc_in
         self.individual = individual
-            # Use this line if you want to visualize the weights
-        # self.Linear.weight = nn.Parameter((1/self.seq_len)*torch.ones([self.pred_len,self.seq_len]))
-        
         if self.individual:
             self.Linear = []
             for i in range(self.channels):
                 self.Linear.append(tf.keras.layers.Dense(units=self.pred_len))
         else:
             self.Linear = tf.keras.layers.Dense(units=self.pred_len)
-        self.final_layer = tf.keras.layers.Dense(self.pred_len)
+        self.final_layer = tf.keras.layers.Dense(1)
 
     def call(self, x):
         # x: [Batch, Input length, Channel]
@@ -157,7 +156,9 @@ class Linear(tf.keras.Model):
         else:
             x = self.Linear(tf.transpose(x, perm=[0,2,1]))
             x = tf.transpose(x, perm=[0,2,1])
-        return tf.squeeze(self.final_layer(x), axis=-1) # [Batch, Output length, Channel]
+        if self.channels==1: x = tf.squeeze(self.final_layer(x), axis=-1)
+        # print(f'{x.shape = }')
+        return x # [Batch, Output length, Channel]
 
 
 from models.Base import TensorflowModel
@@ -166,9 +167,10 @@ from keras.callbacks import EarlyStopping
 from keras.callbacks import ReduceLROnPlateau
 
 class LTSF_Linear_Base(TensorflowModel):
-    def __init__(self, input_shape, output_shape, units, activations, dropouts, individual, normalize_layer=None, seed=941, **kwargs):
+    def __init__(self, input_shape, output_shape, units, activations, dropouts, individual, enc_in, normalize_layer=None, seed=941, **kwargs):
         super().__init__(input_shape, output_shape, units, activations, dropouts, normalize_layer=normalize_layer, seed=seed)
         self.individual = individual
+        self.enc_in = enc_in
 
     def save(self, file_name:str, save_dir:str='.'):
         os.makedirs(name=save_dir, exist_ok=True)
@@ -181,17 +183,25 @@ class LTSF_Linear_Base(TensorflowModel):
 
 class LTSF_Linear__Tensorflow(LTSF_Linear_Base):
     def build(self):
-        self.model = Linear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=self.input_shape[-1], individual=self.individual)
-        # self.model = Linear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=7, individual=False)
+        self.model = Linear(seq_len=self.input_shape, 
+                            pred_len=self.output_shape, 
+                            enc_in=self.enc_in, 
+                            individual=self.individual)
 
 class LTSF_NLinear__Tensorflow(LTSF_Linear_Base):
     def build(self):
-        self.model = NLinear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=self.input_shape[-1], individual=self.individual)
+        self.model = NLinear(seq_len=self.input_shape, 
+                             pred_len=self.output_shape, 
+                             enc_in=self.enc_in, 
+                             individual=self.individual)
         # self.model = NLinear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=7, individual=False)
 
 class LTSF_DLinear__Tensorflow(LTSF_Linear_Base):
     def build(self):
-        self.model = DLinear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=self.input_shape[-1], individual=self.individual)
+        self.model = DLinear(seq_len=self.input_shape, 
+                             pred_len=self.output_shape, 
+                             enc_in=self.enc_in, 
+                             individual=self.individual)
         # self.model = DLinear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=7, individual=False)
 
 

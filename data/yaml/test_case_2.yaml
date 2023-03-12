@@ -1,0 +1,6 @@
+data:
+  - .\data\salinity\2019_all.csv
+target: average
+date: dt
+features:
+  - station

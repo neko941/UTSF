@@ -34,7 +34,7 @@ class ProbMask__Pytorch():
     def mask(self):
         return self._mask
     
-class ProbMask__TensorFlow():
+class ProbMask__Tensorflow():
     def __init__(self, B, H, L, index, scores, device="cpu"):
         _mask = tf.ones((L, scores.shape[-1]), dtype=tf.bool).numpy().triu(1)
         _mask_ex = tf.tile(tf.expand_dims(tf.expand_dims(_mask, 0), 0), [B, H, 1, 1])

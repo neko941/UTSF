@@ -86,6 +86,7 @@ from models.Concatenated import BiLSTMcBiGRU__Tensorflow
 from models.EncoderDecoder import EncoderDecoder__Tensorflow
 from models.EncoderDecoder import BiEncoderDecoder__Tensorflow
 from models.EncoderDecoder import CNNcLSTMcEncoderDecoder__Tensorflow
+from models.Transformer import VanillaTransformer__Tensorflow
 
 """ 
 TODO:
@@ -344,6 +345,13 @@ model_dict = [
         'dropouts' : [0.1, 0.1, 0.1],
         'type' : 'Tensorflow',
         'activations': ['relu', 'relu', 'relu', 'relu']
+    },{
+        'model' : VanillaTransformer__Tensorflow,
+        'help' : '',
+        'type' : 'Tensorflow',
+        'units' : [512, 512, 512, 512, 512, 512, 512],
+        'dropouts' : [0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05],
+        'activations' : ['gelu', 'gelu']
     }
 ]
 for model in model_dict:
@@ -371,6 +379,7 @@ def parse_opt(known=False):
     parser.add_argument('--seed', type=int, default=941, help='Global training seed')
     parser.add_argument('--round', type=int, default=-1, help='Round decimals in results, -1 to disable')
     parser.add_argument('--individual', action='store_true', help='for LTSF Linear models')
+    parser.add_argument('--debug', action='store_true', help='print debug information in table')
 
     parser.add_argument('--AutoInterpolate', type=str, choices=['', 'forward', 'backward'], default='', help='')
     parser.add_argument('--CyclicalPattern', action='store_true', help='Add sin cos cyclical feature')
@@ -446,6 +455,7 @@ def main(opt):
     data['features'].extend(dir_feature)
 
     """ Data preprocessing """
+    # if not isinstance(data['target'], list): data['target'] = [data['target']]
     if data['date'] is not None:
         # get used cols
         cols = []
@@ -483,27 +493,11 @@ def main(opt):
             df.insert(loc=0, column='month_cos', value=[np.cos((x) * (2 * np.pi / year)) for x in d])
             df.insert(loc=0, column='month_sin', value=[np.sin((x) * (2 * np.pi / year)) for x in d]) 
 
-        # remove date col
-        # df.drop([data['date']], axis=1, inplace=True)
-
-    # df.sort_values(by=[dir_feature[0], data['date']], inplace=True, ignore_index=True)
-    # # print(df)
-    # for i in df[dir_feature[0]].unique():
-    #    print(df.loc[df[dir_feature[0]] == i])
-    # #    print()
-    #    break
-    # exit()
-    # get dataset length
-    # print(df)
     assert not all([opt.DirAsFeature != 0, opt.SplitFeature is not None])
 
     if opt.DirAsFeature != 0 and opt.SplitDirFeature != -1: segment_feature = dir_feature[opt.SplitDirFeature]
     elif opt.SplitFeature is not None: segment_feature = opt.SplitFeature
     else: segment_feature = None
-
-    # dataset_length = len(df)
-    # TRAIN_END_IDX = int(opt.trainsz * dataset_length) 
-    # VAL_END_IDX = int(opt.valsz * dataset_length) + TRAIN_END_IDX
 
     X_train, y_train, X_val, y_val, X_test, y_test = slicing_window(df, 
                                                                     data['date'],
@@ -513,34 +507,6 @@ def main(opt):
                                                                     opt.labelsz, 
                                                                     opt.offset, 
                                                                     data['target'])
-    # print(X_test.shape, y_test.shape)
-    # exit()
-    # print(X_train.shape)
-    # exit()
-    # X_train, y_train = slicing_window(df, 
-    #                                   df_start_idx=0,
-    #                                   df_end_idx=TRAIN_END_IDX,
-    #                                   input_size=opt.inputsz,
-    #                                   label_size=opt.labelsz,
-    #                                   offset=opt.offset,
-    #                                   label_name=data['target'])
-
-    # X_val, y_val = slicing_window(df, 
-    #                               df_start_idx=TRAIN_END_IDX,
-    #                               df_end_idx=VAL_END_IDX,
-    #                               input_size=opt.inputsz,
-    #                               label_size=opt.labelsz,
-    #                               offset=opt.offset,
-    #                               label_name=data['target'])
-
-    # X_test, y_test = slicing_window(df, 
-    #                                 df_start_idx=VAL_END_IDX,
-    #                                 df_end_idx=None,
-    #                                 input_size=opt.inputsz,
-    #                                 label_size=opt.labelsz,
-    #                                 offset=opt.offset,
-    #                                 label_name=data['target'])
-    # test_ds = tf.data.Dataset.from_tensor_slices((X_test, y_test)).batch(opt.batchsz)
 
     console = Console(record=True)
     table = Table(title="[cyan]Results", 
@@ -550,8 +516,15 @@ def main(opt):
                   show_lines=True)
     # table header
     # for name in ['Name', 'Activations', *list(used_metric())]: table.add_column(f'[green]{name}', justify='center')
-    for name in ['Name', 'Time', *list(used_metric())]: table.add_column(f'[green]{name}', justify='center')
-
+    for name in ['Name', *list(used_metric())]: table.add_column(f'[green]{name}', justify='center')
+    
+    debug_console = Console(record=True)
+    debug_table = Table(title="[cyan]Debug", 
+                show_header=True, 
+                header_style="bold magenta",
+                box=rbox.ROUNDED,
+                show_lines=True)
+    for name in ['Name', 'Time', 'Activation', 'predShape']: debug_table.add_column(f'[green]{name}', justify='center')
     # Normalization
     if opt.Normalization:
         norm = Normalization()
@@ -561,8 +534,6 @@ def main(opt):
 
     errors = []
     get_custom_activations()
-    # print(X_train.shape[-2:][-1])
-    # exit()
     for item in model_dict:
         start = time.time()
         if not vars(opt)[f'{item["model"].__name__}']: continue
@@ -575,8 +546,11 @@ def main(opt):
                               dropouts=item.get('dropouts'),
                               lag=opt.inputsz,
                               individual=opt.individual,
-                              normalize_layer=norm)
+                              normalize_layer=norm,
+                              enc_in=1) #TODO: make this dynamic enc_in=len(data['target'])
         model.build()
+        # print(f'{y_test.shape = }')
+        # print(f'{model.predict(X_test).shape = }')
         # activations = '\n'.join(['None' if a == None else a for a in item.get('activations')])
         try:
             model.fit(patience=opt.patience, save_dir=save_dir, optimizer=opt.optimizer, loss=opt.loss, lr=opt.lr, epochs=opt.epochs, learning_rate=opt.lr, batchsz=opt.batchsz,
@@ -588,15 +562,35 @@ def main(opt):
             if weight is not None: model.load(weight)
             yhat = model.predict(X=X_test)
             scores = model.score(y=y_test, yhat=yhat, r=opt.round)
+            # print(f'{yhat.shape = }')
             # table.add_row(model.model.name, *scores)
             # table.add_row(model.__class__.__name__, activations, *scores)
-            table.add_row(model.__class__.__name__, convert_seconds(time.time()-start), *scores)
+            table.add_row(model.__class__.__name__, *scores)
+            debug_table.add_row(model.__class__.__name__, 
+                                convert_seconds(time.time()-start), 
+                                '\n'.join(['None' if a == None else a for a in item.get('activations')]),
+                                str(yhat.shape)
+                                )
         except Exception as e:
             errors.append([model.__class__.__name__, str(e)])
             # table.add_row(model.__class__.__name__, activations, *list('_' * len(used_metric())))
-            table.add_row(model.__class__.__name__, convert_seconds(time.time()-start), *list('_' * len(used_metric())))
+            table.add_row(model.__class__.__name__, *list('_' * len(used_metric())))
+            debug_table.add_row(model.__class__.__name__, 
+                                convert_seconds(time.time()-start), 
+                                '\n'.join(['None' if a == None else a for a in item.get('activations')]),
+                                str(model.predict(y_test).shape)
+                                )
         console.print(table)
         console.save_svg(os.path.join(save_dir, 'results.svg'), theme=MONOKAI)
+    if opt.debug: 
+        debug_console.print(debug_table)
+        debug_console.save_svg(os.path.join(save_dir, 'debug.svg'), theme=MONOKAI)
+        print(f'{X_train.shape = }')
+        print(f'{y_train.shape = }')
+        print(f'{X_val.shape = }')
+        print(f'{y_val.shape = }')
+        print(f'{X_test.shape = }')
+        print(f'{y_test.shape = }')
     print(f'\n\n{opt}', end='\n\n\n\n')
     for error in errors: print(f'{error[0]}\n{error[1]}', end='\n\n\n====================================================================\n\n\n')
 

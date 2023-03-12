@@ -1,0 +1,10 @@
+data:
+  - .\data\salinity\615\2014.csv
+  - .\data\salinity\615\2015.csv
+  - .\data\salinity\615\2016.csv
+  - .\data\salinity\615\2017.csv
+  - .\data\salinity\615\2018.csv
+  - .\data\salinity\615\2019.csv
+target: average
+date: dt
+features:

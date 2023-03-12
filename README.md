@@ -42,7 +42,6 @@ python main.py --all --labelsz=7
 # Case 1: Multiple ids, split by id (second last component in the data path)
 
 ```
-# file: data.yaml
 data:
   - .\data\salinity\602\2019.csv
   - .\data\salinity\614\2019.csv
@@ -54,13 +53,12 @@ features:
 ```
 
 ```
-python .\main.py --inputsz=15 --labelsz=1 --DirAsFeature=1 --SplitDirFeature=0
+python .\main.py --inputsz=5 --labelsz=1 --DirAsFeature=1 --SplitDirFeature=0 --source=./data/yaml/test_case_1.yaml
 ```
 
 # Case 2: Multiple ids, split by column
 
 ```
-# file: data.yaml
 data:
   - .\data\salinity\2019_all.csv
 target: average
@@ -69,13 +67,12 @@ features:
 ```
 
 ```
-python .\main.py --inputsz=15 --labelsz=1 --DirAsFeature=0 --SplitDirFeature=-1 --SplitFeature='station'
+python .\main.py --inputsz=5 --labelsz=1 --SplitFeature='station' --source=./data/yaml/test_case_2.yaml
 ```
 
 # Case 2: One id, multi-step forecasting
 
 ```
-# file: data.yaml
 data:
   - .\data\salinity\615\2014.csv
   - .\data\salinity\615\2015.csv
@@ -89,5 +86,5 @@ features:
 ```
 
 ```
-python .\main.py --inputsz=15 --labelsz=2 --DirAsFeature=0 --SplitDirFeature=-1
+python .\main.py --inputsz=15 --labelsz=2 --source=./data/yaml/test_case_3.yaml
 ```

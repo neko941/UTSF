@@ -53,15 +53,13 @@ class TokenEmbedding__Pytorch(nn.Module):
         x = self.tokenConv(x.permute(0, 2, 1)).transpose(1, 2)
         return x
     
-class TokenEmbedding__Tensorflow(tf.keras.layers.Layer):
+class TokenEmbedding__Tensorflow(tf.keras.models.Model):
     def __init__(self, c_in, d_model):
         super(TokenEmbedding__Tensorflow, self).__init__()
 
         self.tokenConv = tf.keras.layers.Conv1D(filters=d_model, kernel_size=3, padding='causal',
-                                                use_bias=False)
-        for layer in self.layers:
-            if isinstance(layer, tf.keras.layers.Conv1D):
-                tf.keras.initializers.GlorotUniform()(layer.weights)
+                                                use_bias=False,
+                                                kernel_initializer=tf.keras.initializers.GlorotUniform)
 
     def call(self, x):
         x = tf.transpose(x, perm=[0, 2, 1])
