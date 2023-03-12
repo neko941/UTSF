@@ -27,7 +27,6 @@ from utils.general import yaml_load
 from utils.general import increment_path
 from utils.general import convert_seconds
 from utils.activations import get_custom_activations
-from tensorflow.random import set_seed 
 
 # performance metrics
 from utils.metrics import used_metric
@@ -425,7 +424,7 @@ def main(opt):
     Set random seed 
         https://pytorch.org/docs/stable/notes/randomness.html
     """
-    set_seed(opt.seed)
+    tf.random.set_seed(opt.seed)
     random.seed(opt.seed)
     np.random.seed(opt.seed)
     torch.manual_seed(opt.seed)

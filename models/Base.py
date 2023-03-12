@@ -9,7 +9,6 @@ from keras.callbacks import CSVLogger
 from keras.callbacks import EarlyStopping
 from keras.callbacks import ModelCheckpoint
 from keras.callbacks import ReduceLROnPlateau
-from tensorflow.data import AUTOTUNE
 from keras.models import Sequential 
 from keras.layers import Input
 
@@ -133,7 +132,7 @@ class TensorflowModel(BaseModel):
                 CSVLogger(filename=os.path.join(log_path, f'{self.__class__.__name__}.csv'), separator=',', append=False)]  
         
     def preprocessing(self, x, y, batchsz):
-        return tf.data.Dataset.from_tensor_slices((x, y)).batch(batchsz).cache().prefetch(buffer_size=AUTOTUNE)
+        return tf.data.Dataset.from_tensor_slices((x, y)).batch(batchsz).cache().prefetch(buffer_size=tf.data.AUTOTUNE)
 
     def build(self):
         try:
