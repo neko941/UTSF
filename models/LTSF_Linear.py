@@ -1,18 +1,18 @@
 import os
-from pathlib import Path
-
 import tensorflow as tf
+from pathlib import Path
 from keras.layers import Dense
-from keras.callbacks import ModelCheckpoint
-
-class MovingAvg(tf.keras.layers.Layer):
+from models.Base import TensorflowModel
+from keras.layers import AveragePooling1D
+from keras.layers import Layer
+class MovingAvg__Tensorflow(Layer):
     """
     Moving average block to highlight the trend of time series
     """
     def __init__(self, kernel_size, stride):
-        super(MovingAvg, self).__init__()
+        super(MovingAvg__Tensorflow, self).__init__()
         self.kernel_size = kernel_size
-        self.avg = tf.keras.layers.AveragePooling1D(pool_size=kernel_size, strides=stride, padding='valid')
+        self.avg = AveragePooling1D(pool_size=kernel_size, strides=stride, padding='valid')
 
     def call(self, x):
         # padding on the both ends of time series
@@ -23,13 +23,13 @@ class MovingAvg(tf.keras.layers.Layer):
         return x
 
 
-class SeriesDecomp(tf.keras.layers.Layer):
+class SeriesDecomp__Tensorflow(Layer):
     """
     Series decomposition block
     """
     def __init__(self, kernel_size):
-        super(SeriesDecomp, self).__init__()
-        self.moving_avg = MovingAvg(kernel_size, stride=1)
+        super(SeriesDecomp__Tensorflow, self).__init__()
+        self.moving_avg = MovingAvg__Tensorflow(kernel_size, stride=1)
 
     def call(self, x):
         moving_mean = self.moving_avg(x)
@@ -37,12 +37,12 @@ class SeriesDecomp(tf.keras.layers.Layer):
         return res, moving_mean
 
 
-class DLinear(tf.keras.Model):
+class DLinear__Tensorflow(tf.keras.Model):
     """
     Decomposition-Linear
     """
     def __init__(self, seq_len, pred_len, enc_in, individual):
-        super(DLinear, self).__init__()
+        super(DLinear__Tensorflow, self).__init__()
         self.seq_len = seq_len
         self.pred_len = pred_len
         self.channels = enc_in
@@ -50,20 +50,20 @@ class DLinear(tf.keras.Model):
 
         # Decompsition Kernel Size
         kernel_size = 25
-        self.decomposition = SeriesDecomp(kernel_size)
+        self.decomposition = SeriesDecomp__Tensorflow(kernel_size)
 
         if self.individual:
             self.Linear_Seasonal = []
             self.Linear_Trend = []
             for i in range(self.channels):
-                self.Linear_Seasonal.append(tf.keras.layers.Dense(self.pred_len))
-                self.Linear_Trend.append(tf.keras.layers.Dense(self.pred_len))
+                self.Linear_Seasonal.append(Dense(self.pred_len))
+                self.Linear_Trend.append(Dense(self.pred_len))
                 # Use this two lines if you want to visualize the weights
                 # self.Linear_Seasonal[i].kernel = tf.Variable((1/self.seq_len)*tf.ones([self.seq_len, self.pred_len]))
                 # self.Linear_Trend[i].kernel = tf.Variable((1/self.seq_len)*tf.ones([self.seq_len, self.pred_len]))
         else:
-            self.Linear_Seasonal = tf.keras.layers.Dense(self.pred_len)
-            self.Linear_Trend = tf.keras.layers.Dense(self.pred_len)
+            self.Linear_Seasonal = Dense(self.pred_len)
+            self.Linear_Trend = Dense(self.pred_len)
             # Use this two lines if you want to visualize the weights
             # self.Linear_Seasonal.kernel = tf.Variable((1/self.seq_len)*tf.ones([self.seq_len, self.pred_len]))
             # self.Linear_Trend.kernel = tf.Variable((1/self.seq_len)*tf.ones([self.seq_len, self.pred_len]))
@@ -89,12 +89,12 @@ class DLinear(tf.keras.Model):
         return x # [Batch, Output length, Channel]
 
 
-class NLinear(tf.keras.Model):
+class NLinear__Tensorflow(tf.keras.Model):
     """
     Normalization-Linear
     """
     def __init__(self, seq_len, pred_len, enc_in, individual):
-        super(NLinear, self).__init__()
+        super(NLinear__Tensorflow, self).__init__()
         self.seq_len = seq_len
         self.pred_len = pred_len
         self.channels = enc_in
@@ -104,9 +104,6 @@ class NLinear(tf.keras.Model):
         # self.Linear.weights = (1/self.seq_len)*tf.ones([self.seq_len, self.pred_len])
         if self.individual:
             self.Linear = [Dense(self.pred_len) for _ in range(self.channels)]
-            # self.Linear = []
-            # for i in range(self.channels):
-            #     self.Linear.append(tf.keras.layers.Dense(self.pred_len))
         else:
             self.Linear = Dense(self.pred_len)
         self.final_layer = Dense(self.pred_len)
@@ -127,12 +124,12 @@ class NLinear(tf.keras.Model):
         if self.pred_len==1: tf.squeeze(self.final_layer(x), axis=-1)
         return x # [Batch, Output length, Channel]
 
-class Linear(tf.keras.Model):
+class Linear__Tensorflow(tf.keras.Model):
     """
     Just one Linear layer
     """
     def __init__(self, seq_len, pred_len, enc_in, individual):
-        super(Linear, self).__init__()
+        super(Linear__Tensorflow, self).__init__()
         self.seq_len = seq_len
         self.pred_len = pred_len
         self.channels = enc_in
@@ -140,10 +137,10 @@ class Linear(tf.keras.Model):
         if self.individual:
             self.Linear = []
             for i in range(self.channels):
-                self.Linear.append(tf.keras.layers.Dense(units=self.pred_len))
+                self.Linear.append(Dense(units=self.pred_len))
         else:
-            self.Linear = tf.keras.layers.Dense(units=self.pred_len)
-        self.final_layer = tf.keras.layers.Dense(1)
+            self.Linear = Dense(units=self.pred_len)
+        self.final_layer = Dense(1)
 
     def call(self, x):
         # x: [Batch, Input length, Channel]
@@ -159,12 +156,6 @@ class Linear(tf.keras.Model):
         if self.channels==1: x = tf.squeeze(self.final_layer(x), axis=-1)
         # print(f'{x.shape = }')
         return x # [Batch, Output length, Channel]
-
-
-from models.Base import TensorflowModel
-from keras.callbacks import CSVLogger
-from keras.callbacks import EarlyStopping
-from keras.callbacks import ReduceLROnPlateau
 
 class LTSF_Linear_Base(TensorflowModel):
     def __init__(self, input_shape, output_shape, units, activations, dropouts, individual, enc_in, normalize_layer=None, seed=941, **kwargs):
@@ -183,27 +174,21 @@ class LTSF_Linear_Base(TensorflowModel):
 
 class LTSF_Linear__Tensorflow(LTSF_Linear_Base):
     def build(self):
-        self.model = Linear(seq_len=self.input_shape, 
-                            pred_len=self.output_shape, 
-                            enc_in=self.enc_in, 
-                            individual=self.individual)
+        self.model = Linear__Tensorflow(seq_len=self.input_shape, 
+                                        pred_len=self.output_shape, 
+                                        enc_in=self.enc_in, 
+                                        individual=self.individual)
 
 class LTSF_NLinear__Tensorflow(LTSF_Linear_Base):
     def build(self):
-        self.model = NLinear(seq_len=self.input_shape, 
-                             pred_len=self.output_shape, 
-                             enc_in=self.enc_in, 
-                             individual=self.individual)
-        # self.model = NLinear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=7, individual=False)
+        self.model = NLinear__Tensorflow(seq_len=self.input_shape, 
+                                         pred_len=self.output_shape, 
+                                         enc_in=self.enc_in, 
+                                         individual=self.individual)
 
 class LTSF_DLinear__Tensorflow(LTSF_Linear_Base):
     def build(self):
-        self.model = DLinear(seq_len=self.input_shape, 
-                             pred_len=self.output_shape, 
-                             enc_in=self.enc_in, 
-                             individual=self.individual)
-        # self.model = DLinear(seq_len=self.input_shape, pred_len=self.output_shape, enc_in=7, individual=False)
-
-
-    # def get_config(self):
-    #     return super().get_config()
+        self.model = DLinear__Tensorflow(seq_len=self.input_shape, 
+                                         pred_len=self.output_shape, 
+                                         enc_in=self.enc_in, 
+                                         individual=self.individual)
