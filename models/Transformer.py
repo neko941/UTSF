@@ -73,49 +73,32 @@ class VanillaTransformer__Pytorch(nn.Module):
         else:
             return dec_out[:, -self.pred_len:, :]  # [B, L, D]
         
-class _VanillaTransformer__Tensorflow(tf.keras.Model):
+class VanillaTransformer__Tensorflow(tf.keras.Model):
     """
     Vanilla Transformer with O(L^2) complexity
     """
-    def __init__(self, 
-                 pred_len,
-                 output_attention,
-                 enc_in,
-                 dec_in,
-                 d_model,
-                 embed,
-                 factor,
-                 freq,
-                 n_heads,
-                 d_layers,
-                 e_layers,
-                 c_out,
-                 d_ff,
-                 activations,
-                 dropouts):
-        super(_VanillaTransformer__Tensorflow, self).__init__()
-        self.pred_len = pred_len
-        self.output_attention = output_attention
+    def __init__(self, configs):
+        super(VanillaTransformer__Tensorflow, self).__init__()
+        self.pred_len = configs.pred_len
+        self.output_attention = configs.output_attention
 
         # Embedding
-        self.enc_embedding = DataEmbedding__Tensorflow(enc_in, d_model[0], embed, freq, dropouts[0])
-        self.dec_embedding = DataEmbedding__Tensorflow(dec_in, d_model[1], embed, freq, dropouts[1])
+        self.enc_embedding = DataEmbedding__Tensorflow(configs.enc_in, configs.d_model, configs.embed, configs.freq,
+                                           configs.dropout)
+        self.dec_embedding = DataEmbedding__Tensorflow(configs.dec_in, configs.d_model, configs.embed, configs.freq,
+                                           configs.dropout)
         # Encoder
         self.encoder = Encoder__Tensorflow(
             [
                 EncoderLayer__Tensorflow(
                     AttentionLayer__Tensorflow(
-                        FullAttention__Tensorflow(False, 
-                                                  factor, 
-                                                  attention_dropout=dropouts[2],
-                                                  output_attention=output_attention), 
-                        d_model[2], 
-                        n_heads),
-                    d_model[3],
-                    d_ff,
-                    dropout=dropouts[3],
-                    activation=activations[0]
-                ) for l in range(e_layers)
+                        FullAttention__Tensorflow(False, configs.factor, attention_dropout=configs.dropout,
+                                      output_attention=configs.output_attention), configs.d_model, configs.n_heads),
+                    configs.d_model,
+                    configs.d_ff,
+                    dropout=configs.dropout,
+                    activation=configs.activation
+                ) for l in range(configs.e_layers)
             ],
             norm_layer=tf.keras.layers.LayerNormalization(epsilon=1e-6)
         )
@@ -124,20 +107,20 @@ class _VanillaTransformer__Tensorflow(tf.keras.Model):
             [
                 DecoderLayer__Tensorflow(
                     AttentionLayer__Tensorflow(
-                        FullAttention__Tensorflow(True, factor, attention_dropout=dropouts[4], output_attention=False),
-                        d_model[4], n_heads),
+                        FullAttention__Tensorflow(True, configs.factor, attention_dropout=configs.dropout, output_attention=False),
+                        configs.d_model, configs.n_heads),
                     AttentionLayer__Tensorflow(
-                        FullAttention__Tensorflow(False, factor, attention_dropout=dropouts[5], output_attention=False),
-                        d_model[5], n_heads),
-                    d_model[6],
-                    d_ff,
-                    dropout=dropouts[6],
-                    activation=activations[1],
+                        FullAttention__Tensorflow(False, configs.factor, attention_dropout=configs.dropout, output_attention=False),
+                        configs.d_model, configs.n_heads),
+                    configs.d_model,
+                    configs.d_ff,
+                    dropout=configs.dropout,
+                    activation=configs.activation,
                 )
-                for l in range(d_layers)
+                for l in range(configs.d_layers)
             ],
             norm_layer=tf.keras.layers.LayerNormalization(epsilon=1e-6),
-            projection=tf.keras.layers.Dense(c_out)
+            projection=tf.keras.layers.Dense(configs.c_out)
         )
 
     def call(self, x_enc, x_mark_enc, x_dec, x_mark_dec, y_dec=None,
@@ -153,22 +136,3 @@ class _VanillaTransformer__Tensorflow(tf.keras.Model):
             return dec_out[:, -self.pred_len:, :], attns
         else:
             return dec_out[:, -self.pred_len:, :]
-
-from models.Base import TensorflowModel
-class VanillaTransformer__Tensorflow(TensorflowModel):
-    def build(self):
-        self.model = _VanillaTransformer__Tensorflow(pred_len=self.output_shape,
-                                                     output_attention=True,
-                                                     enc_in=self.input_shape[-1],
-                                                     dec_in=self.input_shape[-1],
-                                                     d_model=self.units,
-                                                     embed='timeF',
-                                                     factor=1,
-                                                     freq='d',
-                                                     n_heads=8,
-                                                     d_layers=1,
-                                                     e_layers=2,
-                                                     c_out=self.output_shape,
-                                                     d_ff=2048,
-                                                     activations=self.activations,
-                                                     dropouts=self.dropouts)

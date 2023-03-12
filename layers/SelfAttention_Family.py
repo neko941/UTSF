@@ -4,7 +4,7 @@ import numpy as np
 from math import sqrt
 import tensorflow as tf
 from utils.masking import TriangularCausalMask__Pytorch, ProbMask__Pytorch
-from utils.masking import TriangularCausalMask__Tensorflow, ProbMask__TensorFlow
+from utils.masking import TriangularCausalMask__Tensorflow, ProbMask__Tensorflow
 
 class FullAttention__Pytorch(nn.Module):
     def __init__(self, mask_flag=True, factor=5, scale=None, attention_dropout=0.1, output_attention=False):
