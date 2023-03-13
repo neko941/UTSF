@@ -353,8 +353,7 @@ model_dict = [
         'activations' : ['gelu', 'gelu']
     }
 ]
-for model in model_dict:
-    model.setdefault("activations", [None])
+for model in model_dict: model.setdefault("activations", [None])
 
 def parse_opt(known=False):
     parser = argparse.ArgumentParser()
@@ -379,6 +378,7 @@ def parse_opt(known=False):
     parser.add_argument('--round', type=int, default=-1, help='Round decimals in results, -1 to disable')
     parser.add_argument('--individual', action='store_true', help='for LTSF Linear models')
     parser.add_argument('--debug', action='store_true', help='print debug information in table')
+    parser.add_argument('--multimodels', action='store_true', help='split data of n segment ids for n models ')
 
     parser.add_argument('--AutoInterpolate', type=str, choices=['', 'forward', 'backward'], default='', help='')
     parser.add_argument('--CyclicalPattern', action='store_true', help='Add sin cos cyclical feature')
@@ -393,6 +393,7 @@ def parse_opt(known=False):
     parser.add_argument('--DeepLearning', action='store_true', help='')
     parser.add_argument('--Tensorflow', action='store_true', help='')
     parser.add_argument('--Pytorch', action='store_true', help='')
+    parser.add_argument('--LTSF', action='store_true', help='Using all LTSF Linear Models')
 
     for item in model_dict:
         parser.add_argument(f"--{item['model'].__name__}", action='store_true', help=f"{item['help']}")
@@ -413,6 +414,10 @@ def main(opt):
     if opt.DeepLearning:
         opt.Tensorflow = True
         opt.Pytorch = True
+    if opt.LTSF:
+        opt.LTSF_Linear__Tensorflow = True
+        opt.LTSF_NLinear__Tensorflow = True
+        opt.LTSF_DLinear__Tensorflow = True
     for item in model_dict:
         if any([opt.Tensorflow and item['type']=='Tensorflow',
                 opt.Pytorch and item['type']=='Pytorch',
@@ -467,6 +472,7 @@ def main(opt):
         df[data['date']] = pd.to_datetime(df[data['date']])
 
         # auto fill missing data
+        # TODO: drop date for case the does not need a whole year
         if opt.AutoInterpolate != '':
             df = pd.merge(df,
                           pd.DataFrame(pd.date_range(min(df[data['date']]), max(df[data['date']])), columns=[data['date']]),
@@ -498,15 +504,15 @@ def main(opt):
     elif opt.SplitFeature is not None: segment_feature = opt.SplitFeature
     else: segment_feature = None
 
-    X_train, y_train, X_val, y_val, X_test, y_test = slicing_window(df, 
-                                                                    data['date'],
-                                                                    segment_feature,
-                                                                    (opt.trainsz, opt.valsz, 1-opt.trainsz-opt.valsz), 
-                                                                    opt.inputsz, 
-                                                                    opt.labelsz, 
-                                                                    opt.offset, 
-                                                                    data['target'])
-
+    X_train, y_train, X_val, y_val, X_test, y_test = slicing_window(df=df, 
+                                                                    date_feature=data['date'],
+                                                                    segment_feature=segment_feature,
+                                                                    split_ratio=(opt.trainsz, opt.valsz, 1-opt.trainsz-opt.valsz), 
+                                                                    input_size=opt.inputsz, 
+                                                                    label_size=opt.labelsz, 
+                                                                    offset=opt.offset, 
+                                                                    label_name=data['target'],
+                                                                    multimodels=opt.multimodels)
     console = Console(record=True)
     table = Table(title="[cyan]Results", 
                   show_header=True, 
