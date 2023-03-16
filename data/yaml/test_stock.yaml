@@ -1,0 +1,10 @@
+data:
+  - data/stocks
+target: Adj Close
+date: Date
+features:
+  - Open
+  - High
+  - Low
+  - Close
+  - Volume

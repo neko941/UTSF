@@ -1,0 +1,17 @@
+name: model-env
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip<=23.0.1
+  - pip:
+    - torch==1.12
+    - tensorflow==2.9.2
+    - numpy==1.24.1
+    - pandas==1.5.2
+    - rich==12.6.0
+    - scikit-learn==1.2
+    - xgboost==1.7.3
+    - pyyaml==6.0
+    - lightgbm==3.3.4
+    - catboost==1.1.1
