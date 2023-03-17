@@ -85,7 +85,7 @@ class DLinear__Tensorflow(tf.keras.Model):
             x = tf.transpose(x, perm=[0,2,1]) # to [Batch, Output length, Channel]
 
         # print(x.shape)
-        if self.pred_len==1: tf.squeeze(self.final_layer(x), axis=-1)
+        if self.pred_len==1: x = tf.squeeze(self.final_layer(x), axis=-1)
         return x # [Batch, Output length, Channel]
 
 
@@ -121,7 +121,7 @@ class NLinear__Tensorflow(tf.keras.Model):
             x = tf.transpose(x, perm=[0, 2, 1])
         x = x + seq_last
         # print(tf.squeeze(self.final_layer(x), axis=-1).shape)
-        if self.pred_len==1: tf.squeeze(self.final_layer(x), axis=-1)
+        if self.pred_len==1: x = tf.squeeze(self.final_layer(x), axis=-1)
         return x # [Batch, Output length, Channel]
 
 class Linear__Tensorflow(tf.keras.Model):
