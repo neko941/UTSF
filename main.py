@@ -539,54 +539,122 @@ def main(opt):
 
     errors = []
     get_custom_activations()
-    for item in model_dict:
-        start = time.time()
-        if not vars(opt)[f'{item["model"].__name__}']: continue
-        model = item['model'](input_shape=X_train.shape[-2:], output_shape=opt.labelsz, seed=opt.seed,
-                              config_path=item.get('config'), 
-                              activations=item.get('activations'),
-                              units=item.get('units'), 
-                              kernels=item.get('kernels'), 
-                              filters=item.get('filters'),
-                              dropouts=item.get('dropouts'),
-                              lag=opt.inputsz,
-                              individual=opt.individual,
-                              normalize_layer=norm,
-                              enc_in=1) #TODO: make this dynamic enc_in=len(data['target'])
-        model.build()
-        # print(f'{y_test.shape = }')
-        # print(f'{model.predict(X_test).shape = }')
-        # activations = '\n'.join(['None' if a == None else a for a in item.get('activations')])
-        try:
-            model.fit(patience=opt.patience, save_dir=save_dir, optimizer=opt.optimizer, loss=opt.loss, lr=opt.lr, epochs=opt.epochs, learning_rate=opt.lr, batchsz=opt.batchsz,
-                      X_train=X_train, y_train=y_train,
-                      X_val=X_val, y_val=y_val)
-            weight=os.path.join(save_dir, 'weights', f"{model.__class__.__name__}_best.h5")
-            if not os.path.exists(weight): weight = model.save(save_dir=os.path.join(save_dir, 'weights'),
-                                                               file_name=model.__class__.__name__)
-            if weight is not None: model.load(weight)
-            yhat = model.predict(X=X_test)
-            scores = model.score(y=y_test, yhat=yhat, r=opt.round)
-            # print(f'{yhat.shape = }')
-            # table.add_row(model.model.name, *scores)
-            # table.add_row(model.__class__.__name__, activations, *scores)
-            table.add_row(model.__class__.__name__, *scores)
-            debug_table.add_row(model.__class__.__name__, 
-                                convert_seconds(time.time()-start), 
-                                '\n'.join(['None' if a == None else a for a in item.get('activations')]),
-                                str(yhat.shape)
-                                )
-        except Exception as e:
-            errors.append([model.__class__.__name__, str(e)])
-            # table.add_row(model.__class__.__name__, activations, *list('_' * len(used_metric())))
-            table.add_row(model.__class__.__name__, *list('_' * len(used_metric())))
-            debug_table.add_row(model.__class__.__name__, 
-                                convert_seconds(time.time()-start), 
-                                '\n'.join(['None' if a == None else a for a in item.get('activations')]),
-                                str(model.predict(y_test).shape)
-                                )
-        console.print(table)
-        console.save_svg(os.path.join(save_dir, 'results.svg'), theme=MONOKAI)
+    if opt.multimodels:
+        for item in model_dict:
+            start = time.time()
+            num_model = X_train.shape[0]
+            if not vars(opt)[f'{item["model"].__name__}']: continue
+            model_list = []
+            all_scores = []
+            for model_id in range(num_model):
+                model = item['model'](input_shape=X_train.shape[-2:], output_shape=opt.labelsz, seed=opt.seed,
+                                    config_path=item.get('config'), 
+                                    activations=item.get('activations'),
+                                    units=item.get('units'), 
+                                    kernels=item.get('kernels'), 
+                                    filters=item.get('filters'),
+                                    dropouts=item.get('dropouts'),
+                                    lag=opt.inputsz,
+                                    individual=opt.individual,
+                                    normalize_layer=norm,
+                                    enc_in=1) #TODO: make this dynamic enc_in=len(data['target'])
+                model.build()
+                # print(f'{y_test.shape = }')
+                # print(f'{model.predict(X_test).shape = }')
+                # activations = '\n'.join(['None' if a == None else a for a in item.get('activations')])
+                model_list.append(model)
+                # model_list[model_id].__class__.__name__ += f'_{num_model}'
+                sub_X_train = X_train[model_id]
+                sub_y_train = y_train[model_id]
+                sub_X_val = X_val[model_id]
+                sub_y_val = y_val[model_id]
+                sub_X_test = X_test[model_id]
+                sub_y_test = y_test[model_id]
+                # try:
+                model_list[model_id].fit(patience=opt.patience, save_dir=save_dir, optimizer=opt.optimizer, loss=opt.loss, lr=opt.lr, epochs=opt.epochs, learning_rate=opt.lr, batchsz=opt.batchsz,
+                        X_train=sub_X_train, y_train=sub_y_train,
+                        X_val=sub_X_val, y_val=sub_y_val)
+                weight=os.path.join(save_dir, 'weights', f"{model_list[model_id].__class__.__name__}_best.h5")
+                if not os.path.exists(weight): weight = model_list[model_id].save(save_dir=os.path.join(save_dir, 'weights'),
+                                                                file_name=model_list[model_id].__class__.__name__)
+                if weight is not None: model_list[model_id].load(weight)
+                yhat = model_list[model_id].predict(X=sub_X_test)
+                scores = model_list[model_id].score(y=sub_y_test, yhat=yhat, r=opt.round)
+                all_scores.append(scores)
+                    # print(f'{yhat.shape = }')
+                    # table.add_row(model_list[model_id].model_list[model_id].name, *scores)
+                    # table.add_row(model_list[model_id].__class__.__name__, activations, *scores)
+                    # table.add_row(model_list[model_id].__class__.__name__, *scores)
+                #     debug_table.add_row(model_list[model_id].__class__.__name__, 
+                #                         convert_seconds(time.time()-start), 
+                #                         '\n'.join(['None' if a == None else a for a in item.get('activations')]),
+                #                         str(yhat.shape)
+                #                         )
+                # except Exception as e:
+                #     errors.append([model_list[model_id].__class__.__name__, str(e)])
+                #     # table.add_row(model_list[model_id].__class__.__name__, activations, *list('_' * len(used_metric())))
+                #     table.add_row(model_list[model_id].__class__.__name__, *list('_' * len(used_metric())))
+                #     debug_table.add_row(model_list[model_id].__class__.__name__, 
+                #                         convert_seconds(time.time()-start), 
+                #                         '\n'.join(['None' if a == None else a for a in item.get('activations')]),
+                #                         str(model_list[model_id].predict(sub_y_test).shape)
+                #                         )
+            # print(all_scores)
+            # print(type(all_scores))
+            # print(np.mean(np.array(all_scores).astype(np.float64), axis=0))
+            # exit()
+            table.add_row(item["model"].__name__, *[str(a) for a in np.mean(np.array(all_scores).astype(np.float), axis=0)])
+            console.print(table)
+            console.save_svg(os.path.join(save_dir, 'results.svg'), theme=MONOKAI)
+    else:
+        for item in model_dict:
+            start = time.time()
+            if not vars(opt)[f'{item["model"].__name__}']: continue
+            model = item['model'](input_shape=X_train.shape[-2:], output_shape=opt.labelsz, seed=opt.seed,
+                                config_path=item.get('config'), 
+                                activations=item.get('activations'),
+                                units=item.get('units'), 
+                                kernels=item.get('kernels'), 
+                                filters=item.get('filters'),
+                                dropouts=item.get('dropouts'),
+                                lag=opt.inputsz,
+                                individual=opt.individual,
+                                normalize_layer=norm,
+                                enc_in=1) #TODO: make this dynamic enc_in=len(data['target'])
+            model.build()
+            # print(f'{y_test.shape = }')
+            # print(f'{model.predict(X_test).shape = }')
+            # activations = '\n'.join(['None' if a == None else a for a in item.get('activations')])
+            try:
+                model.fit(patience=opt.patience, save_dir=save_dir, optimizer=opt.optimizer, loss=opt.loss, lr=opt.lr, epochs=opt.epochs, learning_rate=opt.lr, batchsz=opt.batchsz,
+                        X_train=X_train, y_train=y_train,
+                        X_val=X_val, y_val=y_val)
+                weight=os.path.join(save_dir, 'weights', f"{model.__class__.__name__}_best.h5")
+                if not os.path.exists(weight): weight = model.save(save_dir=os.path.join(save_dir, 'weights'),
+                                                                file_name=model.__class__.__name__)
+                if weight is not None: model.load(weight)
+                yhat = model.predict(X=X_test)
+                scores = model.score(y=y_test, yhat=yhat, r=opt.round)
+                # print(f'{yhat.shape = }')
+                # table.add_row(model.model.name, *scores)
+                # table.add_row(model.__class__.__name__, activations, *scores)
+                table.add_row(model.__class__.__name__, *scores)
+                debug_table.add_row(model.__class__.__name__, 
+                                    convert_seconds(time.time()-start), 
+                                    '\n'.join(['None' if a == None else a for a in item.get('activations')]),
+                                    str(yhat.shape)
+                                    )
+            except Exception as e:
+                errors.append([model.__class__.__name__, str(e)])
+                # table.add_row(model.__class__.__name__, activations, *list('_' * len(used_metric())))
+                table.add_row(model.__class__.__name__, *list('_' * len(used_metric())))
+                debug_table.add_row(model.__class__.__name__, 
+                                    convert_seconds(time.time()-start), 
+                                    '\n'.join(['None' if a == None else a for a in item.get('activations')]),
+                                    str(model.predict(y_test).shape)
+                                    )
+            console.print(table)
+            console.save_svg(os.path.join(save_dir, 'results.svg'), theme=MONOKAI)
     if opt.debug: 
         debug_console.print(debug_table)
         debug_console.save_svg(os.path.join(save_dir, 'debug.svg'), theme=MONOKAI)
