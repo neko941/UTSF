@@ -570,17 +570,17 @@ def main(opt):
                 sub_y_val = y_val[model_id]
                 sub_X_test = X_test[model_id]
                 sub_y_test = y_test[model_id]
-                # try:
-                model_list[model_id].fit(patience=opt.patience, save_dir=save_dir, optimizer=opt.optimizer, loss=opt.loss, lr=opt.lr, epochs=opt.epochs, learning_rate=opt.lr, batchsz=opt.batchsz,
-                        X_train=sub_X_train, y_train=sub_y_train,
-                        X_val=sub_X_val, y_val=sub_y_val)
-                weight=os.path.join(save_dir, 'weights', f"{model_list[model_id].__class__.__name__}_best.h5")
-                if not os.path.exists(weight): weight = model_list[model_id].save(save_dir=os.path.join(save_dir, 'weights'),
-                                                                file_name=model_list[model_id].__class__.__name__)
-                if weight is not None: model_list[model_id].load(weight)
-                yhat = model_list[model_id].predict(X=sub_X_test)
-                scores = model_list[model_id].score(y=sub_y_test, yhat=yhat, r=opt.round)
-                all_scores.append(scores)
+                try:
+                    model_list[model_id].fit(patience=opt.patience, save_dir=save_dir, optimizer=opt.optimizer, loss=opt.loss, lr=opt.lr, epochs=opt.epochs, learning_rate=opt.lr, batchsz=opt.batchsz,
+                            X_train=sub_X_train, y_train=sub_y_train,
+                            X_val=sub_X_val, y_val=sub_y_val)
+                    weight=os.path.join(save_dir, 'weights', f"{model_list[model_id].__class__.__name__}_best.h5")
+                    if not os.path.exists(weight): weight = model_list[model_id].save(save_dir=os.path.join(save_dir, 'weights'),
+                                                                    file_name=model_list[model_id].__class__.__name__)
+                    if weight is not None: model_list[model_id].load(weight)
+                    yhat = model_list[model_id].predict(X=sub_X_test)
+                    scores = model_list[model_id].score(y=sub_y_test, yhat=yhat, r=opt.round)
+                    all_scores.append(scores)
                     # print(f'{yhat.shape = }')
                     # table.add_row(model_list[model_id].model_list[model_id].name, *scores)
                     # table.add_row(model_list[model_id].__class__.__name__, activations, *scores)
@@ -590,8 +590,8 @@ def main(opt):
                 #                         '\n'.join(['None' if a == None else a for a in item.get('activations')]),
                 #                         str(yhat.shape)
                 #                         )
-                # except Exception as e:
-                #     errors.append([model_list[model_id].__class__.__name__, str(e)])
+                except Exception as e:
+                    errors.append([model_list[model_id].__class__.__name__, str(e)])
                 #     # table.add_row(model_list[model_id].__class__.__name__, activations, *list('_' * len(used_metric())))
                 #     table.add_row(model_list[model_id].__class__.__name__, *list('_' * len(used_metric())))
                 #     debug_table.add_row(model_list[model_id].__class__.__name__, 
