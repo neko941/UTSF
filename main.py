@@ -603,7 +603,7 @@ def main(opt):
             # print(type(all_scores))
             # print(np.mean(np.array(all_scores).astype(np.float64), axis=0))
             # exit()
-            table.add_row(item["model"].__name__, *[str(a) for a in np.mean(np.array(all_scores).astype(np.float), axis=0)])
+            table.add_row(item["model"].__name__, *[str(a) for a in np.mean(np.array(all_scores).astype(np.float64), axis=0)])
             console.print(table)
             console.save_svg(os.path.join(save_dir, 'results.svg'), theme=MONOKAI)
     else:
