@@ -85,7 +85,6 @@ from models.Concatenated import BiLSTMcBiGRU__Tensorflow
 from models.EncoderDecoder import EncoderDecoder__Tensorflow
 from models.EncoderDecoder import BiEncoderDecoder__Tensorflow
 from models.EncoderDecoder import CNNcLSTMcEncoderDecoder__Tensorflow
-from models.Transformer import VanillaTransformer__Tensorflow
 
 """ 
 TODO:
@@ -122,6 +121,15 @@ TODO:
         'type' : 'Tensorflow',
         'units' : [28, 64, 32, 32],
         'activations': ['tanh', 'tanh', 'tanh', None, None]
+    }
+    from models.Transformer import VanillaTransformer__Tensorflow
+    {
+        'model' : VanillaTransformer__Tensorflow,
+        'help' : '',
+        'type' : 'Tensorflow',
+        'units' : [512, 512, 512, 512, 512, 512, 512],
+        'dropouts' : [0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05],
+        'activations' : ['gelu', 'gelu']
     }
     
     from models.TabTransformer import TabTransformer
@@ -344,13 +352,6 @@ model_dict = [
         'dropouts' : [0.1, 0.1, 0.1],
         'type' : 'Tensorflow',
         'activations': ['relu', 'relu', 'relu', 'relu']
-    },{
-        'model' : VanillaTransformer__Tensorflow,
-        'help' : '',
-        'type' : 'Tensorflow',
-        'units' : [512, 512, 512, 512, 512, 512, 512],
-        'dropouts' : [0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 0.05],
-        'activations' : ['gelu', 'gelu']
     }
 ]
 for model in model_dict: model.setdefault("activations", [None])
@@ -603,7 +604,10 @@ def main(opt):
             # print(type(all_scores))
             # print(np.mean(np.array(all_scores).astype(np.float64), axis=0))
             # exit()
-            table.add_row(item["model"].__name__, *[str(a) for a in np.mean(np.array(all_scores).astype(np.float64), axis=0)])
+            try:
+                table.add_row(item["model"].__name__, *[str(a) for a in np.mean(np.array(all_scores).astype(np.float64), axis=0)])
+            except Exception as e:
+                table.add_row(item["model"].__name__, *list('_' * len(used_metric())))
             console.print(table)
             console.save_svg(os.path.join(save_dir, 'results.svg'), theme=MONOKAI)
     else:
@@ -648,11 +652,13 @@ def main(opt):
                 errors.append([model.__class__.__name__, str(e)])
                 # table.add_row(model.__class__.__name__, activations, *list('_' * len(used_metric())))
                 table.add_row(model.__class__.__name__, *list('_' * len(used_metric())))
+                
+                theshape = str(model.predict(y_test).shape) if model.model is not None else '_'
+                
                 debug_table.add_row(model.__class__.__name__, 
                                     convert_seconds(time.time()-start), 
                                     '\n'.join(['None' if a == None else a for a in item.get('activations')]),
-                                    str(model.predict(y_test).shape)
-                                    )
+                                    theshape)
             console.print(table)
             console.save_svg(os.path.join(save_dir, 'results.svg'), theme=MONOKAI)
     if opt.debug: 
