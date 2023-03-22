@@ -524,6 +524,16 @@ def main(opt):
     # for name in ['Name', 'Activations', *list(used_metric())]: table.add_column(f'[green]{name}', justify='center')
     for name in ['Name', *list(used_metric())]: table.add_column(f'[green]{name}', justify='center')
     
+    train_console = Console(record=True)
+    train_table = Table(title="[cyan]Test on Train", 
+                  show_header=True, 
+                  header_style="bold magenta",
+                  box=rbox.ROUNDED,
+                  show_lines=True)
+    # table header
+    # for name in ['Name', 'Activations', *list(used_metric())]: table.add_column(f'[green]{name}', justify='center')
+    for name in ['Name', *list(used_metric())]: train_table.add_column(f'[green]{name}', justify='center')
+
     debug_console = Console(record=True)
     debug_table = Table(title="[cyan]Debug", 
                 show_header=True, 
@@ -547,6 +557,7 @@ def main(opt):
             if not vars(opt)[f'{item["model"].__name__}']: continue
             model_list = []
             all_scores = []
+            train_all_scores = []
             for model_id in range(num_model):
                 model = item['model'](input_shape=X_train.shape[-2:], output_shape=opt.labelsz, seed=opt.seed,
                                     config_path=item.get('config'), 
@@ -564,7 +575,7 @@ def main(opt):
                 # print(f'{model.predict(X_test).shape = }')
                 # activations = '\n'.join(['None' if a == None else a for a in item.get('activations')])
                 model_list.append(model)
-                # model_list[model_id].__class__.__name__ += f'_{num_model}'
+                model_list[model_id].__class__.__name__ += f'_{model_id}'
                 sub_X_train = X_train[model_id]
                 sub_y_train = y_train[model_id]
                 sub_X_val = X_val[model_id]
@@ -582,6 +593,9 @@ def main(opt):
                     yhat = model_list[model_id].predict(X=sub_X_test)
                     scores = model_list[model_id].score(y=sub_y_test, yhat=yhat, r=opt.round)
                     all_scores.append(scores)
+                    yhat = model_list[model_id].predict(X=sub_X_train)
+                    scores = model_list[model_id].score(y=sub_y_train, yhat=yhat, r=opt.round)
+                    train_all_scores.append(scores)
                     # print(f'{yhat.shape = }')
                     # table.add_row(model_list[model_id].model_list[model_id].name, *scores)
                     # table.add_row(model_list[model_id].__class__.__name__, activations, *scores)
@@ -605,7 +619,9 @@ def main(opt):
             # print(np.mean(np.array(all_scores).astype(np.float64), axis=0))
             # exit()
             try:
+                print(all_scores, train_all_scores)
                 table.add_row(item["model"].__name__, *[str(a) for a in np.mean(np.array(all_scores).astype(np.float64), axis=0)])
+                train_table.add_row(item["model"].__name__, *[str(a) for a in np.mean(np.array(train_all_scores).astype(np.float64), axis=0)])
                 # theshape = str(model_list[model_id].predict(y_test).shape) if model_list[model_id].model is not None else '_'
                 # debug_table.add_row(item["model"].__name__, 
                 #                     convert_seconds(time.time()-start), 
@@ -614,8 +630,11 @@ def main(opt):
                 #                     )
             except Exception as e:
                 table.add_row(item["model"].__name__, *list('_' * len(used_metric())))
+                train_table.add_row(item["model"].__name__, *list('_' * len(used_metric())))
             console.print(table)
             console.save_svg(os.path.join(save_dir, 'results.svg'), theme=MONOKAI)
+            train_console.print(train_table)
+            train_console.save_svg(os.path.join(save_dir, 'results_on_train.svg'), theme=MONOKAI)
     else:
         for item in model_dict:
             start = time.time()
