@@ -39,7 +39,9 @@ main.run(all=True,
 python main.py --all --labelsz=7
 ```
 
-# Case 1: Multiple ids, split by id (second last component in the data path)
+# Salinity
+
+## Case 1: Multiple ids, split by id (second last component in the data path)
 
 ```
 data:
@@ -56,7 +58,7 @@ features:
 python .\main.py --inputsz=5 --labelsz=1 --DirAsFeature=1 --SplitDirFeature=0 --source=./data/yaml/test_case_1.yaml
 ```
 
-# Case 2: Multiple ids, split by column
+## Case 2: Multiple ids, split by column
 
 ```
 data:
@@ -70,7 +72,7 @@ features:
 python .\main.py --inputsz=5 --labelsz=1 --SplitFeature='station' --source=./data/yaml/test_case_2.yaml
 ```
 
-# Case 2: One id, multi-step forecasting
+## Case 3: One id, multi-step forecasting
 
 ```
 data:
@@ -87,4 +89,20 @@ features:
 
 ```
 python .\main.py --inputsz=15 --labelsz=2 --source=./data/yaml/test_case_3.yaml
+```
+
+# Traffic
+
+## Case 1
+
+```
+data: .\data\traffic\vehiclework_segment_avg_speed.csv
+target: speed
+date: date
+time_as_id: time_id
+features: road_segment_id
+```
+
+```
+python .\main.py --inputsz=5 --labelsz=1 --SplitFeature='road_segment_id' --source=./data/yaml/test_traffic.yaml --delimiter='|' --indexCol=0 --granularity=5 --startTimeId=240
 ```

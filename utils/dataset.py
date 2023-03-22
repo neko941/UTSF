@@ -2,7 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 
-def ReadFileAddFetures(csvs, DirAsFeature, ColName):
+def ReadFileAddFetures(csvs, DirAsFeature, ColName, delimiter, index_col):
     # path = os.path.abspath(filename)
     # features = [int(p) if p.isdigit() else p for p in path.split(os.sep)[-DirAsFeature-1:-1]]
     # print(features)
@@ -10,13 +10,13 @@ def ReadFileAddFetures(csvs, DirAsFeature, ColName):
     # for idx, f in enumerate(features): df[f'Dir{idx}'] = f
     # print(df)
     dir_features = []
-    if DirAsFeature == 0: df = pd.concat([pd.read_csv(filename) for filename in csvs], axis=0, ignore_index=True)
+    if DirAsFeature == 0: df = pd.concat([pd.read_csv(filepath_or_buffer=filename, delimiter=delimiter, index_col=index_col) for filename in csvs], axis=0, ignore_index=True)
     else:
         dfs = []
         for csv in csvs:
             path = os.path.abspath(csv)
             features = [int(p) if p.isdigit() else p for p in path.split(os.sep)[-DirAsFeature-1:-1]]
-            df = pd.read_csv(path)
+            df = pd.read_csv(filepath_or_buffer=path, delimiter=delimiter, index_col=index_col)
             for idx, f in enumerate(features): df[f'{ColName}{idx}'] = f
             dir_features.append(f'{ColName}{idx}')
             dfs.append(df)

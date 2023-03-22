@@ -367,6 +367,12 @@ def parse_opt(known=False):
     parser.add_argument('--trainsz', type=float, default=0.7, help='')
     parser.add_argument('--valsz', type=float, default=0.2, help='')
 
+    parser.add_argument('--indexCol', type=int, default=None, help='')
+    parser.add_argument('--delimiter', type=str, default=',', help='')
+
+    parser.add_argument('--granularity', type=int, default=1, help='by minutes')
+    parser.add_argument('--startTimeId', type=int, default=0, help='by minutes')
+
     parser.add_argument('--source', default='data.yaml', help='dataset')
     parser.add_argument('--patience', type=int, default=1000, help='EarlyStopping patience (epochs without improvement)')
     parser.add_argument('--project', default=ROOT / 'runs', help='save to project/name')
@@ -439,9 +445,9 @@ def main(opt):
 
     """ Read data config """
     data = yaml_load(opt.source)
-    if data['features'] is None: 
-        # opt.CyclicalPattern = True
-        data['features'] = []
+    if data['features'] is None: data['features'] = []
+    elif not isinstance(data['features'], list): data['features'] = [data['features']]
+
 
     """ Get all files with given extensions and read """
     csvs = []
@@ -456,8 +462,14 @@ def main(opt):
     assert len(csvs) > 0, 'No csv file(s)'
     df, dir_feature = ReadFileAddFetures(csvs=csvs, 
                                          DirAsFeature=opt.DirAsFeature,
-                                         ColName=opt.DirFeatureName)
+                                         ColName=opt.DirFeatureName,
+                                         delimiter=opt.delimiter,
+                                         index_col=opt.indexCol)
     data['features'].extend(dir_feature)
+
+    if 'time_as_id' in data and 'date' in data: 
+        assert df[data['time_as_id']].max() * opt.granularity + opt.startTimeId - 24*60 <= 0, f'time id max should be {(24*60  - opt.startTimeId) / opt.granularity} else it will exceed to the next day'
+        df[data['date']] = df.apply(lambda row: pd.to_datetime(row[data['date']]) + pd.to_timedelta((row[data['time_as_id']]-1)*opt.granularity+opt.startTimeId, unit='m'), axis=1)
 
     """ Data preprocessing """
     # if not isinstance(data['target'], list): data['target'] = [data['target']]
