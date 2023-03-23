@@ -618,12 +618,6 @@ def main(opt):
             # exit()
             try:
                 table.add_row(item["model"].__name__, *[str(a) for a in np.mean(np.array(all_scores).astype(np.float64), axis=0)])
-                # theshape = str(model_list[model_id].predict(y_test).shape) if model_list[model_id].model is not None else '_'
-                # debug_table.add_row(item["model"].__name__, 
-                #                     convert_seconds(time.time()-start), 
-                #                     '\n'.join(['None' if a == None else a for a in item.get('activations')]),
-                #                     theshape
-                #                     )
             except Exception as e:
                 table.add_row(item["model"].__name__, *list('_' * len(used_metric())))
             console.print(table)
