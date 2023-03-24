@@ -1,4 +1,6 @@
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1' # INFO messages are not printed
+
 import sys
 from pathlib import Path
 
@@ -397,6 +399,7 @@ def parse_opt(known=False):
     parser.add_argument('--DirFeatureName', type=str, default='dir', help='')
     parser.add_argument('--SplitDirFeature', type=int, default=0, help='Segmentation using dir feature')
     parser.add_argument('--SplitFeature', type=str, default=None, help='Segmentation using feature')
+    parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
 
     parser.add_argument('--all', action='store_true', help='Use all available models')
     parser.add_argument('--MachineLearning', action='store_true', help='')
@@ -447,6 +450,9 @@ def main(opt):
     torch.manual_seed(opt.seed)
     torch.cuda.manual_seed(opt.seed)
     torch.cuda.manual_seed_all(opt.seed)  # for Multi-GPU, exception safe
+
+    """ Set device """
+    # os.environ["CUDA_VISIBLE_DEVICES"]="0,1"
 
     """ Read data config """
     data = yaml_load(opt.source)
@@ -533,6 +539,7 @@ def main(opt):
                                                                     label_name=data['target'],
                                                                     multimodels=opt.multimodels)
 
+    # print(X_train.shape, X_train)
 
     console = Console(record=True)
     table = Table(title="[cyan]Results", 

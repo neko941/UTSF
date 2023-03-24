@@ -1,61 +1,48 @@
 import os
 import numpy as np
 import pandas as pd
+from rich.style import Style
+from rich.progress import track
+from rich.console import Console
 
-def ReadFileAddFetures(csvs, DirAsFeature, ColName, 
-                       delimiter, index_col
-                       ):
-    # path = os.path.abspath(filename)
-    # features = [int(p) if p.isdigit() else p for p in path.split(os.sep)[-DirAsFeature-1:-1]]
-    # print(features)
-    # df = pd.read_csv(path)
-    # for idx, f in enumerate(features): df[f'Dir{idx}'] = f
-    # print(df)
+# No more warning
+pd.options.mode.chained_assignment = None 
+
+def ReadFileAddFetures(csvs, DirAsFeature, ColName, delimiter, index_col):
     dir_features = []
-    # if DirAsFeature == 0: df = pd.concat([pd.read_csv(filepath_or_buffer=filename, delimiter=delimiter, index_col=index_col) for filename in csvs], axis=0, ignore_index=True)
-    if DirAsFeature == 0: df = pd.concat([pd.read_csv(filename) for filename in csvs], axis=0, ignore_index=True)
+    if DirAsFeature == 0: df = pd.concat([pd.read_csv(filepath_or_buffer=filename, delimiter=delimiter, index_col=index_col) for filename in csvs], axis=0, ignore_index=True)
     else:
         dfs = []
         for csv in csvs:
             path = os.path.abspath(csv)
             features = [int(p) if p.isdigit() else p for p in path.split(os.sep)[-DirAsFeature-1:-1]]
-            # df = pd.read_csv(filepath_or_buffer=path, delimiter=delimiter, index_col=index_col)
-            df = pd.read_csv(path)
+            df = pd.read_csv(filepath_or_buffer=path, delimiter=delimiter, index_col=index_col)
             for idx, f in enumerate(features): df[f'{ColName}{idx}'] = f
             dir_features.append(f'{ColName}{idx}')
             dfs.append(df)
         df = pd.concat(dfs, axis=0, ignore_index=True)
     return df, list(set(dir_features))
 
-# # Khai báo hàm Windowing (dùng để tạo các cặp X, y cho time series data)
-def _slicing_window(df, df_start_idx, df_end_idx, input_size, label_size, offset, label_name):
-    features = [] # Khai báo list dùng để lưu trữ các X
-    labels = [] # Khai báo list dùng để lưu trữ các y
-
-    # Nếu df_end_idx = chỉ mục cuối cùng bảng dữ liệu, cần phải dời xuống 1 khoảng = window size 
+def _slicing_window(df, df_start_idx, df_end_idx, input_size, label_size, offset, label_name, description):
+    features = [] 
+    labels = []
     if df_end_idx == None: df_end_idx = len(df) - label_size - offset
-
     df_start_idx = df_start_idx + input_size + offset
-    # Duyệt qua từng mẫu dữ liệu
-    for idx in range(df_start_idx, df_end_idx):
+    for idx in track(range(df_start_idx, df_end_idx), description=description):
         feature_start_idx = idx - input_size - offset
         feature_end_idx = feature_start_idx + input_size
-
         label_start_idx = idx - 1
         label_end_idx = label_start_idx + label_size
-
         feature = df[feature_start_idx:feature_end_idx] # Lấy X
-        label = df[label_name][label_start_idx:label_end_idx] # Lấy y
-
+        label = df[label_name].iloc[label_start_idx:label_end_idx] # Lấy y
         features.append(feature) 
         labels.append(label)
 
-    # Chuyển list thành np.ndarrray
     features = np.array(features)
     labels = np.array(labels)
 
     return features, labels
-from rich.progress import track
+
 def slicing_window(df, 
                    date_feature,
                    segment_feature,
@@ -67,8 +54,12 @@ def slicing_window(df,
         else: df.sort_values(by=[segment_feature], inplace=True, ignore_index=True)
 
         X_train, y_train, X_val, y_val, X_test, y_test = [], [], [], [], [], []
-        
-        for i in track(df[segment_feature].unique(), description='Slicing data...'):
+        console = Console()
+
+        for i in df[segment_feature].unique():
+            print('PROCESSING ID', end=' ')
+            console.print(i, style=Style())
+
             d = df.loc[df[segment_feature] == i]
             d.drop([date_feature], axis=1, inplace=True)
             dataset_length = len(d)
@@ -81,21 +72,24 @@ def slicing_window(df,
                                      input_size=input_size,
                                      label_size=label_size,
                                      offset=offset,
-                                     label_name=label_name)
+                                     label_name=label_name,
+                                     description='  Training')
             x2, y2 = _slicing_window(df=d, 
                                      df_start_idx=TRAIN_END_IDX,
                                      df_end_idx=VAL_END_IDX,
                                      input_size=input_size,
                                      label_size=label_size,
                                      offset=offset,
-                                     label_name=label_name)
+                                     label_name=label_name,
+                                     description='Validation')
             x3, y3 = _slicing_window(df=d, 
                                      df_start_idx=VAL_END_IDX,
                                      df_end_idx=None,
                                      input_size=input_size,
                                      label_size=label_size,
                                      offset=offset,
-                                     label_name=label_name)
+                                     label_name=label_name,
+                                     description='   Testing')
             if multimodels:
                 X_train.append(x1)
                 y_train.append(y1)
@@ -122,7 +116,8 @@ def slicing_window(df,
                                       input_size=input_size,
                                       label_size=label_size,
                                       offset=offset,
-                                      label_name=label_name)
+                                      label_name=label_name,
+                                      description='  Training')
 
         X_val, y_val = _slicing_window(df, 
                                     df_start_idx=TRAIN_END_IDX,
@@ -130,7 +125,8 @@ def slicing_window(df,
                                     input_size=input_size,
                                     label_size=label_size,
                                     offset=offset,
-                                    label_name=label_name)
+                                    label_name=label_name,
+                                    description='Validation')
 
         X_test, y_test = _slicing_window(df, 
                                         df_start_idx=VAL_END_IDX,
@@ -138,7 +134,8 @@ def slicing_window(df,
                                         input_size=input_size,
                                         label_size=label_size,
                                         offset=offset,
-                                        label_name=label_name)
+                                        label_name=label_name,
+                                        description='   Testing')
     return X_train, y_train, X_val, y_val, X_test, y_test
 
 
