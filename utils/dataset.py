@@ -2,7 +2,9 @@ import os
 import numpy as np
 import pandas as pd
 
-def ReadFileAddFetures(csvs, DirAsFeature, ColName, delimiter, index_col):
+def ReadFileAddFetures(csvs, DirAsFeature, ColName, 
+                       delimiter, index_col
+                       ):
     # path = os.path.abspath(filename)
     # features = [int(p) if p.isdigit() else p for p in path.split(os.sep)[-DirAsFeature-1:-1]]
     # print(features)
@@ -10,13 +12,15 @@ def ReadFileAddFetures(csvs, DirAsFeature, ColName, delimiter, index_col):
     # for idx, f in enumerate(features): df[f'Dir{idx}'] = f
     # print(df)
     dir_features = []
-    if DirAsFeature == 0: df = pd.concat([pd.read_csv(filepath_or_buffer=filename, delimiter=delimiter, index_col=index_col) for filename in csvs], axis=0, ignore_index=True)
+    # if DirAsFeature == 0: df = pd.concat([pd.read_csv(filepath_or_buffer=filename, delimiter=delimiter, index_col=index_col) for filename in csvs], axis=0, ignore_index=True)
+    if DirAsFeature == 0: df = pd.concat([pd.read_csv(filename) for filename in csvs], axis=0, ignore_index=True)
     else:
         dfs = []
         for csv in csvs:
             path = os.path.abspath(csv)
             features = [int(p) if p.isdigit() else p for p in path.split(os.sep)[-DirAsFeature-1:-1]]
-            df = pd.read_csv(filepath_or_buffer=path, delimiter=delimiter, index_col=index_col)
+            # df = pd.read_csv(filepath_or_buffer=path, delimiter=delimiter, index_col=index_col)
+            df = pd.read_csv(path)
             for idx, f in enumerate(features): df[f'{ColName}{idx}'] = f
             dir_features.append(f'{ColName}{idx}')
             dfs.append(df)
@@ -51,7 +55,7 @@ def _slicing_window(df, df_start_idx, df_end_idx, input_size, label_size, offset
     labels = np.array(labels)
 
     return features, labels
-
+from rich.progress import track
 def slicing_window(df, 
                    date_feature,
                    segment_feature,
@@ -63,7 +67,8 @@ def slicing_window(df,
         else: df.sort_values(by=[segment_feature], inplace=True, ignore_index=True)
 
         X_train, y_train, X_val, y_val, X_test, y_test = [], [], [], [], [], []
-        for i in df[segment_feature].unique():
+        
+        for i in track(df[segment_feature].unique(), description='Slicing data...'):
             d = df.loc[df[segment_feature] == i]
             d.drop([date_feature], axis=1, inplace=True)
             dataset_length = len(d)
