@@ -385,7 +385,6 @@ def parse_opt(known=False):
     parser.add_argument('--overwrite', action='store_true', help='existing project/name ok, do not increment')
     parser.add_argument('--optimizer', type=str, choices=['SGD', 'Adam'], default='Adam', help='optimizer')
     parser.add_argument('--loss', type=str, choices=['MSE'], default='MSE', help='losses')
-    # parser.add_argument('--activation', type=str, choices=['relu', 'xsinsquared', 'xsin', 'snake'], default='relu', help='Activatoin functions')
     parser.add_argument('--seed', type=int, default=941, help='Global training seed')
     parser.add_argument('--round', type=int, default=-1, help='Round decimals in results, -1 to disable')
     parser.add_argument('--individual', action='store_true', help='for LTSF Linear models')
@@ -539,7 +538,6 @@ def main(opt):
                                                                     label_name=data['target'],
                                                                     multimodels=opt.multimodels)
 
-    # print(X_train.shape, X_train)
 
     console = Console(record=True)
     table = Table(title="[cyan]Results", 
@@ -547,19 +545,15 @@ def main(opt):
                   header_style="bold magenta",
                   box=rbox.ROUNDED,
                   show_lines=True)
-    # table header
-    # for name in ['Name', 'Activations', *list(used_metric())]: table.add_column(f'[green]{name}', justify='center')
     for name in ['Name', *list(used_metric())]: table.add_column(f'[green]{name}', justify='center')
     
-    train_console = Console(record=True)
-    train_table = Table(title="[cyan]Test on Train", 
-                        show_header=True, 
-                        header_style="bold magenta",
-                        box=rbox.ROUNDED,
-                        show_lines=True)
-    # table header
-    # for name in ['Name', 'Activations', *list(used_metric())]: table.add_column(f'[green]{name}', justify='center')
-    for name in ['Name', *list(used_metric())]: train_table.add_column(f'[green]{name}', justify='center')
+    # train_console = Console(record=True)
+    # train_table = Table(title="[cyan]Test on Train", 
+    #                     show_header=True, 
+    #                     header_style="bold magenta",
+    #                     box=rbox.ROUNDED,
+    #                     show_lines=True)
+    # for name in ['Name', *list(used_metric())]: train_table.add_column(f'[green]{name}', justify='center')
 
     debug_console = Console(record=True)
     debug_table = Table(title="[cyan]Debug", 
@@ -568,7 +562,8 @@ def main(opt):
                 box=rbox.ROUNDED,
                 show_lines=True)
     for name in ['Name', 'Time', 'Activation', 'predShape']: debug_table.add_column(f'[green]{name}', justify='center')
-    # Normalization
+    
+    """ Data Normalization """
     if opt.Normalization:
         norm = Normalization()
         norm.adapt(np.vstack((X_train, X_val, X_test)))
@@ -584,7 +579,7 @@ def main(opt):
             if not vars(opt)[f'{item["model"].__name__}']: continue
             model_list = []
             all_scores = []
-            train_all_scores = []
+            # train_all_scores = []
             for model_id in range(num_model):
                 model = item['model'](input_shape=X_train.shape[-2:], output_shape=opt.labelsz, seed=opt.seed,
                                       config_path=item.get('config'), 
@@ -598,9 +593,6 @@ def main(opt):
                                       normalize_layer=norm,
                                       enc_in=1) #TODO: make this dynamic enc_in=len(data['target'])
                 model.build()
-                # print(f'{y_test.shape = }')
-                # print(f'{model.predict(X_test).shape = }')
-                # activations = '\n'.join(['None' if a == None else a for a in item.get('activations')])
                 model_list.append(model)
                 model_list[model_id].__class__.__name__ += f'_{model_id}'
                 sub_X_train = X_train[model_id]
@@ -621,78 +613,37 @@ def main(opt):
                     scores = model_list[model_id].score(y=sub_y_test, yhat=yhat, r=opt.round)
                     all_scores.append(scores)
                     
-                    save_plot(filename=os.path.join(visualize_path, f'{model_list[model_id].__class__.__name__}.png'),
-                              data=[{'data': sub_y_test,
-                                     'color': 'green',
-                                     'label': 'y'},
-                                     {'data': yhat,
-                                     'color': 'red',
-                                     'label': 'yhat'}])
-                    # fig, ax = plt.subplots()
-                    # ax.plot(sub_y_test, color='green', label='y')
-                    # ax.plot(yhat, color='red', label='yhat')
-                    # ax.legend()
-                    # ax.set_xlabel('X-axis label')
-                    # ax.set_ylabel('Y-axis label')
-                    # fig.savefig()
+                    if opt.labelsz == 1:
+                        save_plot(filename=os.path.join(visualize_path, f'{model_list[model_id].__class__.__name__}.png'),
+                                data=[{'data': sub_y_test,
+                                        'color': 'green',
+                                        'label': 'y'},
+                                        {'data': yhat,
+                                        'color': 'red',
+                                        'label': 'yhat'}])
+                    # yhat = model_list[model_id].predict(X=sub_X_train)
+                    # scores = model_list[model_id].score(y=sub_y_train, yhat=yhat, r=opt.round)
+                    # train_all_scores.append(scores)
 
-                    yhat = model_list[model_id].predict(X=sub_X_train)
-                    scores = model_list[model_id].score(y=sub_y_train, yhat=yhat, r=opt.round)
-                    train_all_scores.append(scores)
-
-                    save_plot(filename=os.path.join(visualize_path, f'{model_list[model_id].__class__.__name__}_train.png'),
-                              data=[{'data': sub_y_train,
-                                     'color': 'green',
-                                     'label': 'y'},
-                                     {'data': yhat,
-                                     'color': 'red',
-                                     'label': 'yhat'}])
-                    # fig, ax = plt.subplots()
-                    # ax.plot(sub_y_train, color='green', label='y')
-                    # ax.plot(yhat, color='red', label='yhat')
-                    # ax.legend()
-                    # ax.set_xlabel('X-axis label')
-                    # ax.set_ylabel('Y-axis label')
-                    # fig.savefig(os.path.join(visualize_path, f'{model_list[model_id].__class__.__name__}_train.png'))
-                    # print(f'{yhat.shape = }')
-                    # table.add_row(model_list[model_id].model_list[model_id].name, *scores)
-                    # table.add_row(model_list[model_id].__class__.__name__, activations, *scores)
-                    # table.add_row(model_list[model_id].__class__.__name__, *scores)
-                #     debug_table.add_row(model_list[model_id].__class__.__name__, 
-                #                         convert_seconds(time.time()-start), 
-                #                         '\n'.join(['None' if a == None else a for a in item.get('activations')]),
-                #                         str(yhat.shape)
-                #                         )
+                    # save_plot(filename=os.path.join(visualize_path, f'{model_list[model_id].__class__.__name__}_train.png'),
+                    #           data=[{'data': sub_y_train,
+                    #                  'color': 'green',
+                    #                  'label': 'y'},
+                    #                  {'data': yhat,
+                    #                  'color': 'red',
+                    #                  'label': 'yhat'}])
                 except Exception as e:
                     errors.append([model_list[model_id].__class__.__name__, str(e)])
-                #     # table.add_row(model_list[model_id].__class__.__name__, activations, *list('_' * len(used_metric())))
-                #     table.add_row(model_list[model_id].__class__.__name__, *list('_' * len(used_metric())))
-                #     debug_table.add_row(model_list[model_id].__class__.__name__, 
-                #                         convert_seconds(time.time()-start), 
-                #                         '\n'.join(['None' if a == None else a for a in item.get('activations')]),
-                #                         str(model_list[model_id].predict(sub_y_test).shape)
-                #                         )
-            # print(all_scores)
-            # print(type(all_scores))
-            # print(np.mean(np.array(all_scores).astype(np.float64), axis=0))
-            # exit()
             try:
-                # print(all_scores, train_all_scores)
                 table.add_row(item["model"].__name__, *[str(a) for a in np.mean(np.array(all_scores).astype(np.float64), axis=0)])
-                train_table.add_row(item["model"].__name__, *[str(a) for a in np.mean(np.array(train_all_scores).astype(np.float64), axis=0)])
-                # theshape = str(model_list[model_id].predict(y_test).shape) if model_list[model_id].model is not None else '_'
-                # debug_table.add_row(item["model"].__name__, 
-                #                     convert_seconds(time.time()-start), 
-                #                     '\n'.join(['None' if a == None else a for a in item.get('activations')]),
-                #                     theshape
-                #                     )
+                # train_table.add_row(item["model"].__name__, *[str(a) for a in np.mean(np.array(train_all_scores).astype(np.float64), axis=0)])
             except Exception as e:
                 table.add_row(item["model"].__name__, *list('_' * len(used_metric())))
-                train_table.add_row(item["model"].__name__, *list('_' * len(used_metric())))
+                # train_table.add_row(item["model"].__name__, *list('_' * len(used_metric())))
             console.print(table)
             console.save_svg(os.path.join(save_dir, 'results.svg'), theme=MONOKAI)
-            train_console.print(train_table)
-            train_console.save_svg(os.path.join(save_dir, 'results_on_train.svg'), theme=MONOKAI)
+            # train_console.print(train_table)
+            # train_console.save_svg(os.path.join(save_dir, 'results_on_train.svg'), theme=MONOKAI)
     else:
         for item in model_dict:
             start = time.time()
@@ -709,73 +660,34 @@ def main(opt):
                                   normalize_layer=norm,
                                   enc_in=1) #TODO: make this dynamic enc_in=len(data['target'])
             model.build()
-            # model.fit(patience=opt.patience, 
-            #               save_dir=save_dir, optimizer=opt.optimizer, loss=opt.loss, lr=opt.lr, epochs=1, learning_rate=opt.lr, batchsz=opt.batchsz,
-            #               X_train=X_train, y_train=y_train,
-            #               X_val=X_val, y_val=y_val)
-            # weight = r'BiGRU__Tensorflow_best.h5'
-            # model.load(weight)
-            # yhat = model.predict(X=X_test)
-            # scores = model.score(y=y_test, yhat=yhat, r=opt.round)
-            
-            # fig, ax = plt.subplots()
-            # ax.plot(y_test[:150], color='green', label='y')
-            # ax.plot(yhat[:150], color='red', label='yhat')
-            # ax.legend()
-            # ax.set_xlabel('X-axis label')
-            # ax.set_ylabel('Y-axis label')
-            # fig.savefig(f'{model.__class__.__name__}.png')
-            # exit()
-            # print(f'{y_test.shape = }')
-            # print(f'{model.predict(X_test).shape = }')
-            # activations = '\n'.join(['None' if a == None else a for a in item.get('activations')])
             try:
                 model.fit(patience=opt.patience, 
                           save_dir=save_dir, optimizer=opt.optimizer, loss=opt.loss, lr=opt.lr, epochs=opt.epochs, learning_rate=opt.lr, batchsz=opt.batchsz,
                           X_train=X_train, y_train=y_train,
                           X_val=X_val, y_val=y_val)
                 weight=os.path.join(save_dir, 'weights', f"{model.__class__.__name__}_best.h5")
-                # weight = 'VanillaLSTM__Tensorflow_best.h5'
                 if not os.path.exists(weight): weight = model.save(save_dir=os.path.join(save_dir, 'weights'),
                                                                    file_name=model.__class__.__name__)
                 if weight is not None: model.load(weight)
                 yhat = model.predict(X=X_test)
-                # print(yhat)
                 scores = model.score(y=y_test, yhat=yhat, r=opt.round)
                 
-                save_plot(filename=os.path.join(visualize_path, f'{model.__class__.__name__}.png'),
-                              data=[{'data': y_test,
-                                     'color': 'green',
-                                     'label': 'y'},
-                                     {'data': yhat,
-                                     'color': 'red',
-                                     'label': 'yhat'}])
-                # fig, ax = plt.subplots()
-                # ax.plot(y_test, color='green', label='y')
-                # ax.plot(yhat, color='red', label='yhat')
-                # ax.legend()
-                # ax.set_xlabel('X-axis label')
-                # ax.set_ylabel('Y-axis label')
-                # fig.savefig(os.path.join(visualize_path, f'{model.__class__.__name__}.png'))
-
-                save_plot(filename=os.path.join(visualize_path, f'{model.__class__.__name__}_train.png'),
-                              data=[{'data': y_train,
-                                     'color': 'green',
-                                     'label': 'y'},
-                                     {'data': yhat,
-                                     'color': 'red',
-                                     'label': 'yhat'}])
-                # yhat = model.predict(X=X_train)
-                # fig, ax = plt.subplots()
-                # ax.plot(y_train, color='green', label='y')
-                # ax.plot(yhat, color='red', label='yhat')
-                # ax.legend()
-                # ax.set_xlabel('X-axis label')
-                # ax.set_ylabel('Y-axis label')
-                # fig.savefig(os.path.join(visualize_path, f'{model.__class__.__name__}_train.png'))
-                # print(f'{yhat.shape = }')
-                # table.add_row(model.model.name, *scores)
-                # table.add_row(model.__class__.__name__, activations, *scores)
+                if opt.labelsz == 1:
+                    save_plot(filename=os.path.join(visualize_path, f'{model.__class__.__name__}.png'),
+                                data=[{'data': y_test,
+                                        'color': 'green',
+                                        'label': 'y'},
+                                        {'data': yhat,
+                                        'color': 'red',
+                                        'label': 'yhat'}])
+                # if opt.labelsz == 1:
+                #     save_plot(filename=os.path.join(visualize_path, f'{model.__class__.__name__}_train.png'),
+                #                 data=[{'data': y_train,
+                #                         'color': 'green',
+                #                         'label': 'y'},
+                #                         {'data': yhat,
+                #                         'color': 'red',
+                #                         'label': 'yhat'}])
                 table.add_row(model.__class__.__name__, *scores)
                 debug_table.add_row(model.__class__.__name__, 
                                     convert_seconds(time.time()-start), 
@@ -784,11 +696,10 @@ def main(opt):
                                     )
             except Exception as e:
                 errors.append([model.__class__.__name__, str(e)])
-                # table.add_row(model.__class__.__name__, activations, *list('_' * len(used_metric())))
                 table.add_row(model.__class__.__name__, *list('_' * len(used_metric())))
                 
 
-                theshape = str(model.predict(y_test).shape) if model.model is not None else '_'
+                theshape = str(model.predict(X_test).shape) if model.model is not None else '_'
                 
                 debug_table.add_row(model.__class__.__name__, 
                                     convert_seconds(time.time()-start), 
