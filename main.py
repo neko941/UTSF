@@ -601,7 +601,7 @@ def main(opt):
                                       enc_in=1) #TODO: make this dynamic enc_in=len(data['target'])
                 model.build()
                 model_list.append(model)
-                model_list[model_id].__class__.__name__ += f'_{model_id}'
+                model_list[model_id].__class__.__name__ = f'{model_list[model_id].__class__.__name__.split("~")[0]}~{model_id}'
                 sub_X_train = X_train[model_id]
                 sub_y_train = y_train[model_id]
                 sub_X_val = X_val[model_id]
@@ -658,19 +658,28 @@ def main(opt):
                 except Exception as e:
                     errors.append([model_list[model_id].__class__.__name__, str(e)])
             try:
-                table.add_row(item["model"].__name__, *[str(a) for a in np.mean(np.array(all_scores).astype(np.float64), axis=0)])
+                table.add_row(item["model"].__name__.split('~')[0], *[str(a) for a in np.mean(np.array(all_scores).astype(np.float64), axis=0)])
                 # train_table.add_row(item["model"].__name__, *[str(a) for a in np.mean(np.array(train_all_scores).astype(np.float64), axis=0)])
                 if opt.debug:
-                    debug_table.add_row(item["model"].__name__, 
+                    debug_table.add_row(item["model"].__name__.split('~')[0], 
                                         convert_seconds(time.time()-start), 
                                         '\n'.join(['None' if a == None else a for a in item.get('activations')]),
                                         str(yhat.shape)
                                         )
+                # save_plot(filename=os.path.join(visualize_path, f'{item["model"].__name__.split('~')[0]}-Loss.png'),
+                #                 data=[{'data': [range(len(loss)), loss],
+                #                         'color': 'green',
+                #                         'label': 'loss'},
+                #                         {'data': [range(len(val_loss)), val_loss],
+                #                         'color': 'red',
+                #                         'label': 'val_loss'}],
+                #                 xlabel='Epoch',
+                #                 ylabel='Loss Value')
             except Exception as e:
-                table.add_row(item["model"].__name__, *list('_' * len(used_metric())))
+                table.add_row(item["model"].__name__.split('~')[0], *list('_' * len(used_metric())))
                 if opt.debug:
                     theshape = str(model_list[model_id].predict(X_test).shape) if model_list[model_id].model is not None else '_'
-                    debug_table.add_row(item["model"].__name__, 
+                    debug_table.add_row(item["model"].__name__.split('~')[0], 
                                         convert_seconds(time.time()-start), 
                                         '\n'.join(['None' if a == None else a for a in item.get('activations')]),
                                         theshape)
