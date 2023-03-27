@@ -1,5 +1,7 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1' # INFO messages are not printed
+import absl.logging
+absl.logging.set_verbosity(absl.logging.ERROR) # disable absl INFO and WARNING log messages
 
 import sys
 from pathlib import Path
@@ -543,7 +545,6 @@ def main(opt):
                                                                     label_name=data['target'],
                                                                     multimodels=opt.multimodels)
 
-
     console = Console(record=True)
     table = Table(title="[cyan]Results", 
                   show_header=True, 
@@ -560,13 +561,14 @@ def main(opt):
     #                     show_lines=True)
     # for name in ['Name', *list(used_metric())]: train_table.add_column(f'[green]{name}', justify='center')
 
-    debug_console = Console(record=True)
-    debug_table = Table(title="[cyan]Debug", 
-                show_header=True, 
-                header_style="bold magenta",
-                box=rbox.ROUNDED,
-                show_lines=True)
-    for name in ['Name', 'Time', 'Activation', 'predShape']: debug_table.add_column(f'[green]{name}', justify='center')
+    if opt.debug:
+        debug_console = Console(record=True)
+        debug_table = Table(title="[cyan]Debug", 
+                    show_header=True, 
+                    header_style="bold magenta",
+                    box=rbox.ROUNDED,
+                    show_lines=True)
+        for name in ['Name', 'Time', 'Activation', 'predShape']: debug_table.add_column(f'[green]{name}', justify='center')
     
     """ Data Normalization """
     if opt.Normalization:
@@ -642,8 +644,20 @@ def main(opt):
             try:
                 table.add_row(item["model"].__name__, *[str(a) for a in np.mean(np.array(all_scores).astype(np.float64), axis=0)])
                 # train_table.add_row(item["model"].__name__, *[str(a) for a in np.mean(np.array(train_all_scores).astype(np.float64), axis=0)])
+                if opt.debug:
+                    debug_table.add_row(item["model"].__name__, 
+                                        convert_seconds(time.time()-start), 
+                                        '\n'.join(['None' if a == None else a for a in item.get('activations')]),
+                                        str(yhat.shape)
+                                        )
             except Exception as e:
                 table.add_row(item["model"].__name__, *list('_' * len(used_metric())))
+                if opt.debug:
+                    theshape = str(model_list[model_id].predict(X_test).shape) if model_list[model_id].model is not None else '_'
+                    debug_table.add_row(item["model"].__name__, 
+                                        convert_seconds(time.time()-start), 
+                                        '\n'.join(['None' if a == None else a for a in item.get('activations')]),
+                                        theshape)
                 # train_table.add_row(item["model"].__name__, *list('_' * len(used_metric())))
             console.print(table)
             console.save_svg(os.path.join(save_dir, 'results.svg'), theme=MONOKAI)
@@ -694,22 +708,21 @@ def main(opt):
                 #                         'color': 'red',
                 #                         'label': 'yhat'}])
                 table.add_row(model.__class__.__name__, *scores)
-                debug_table.add_row(model.__class__.__name__, 
-                                    convert_seconds(time.time()-start), 
-                                    '\n'.join(['None' if a == None else a for a in item.get('activations')]),
-                                    str(yhat.shape)
-                                    )
+                if opt.debug:
+                    debug_table.add_row(model.__class__.__name__, 
+                                        convert_seconds(time.time()-start), 
+                                        '\n'.join(['None' if a == None else a for a in item.get('activations')]),
+                                        str(yhat.shape)
+                                        )
             except Exception as e:
                 errors.append([model.__class__.__name__, str(e)])
                 table.add_row(model.__class__.__name__, *list('_' * len(used_metric())))
-                
-
-                theshape = str(model.predict(X_test).shape) if model.model is not None else '_'
-                
-                debug_table.add_row(model.__class__.__name__, 
-                                    convert_seconds(time.time()-start), 
-                                    '\n'.join(['None' if a == None else a for a in item.get('activations')]),
-                                    theshape)
+                if opt.debug:
+                    theshape = str(model.predict(X_test).shape) if model.model is not None else '_'
+                    debug_table.add_row(model.__class__.__name__, 
+                                        convert_seconds(time.time()-start), 
+                                        '\n'.join(['None' if a == None else a for a in item.get('activations')]),
+                                        theshape)
             console.print(table)
             console.save_svg(os.path.join(save_dir, 'results.svg'), theme=MONOKAI)
     if opt.debug: 
