@@ -12,7 +12,7 @@ class LinearRegression_(MachineLearningModel):
         self.model = LinearRegression(**yaml_load(self.config_path))
 
 from sklearn.linear_model import Lasso
-class Lasso_(MachineLearningModel):
+class LassoRegression(MachineLearningModel):
     def build(self):
         self.model = Lasso(**yaml_load(self.config_path))
 
@@ -58,7 +58,7 @@ class LightGBM(MachineLearningModel):
         self.model = LGBMRegressor(**yaml_load(self.config_path))
 
 from sklearn.linear_model import Ridge
-class Ridge_(MachineLearningModel):
+class RidgeRegression(MachineLearningModel):
     def build(self):
         self.model = Ridge(**yaml_load(self.config_path))
 
@@ -74,7 +74,7 @@ class RidgeCrossValidation(MachineLearningModel):
         self.model = RidgeCV(**yaml_load(self.config_path))
 
 from sklearn.kernel_ridge import KernelRidge
-class KernelRidge_(MachineLearningModel):
+class KernelRidgeRegression(MachineLearningModel):
     def build(self):
         self.model = KernelRidge(**yaml_load(self.config_path))
 
@@ -133,3 +133,13 @@ class AdaBoostClassification(MachineLearningModel):
     def build(self):
         self.is_classifier = True
         self.model = AdaBoostClassifier(**yaml_load(self.config_path))
+
+from sklearn.linear_model import OrthogonalMatchingPursuit
+class OrthogonalMatchingPursuitRegression(MachineLearningModel):
+    def build(self):
+        self.model = OrthogonalMatchingPursuit(**yaml_load(self.config_path))
+
+from sklearn.linear_model import OrthogonalMatchingPursuitCV
+class OrthogonalMatchingPursuitCrossValidation(MachineLearningModel):
+    def build(self):
+        self.model = OrthogonalMatchingPursuitCV(**yaml_load(self.config_path))

@@ -1,0 +1,6 @@
+# """ https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.OrthogonalMatchingPursuitCV.html """
+
+copy: True
+# description:
+# default:
+# options:

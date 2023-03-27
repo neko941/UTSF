@@ -46,12 +46,12 @@ from models.MachineLearning import SupportVectorMachinesRegression
 from models.MachineLearning import NuSupportVectorMachinesRegression
 from models.MachineLearning import LinearSupportVectorMachinesRegression
 from models.MachineLearning import LinearRegression_
-from models.MachineLearning import Lasso_
+from models.MachineLearning import LassoRegression
 from models.MachineLearning import LassoCrossValidation
-from models.MachineLearning import Ridge_
+from models.MachineLearning import RidgeRegression
 from models.MachineLearning import RidgeClassification
 from models.MachineLearning import RidgeCrossValidation
-from models.MachineLearning import KernelRidge_
+from models.MachineLearning import KernelRidgeRegression
 from models.MachineLearning import CatBoostRegression
 from models.MachineLearning import LightGBM
 from models.MachineLearning import RandomForestRegression
@@ -64,6 +64,8 @@ from models.MachineLearning import BaggingRegression
 from models.MachineLearning import BaggingClassification
 from models.MachineLearning import AdaBoostRegression
 from models.MachineLearning import AdaBoostClassification
+from models.MachineLearning import OrthogonalMatchingPursuitRegression
+from models.MachineLearning import OrthogonalMatchingPursuitCrossValidation
 
 # deep learning models
 from models.RNN import VanillaRNN__Tensorflow    
@@ -142,7 +144,7 @@ model_dict = [
         'type' : 'MachineLearning',
         'config': 'configs/LinearRegression.yaml'
     },{
-        'model' : Lasso_,
+        'model' : LassoRegression,
         'help' : '',
         'type' : 'MachineLearning',
         'config': 'configs/Lasso.yaml'
@@ -152,7 +154,7 @@ model_dict = [
         'type' : 'MachineLearning',
         'config': 'configs/LassoCrossValidation.yaml'
     },{
-        'model' : Ridge_,
+        'model' : RidgeRegression,
         'help' : '',
         'type' : 'MachineLearning',
         'config': 'configs/Ridge.yaml'
@@ -167,7 +169,7 @@ model_dict = [
         'type' : 'MachineLearning',
         'config': 'configs/RidgeCrossValidation.yaml'
     },{
-        'model' : KernelRidge_,
+        'model' : KernelRidgeRegression,
         'help' : '',
         'type' : 'MachineLearning',
         'config': 'configs/KernelRidge.yaml'
@@ -256,6 +258,16 @@ model_dict = [
         'help' : '',
         'type' : 'MachineLearning',
         'config': 'configs/AdaBoostClassification.yaml' #TODO: finish this file
+    },{
+        'model' : OrthogonalMatchingPursuitRegression,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/OrthogonalMatchingPursuitRegression.yaml' #TODO: finish this file
+    },{
+        'model' : OrthogonalMatchingPursuitCrossValidation,
+        'help' : '',
+        'type' : 'MachineLearning',
+        'config': 'configs/OrthogonalMatchingPursuitCrossValidation.yaml' #TODO: finish this file
     },{
         'model' : VanillaRNN__Tensorflow,
         'help' : '',
@@ -504,10 +516,16 @@ def main(opt):
             # d["day_sin"] = [np.sin(x * (2 * np.pi / 24)) for x in d["hour"]]
 
             d = [x.timestamp() for x in df[f"{data['date']}"]]
-            s = 24 * 60 * 60 # Seconds in day  
-            year = (365.25) * s # Seconds in year 
-            df.insert(loc=0, column='month_cos', value=[np.cos((x) * (2 * np.pi / year)) for x in d])
-            df.insert(loc=0, column='month_sin', value=[np.sin((x) * (2 * np.pi / year)) for x in d]) 
+            day = 24 * 60 * 60 # Seconds in day  
+            year = (365.2425) * day # Seconds in year 
+
+            if df[data['date']].dt.day.nunique() > 1:
+                df.insert(loc=0, column='day_cos', value=[np.cos((x) * (2 * np.pi / day)) for x in d])
+                df.insert(loc=0, column='day_sin', value=[np.sin((x) * (2 * np.pi / day)) for x in d]) 
+            
+            if df[data['date']].dt.month.nunique() > 1:
+                df.insert(loc=0, column='month_cos', value=[np.cos((x) * (2 * np.pi / year)) for x in d])
+                df.insert(loc=0, column='month_sin', value=[np.sin((x) * (2 * np.pi / year)) for x in d]) 
 
     assert not all([opt.DirAsFeature != 0, opt.SplitFeature is not None])
 

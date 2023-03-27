@@ -70,13 +70,13 @@ def SetSeed(seed: Optional[int] = None, workers: bool = False) -> int:
     if seed is None:
         env_seed = os.environ.get("PL_GLOBAL_SEED")
         if env_seed is None:
-            seed = _select_seed_randomly(min_seed_value, max_seed_value)
+            seed = random.randint(min_seed_value, max_seed_value)
             print(f"No seed found, seed set to {seed}")
         else:
             try:
                 seed = int(env_seed)
             except ValueError:
-                seed = _select_seed_randomly(min_seed_value, max_seed_value)
+                seed = random.randint(min_seed_value, max_seed_value)
                 print(f"Invalid seed found: {repr(env_seed)}, seed set to {seed}")
     elif not isinstance(seed, int):
         seed = int(seed)
@@ -85,7 +85,7 @@ def SetSeed(seed: Optional[int] = None, workers: bool = False) -> int:
         print(f"{seed} is not in bounds, numpy accepts from {min_seed_value} to {max_seed_value}")
         seed = random.randint(min_seed_value, max_seed_value)
 
-    print(f"Global seed set to {seed}", _get_rank())
+    # print(f"Global seed set to {seed}", _get_rank())
     os.environ["PL_GLOBAL_SEED"] = str(seed)
     random.seed(seed)
     np.random.seed(seed)
@@ -99,17 +99,17 @@ def SetSeed(seed: Optional[int] = None, workers: bool = False) -> int:
 
     return seed
 
-def _get_rank(
-    strategy: Optional["lightning.fabric.strategies.Strategy"] = None,
-) -> Optional[int]:
-    if strategy is not None:
-        return strategy.global_rank
-    # SLURM_PROCID can be set even if SLURM is not managing the multiprocessing,
-    # therefore LOCAL_RANK needs to be checked first
-    rank_keys = ("RANK", "LOCAL_RANK", "SLURM_PROCID", "JSM_NAMESPACE_RANK")
-    for key in rank_keys:
-        rank = os.environ.get(key)
-        if rank is not None:
-            return int(rank)
-    # None to differentiate whether an environment variable was set at all
-    return None
+# def _get_rank(
+#     strategy: Optional["lightning.fabric.strategies.Strategy"] = None,
+# ) -> Optional[int]:
+#     if strategy is not None:
+#         return strategy.global_rank
+#     # SLURM_PROCID can be set even if SLURM is not managing the multiprocessing,
+#     # therefore LOCAL_RANK needs to be checked first
+#     rank_keys = ("RANK", "LOCAL_RANK", "SLURM_PROCID", "JSM_NAMESPACE_RANK")
+#     for key in rank_keys:
+#         rank = os.environ.get(key)
+#         if rank is not None:
+#             return int(rank)
+#     # None to differentiate whether an environment variable was set at all
+#     return None
