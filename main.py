@@ -632,18 +632,17 @@ def main(opt):
                                   ylabel='Value')
                     if model.history is not None:
                         loss = model_list[model_id].history.history.get('loss')
-                        if not isinstance(loss, list): loss = [loss]
                         val_loss = model_list[model_id].history.history.get('val_loss')
-                        if not isinstance(val_loss, list): loss = [val_loss]
-                        save_plot(filename=os.path.join(visualize_path, f'{model_list[model_id].__class__.__name__}-Loss.png'),
-                                data=[{'data': [range(len(loss)), loss],
-                                        'color': 'green',
-                                        'label': 'loss'},
-                                        {'data': [range(len(val_loss)), val_loss],
-                                        'color': 'red',
-                                        'label': 'val_loss'}],
-                                xlabel='Epoch',
-                                ylabel='Loss Value')
+                        if all([len(loss)>1, len(val_loss)>1]):
+                            save_plot(filename=os.path.join(visualize_path, f'{model_list[model_id].__class__.__name__}-Loss.png'),
+                                      data=[{'data': [range(len(loss)), loss],
+                                              'color': 'green',
+                                              'label': 'loss'},
+                                              {'data': [range(len(val_loss)), val_loss],
+                                              'color': 'red',
+                                              'label': 'val_loss'}],
+                                      xlabel='Epoch',
+                                      ylabel='Loss Value')
                     # yhat = model_list[model_id].predict(X=sub_X_train)
                     # scores = model_list[model_id].score(y=sub_y_train, yhat=yhat, r=opt.round)
                     # train_all_scores.append(scores)
@@ -734,18 +733,17 @@ def main(opt):
                               ylabel='Value')
                 if model.history is not None:
                     loss = model.history.history.get('loss')
-                    if not isinstance(loss, list): loss = [loss]
                     val_loss = model.history.history.get('val_loss')
-                    if not isinstance(val_loss, list): loss = [val_loss]
-                    save_plot(filename=os.path.join(visualize_path, f'{model.__class__.__name__}-Loss.png'),
-                              data=[{'data': [range(len(loss)), loss],
-                                     'color': 'green',
-                                     'label': 'loss'},
-                                    {'data': [range(len(val_loss)), val_loss],
-                                     'color': 'red',
-                                     'label': 'val_loss'}],
-                              xlabel='Epoch',
-                              ylabel='Loss Value')
+                    if all([len(loss)>1, len(val_loss)>1]):
+                        save_plot(filename=os.path.join(visualize_path, f'{model.__class__.__name__}-Loss.png'),
+                                  data=[{'data': [range(len(loss)), loss],
+                                         'color': 'green',
+                                         'label': 'loss'},
+                                        {'data': [range(len(val_loss)), val_loss],
+                                         'color': 'red',
+                                         'label': 'val_loss'}],
+                                  xlabel='Epoch',
+                                  ylabel='Loss Value')
                 # if opt.labelsz == 1:
                 #     save_plot(filename=os.path.join(visualize_path, f'{model.__class__.__name__}_train.png'),
                 #                 data=[{'data': y_train,
