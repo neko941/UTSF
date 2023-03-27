@@ -4,6 +4,7 @@ from abc import abstractmethod
 import tensorflow as tf
 from keras.losses import MeanSquaredError
 from keras.optimizers import Adam
+# from tensorflow.keras.optimizers import AdamW
 from keras.optimizers import SGD
 from keras.callbacks import CSVLogger
 from keras.callbacks import EarlyStopping
@@ -94,6 +95,7 @@ class TensorflowModel(BaseModel):
     def __init__(self, input_shape, output_shape, units, activations, dropouts, normalize_layer=None, seed=941, **kwargs):
         self.function_dict = {
             'Adam' : Adam,
+            # 'AdamW' : AdamW,
             'MSE' : MeanSquaredError,
             'SGD' : SGD
         }
@@ -147,10 +149,10 @@ class TensorflowModel(BaseModel):
 
     def fit(self, X_train, y_train, X_val, y_val, patience, learning_rate, epochs, save_dir, batchsz, optimizer='Adam', loss='MSE', **kwargs):
         self.model.compile(optimizer=self.function_dict[optimizer](learning_rate=learning_rate), loss=self.function_dict[loss]())
-        self.model.fit(self.preprocessing(x=X_train, y=y_train, batchsz=batchsz), 
-                       validation_data=self.preprocessing(x=X_val, y=y_val, batchsz=batchsz),
-                       epochs=epochs, 
-                       callbacks=self.callbacks(patience=patience, save_dir=save_dir, min_delta=0.001))
+        self.history = self.model.fit(self.preprocessing(x=X_train, y=y_train, batchsz=batchsz), 
+                                      validation_data=self.preprocessing(x=X_val, y=y_val, batchsz=batchsz),
+                                      epochs=epochs, 
+                                      callbacks=self.callbacks(patience=patience, save_dir=save_dir, min_delta=0.001))
 
     def predict(self, X):
         return self.model.predict(X)

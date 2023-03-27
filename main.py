@@ -622,12 +622,14 @@ def main(opt):
                     
                     if opt.labelsz == 1:
                         save_plot(filename=os.path.join(visualize_path, f'{model_list[model_id].__class__.__name__}.png'),
-                                data=[{'data': sub_y_test,
-                                        'color': 'green',
-                                        'label': 'y'},
-                                        {'data': yhat,
-                                        'color': 'red',
-                                        'label': 'yhat'}])
+                                  data=[{'data': [range(len(sub_y_test)), sub_y_test],
+                                          'color': 'green',
+                                          'label': 'y'},
+                                          {'data': [range(len(yhat)), yhat],
+                                          'color': 'red',
+                                          'label': 'yhat'}],
+                                  xlabel='Sample',
+                                  ylabel='Value')
                     # yhat = model_list[model_id].predict(X=sub_X_train)
                     # scores = model_list[model_id].score(y=sub_y_train, yhat=yhat, r=opt.round)
                     # train_all_scores.append(scores)
@@ -681,7 +683,13 @@ def main(opt):
             model.build()
             try:
                 model.fit(patience=opt.patience, 
-                          save_dir=save_dir, optimizer=opt.optimizer, loss=opt.loss, lr=opt.lr, epochs=opt.epochs, learning_rate=opt.lr, batchsz=opt.batchsz,
+                          save_dir=save_dir, 
+                          optimizer=opt.optimizer, 
+                          loss=opt.loss, 
+                          lr=opt.lr, 
+                          epochs=opt.epochs, 
+                          learning_rate=opt.lr, 
+                          batchsz=opt.batchsz,
                           X_train=X_train, y_train=y_train,
                           X_val=X_val, y_val=y_val)
                 weight=os.path.join(save_dir, 'weights', f"{model.__class__.__name__}_best.h5")
@@ -693,12 +701,28 @@ def main(opt):
                 
                 if opt.labelsz == 1:
                     save_plot(filename=os.path.join(visualize_path, f'{model.__class__.__name__}.png'),
-                                data=[{'data': y_test,
-                                        'color': 'green',
-                                        'label': 'y'},
-                                        {'data': yhat,
-                                        'color': 'red',
-                                        'label': 'yhat'}])
+                              data=[{'data': [range(len(y_test)), y_test],
+                                      'color': 'green',
+                                      'label': 'y'},
+                                     {'data': [range(len(yhat)), yhat],
+                                      'color': 'red',
+                                      'label': 'yhat'}],
+                              xlabel='Sample',
+                              ylabel='Value')
+                if model.history is not None:
+                    loss = model.history.history.get('loss')
+                    if not isinstance(loss, list): loss = [loss]
+                    val_loss = model.history.history.get('val_loss')
+                    if not isinstance(val_loss, list): loss = [val_loss]
+                    save_plot(filename=os.path.join(visualize_path, f'{model.__class__.__name__}-Loss.png'),
+                              data=[{'data': [range(len(loss)), loss],
+                                     'color': 'green',
+                                     'label': 'loss'},
+                                    {'data': [range(len(val_loss)), val_loss],
+                                     'color': 'red',
+                                     'label': 'val_loss'}],
+                              xlabel='Epoch',
+                              ylabel='Loss Value')
                 # if opt.labelsz == 1:
                 #     save_plot(filename=os.path.join(visualize_path, f'{model.__class__.__name__}_train.png'),
                 #                 data=[{'data': y_train,
