@@ -14,28 +14,20 @@ import time
 import argparse
 import numpy as np
 import pandas as pd
-import tensorflow as tf
-import torch
-import random
 from keras.layers import Normalization
 
-import matplotlib.pyplot as plt
-
-# optimizers
-from keras.optimizers import SGD
-from keras.optimizers import Adam
 
 # general utils
 from utils.general import yaml_save
 from utils.general import yaml_load
 from utils.general import increment_path
 from utils.general import convert_seconds
+from utils.general import SetSeed
 from utils.activations import get_custom_activations
 from utils.visualize import save_plot
 
 # performance metrics
 from utils.metrics import used_metric
-# from utils.metrics import calculate_score
 
 # dataset slicing 
 from utils.dataset import slicing_window
@@ -421,7 +413,10 @@ def main(opt):
     """ Save init options """
     yaml_save(os.path.join(save_dir, 'opt.yaml'), vars(opt))
 
-    """ Update options and save """
+    """ Set seed """
+    opt.seed = SetSeed(opt.seed)
+
+    """ Update options """
     if opt.all:
         opt.MachineLearning = True
         opt.DeepLearning = True
@@ -437,18 +432,9 @@ def main(opt):
                 opt.Pytorch and item['type']=='Pytorch',
                 opt.MachineLearning and item['type']=='MachineLearning']): 
             vars(opt)[f'{item["model"].__name__}'] = True
-    yaml_save(os.path.join(save_dir, 'updated_opt.yaml'), vars(opt))
 
-    """ 
-    Set random seed 
-        https://pytorch.org/docs/stable/notes/randomness.html
-    """
-    tf.random.set_seed(opt.seed)
-    random.seed(opt.seed)
-    np.random.seed(opt.seed)
-    torch.manual_seed(opt.seed)
-    torch.cuda.manual_seed(opt.seed)
-    torch.cuda.manual_seed_all(opt.seed)  # for Multi-GPU, exception safe
+    """ Save updated options """
+    yaml_save(os.path.join(save_dir, 'updated_opt.yaml'), vars(opt))
 
     """ Set device """
     # os.environ["CUDA_VISIBLE_DEVICES"]="0,1"
@@ -478,6 +464,7 @@ def main(opt):
                                          )
     data['features'].extend(dir_feature)
 
+    """ Convert to datetime """
     if 'time_as_id' in data and 'date' in data: 
         assert df[data['time_as_id']].max() * opt.granularity + opt.startTimeId - 24*60 <= 0, f'time id max should be {(24*60  - opt.startTimeId) / opt.granularity} else it will exceed to the next day'
         df[data['date']] = df.apply(lambda row: pd.to_datetime(row[data['date']]) + pd.to_timedelta((row[data['time_as_id']]-1)*opt.granularity+opt.startTimeId, unit='m'), axis=1)

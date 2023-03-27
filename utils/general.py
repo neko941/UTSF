@@ -1,7 +1,12 @@
 # import matplotlib.pyplot as plt
 import os
 import yaml
+import torch
+import random
+import numpy as np
+import tensorflow as tf
 from pathlib import Path
+from typing import Optional
 
 def yaml_load(file='data.yaml'):
     # Single-line safe yaml loading
@@ -42,17 +47,69 @@ def convert_seconds(seconds):
     if len(time_units) == 0: time_units.append(f"{seconds}s")
     return "".join(time_units)
 
-# def display(history, save_name):
-#     fig, ax = plt.subplots(1, 2, figsize=(10, 3))
-#     ax = ax.ravel()
+def SetSeed(seed: Optional[int] = None, workers: bool = False) -> int:
+    """Function that sets seed for pseudo-random number generators in: pytorch, numpy, python.random In addition,
+    sets the following environment variables:
+    - `PL_GLOBAL_SEED`: will be passed to spawned subprocesses (e.g. ddp_spawn backend).
+    - `PL_SEED_WORKERS`: (optional) is set to 1 if ``workers=True``.
+    Args:
+        seed: the integer value seed for global random state in Lightning.
+            If `None`, will read seed from `PL_GLOBAL_SEED` env variable
+            or select it randomly.
+        workers: if set to ``True``, will properly configure all dataloaders passed to the
+            Trainer with a ``worker_init_fn``. If the user already provides such a function
+            for their dataloaders, setting this argument will have no influence. See also:
+            :func:`~lightning_lite.utilities.seed.pl_worker_init_function`.
+    """
+    """ 
+    Set random seed 
+        https://pytorch.org/docs/stable/notes/randomness.html
+    """
+    max_seed_value = np.iinfo(np.uint32).max
+    min_seed_value = np.iinfo(np.uint32).min
+    if seed is None:
+        env_seed = os.environ.get("PL_GLOBAL_SEED")
+        if env_seed is None:
+            seed = _select_seed_randomly(min_seed_value, max_seed_value)
+            print(f"No seed found, seed set to {seed}")
+        else:
+            try:
+                seed = int(env_seed)
+            except ValueError:
+                seed = _select_seed_randomly(min_seed_value, max_seed_value)
+                print(f"Invalid seed found: {repr(env_seed)}, seed set to {seed}")
+    elif not isinstance(seed, int):
+        seed = int(seed)
 
-#     for i, metric in enumerate(['accuracy', 'loss']):
-#         ax[i].plot(history.history[metric])
-#         ax[i].plot(history.history['val_' + metric])
-#         ax[i].set_title(f'Model {metric}')
-#         ax[i].set_xlabel('epochs')
-#         ax[i].set_ylabel(metric)
-#         ax[i].legend(['Train', 'Validation'])
+    if not (min_seed_value <= seed <= max_seed_value):
+        print(f"{seed} is not in bounds, numpy accepts from {min_seed_value} to {max_seed_value}")
+        seed = random.randint(min_seed_value, max_seed_value)
+
+    print(f"Global seed set to {seed}", _get_rank())
+    os.environ["PL_GLOBAL_SEED"] = str(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed) # for Multi-GPU, exception safe
+    tf.random.set_seed(seed)
     
-#     plt.show()
-#     plt.savefig(save_name)
+
+    os.environ["PL_SEED_WORKERS"] = f"{int(workers)}"
+
+    return seed
+
+def _get_rank(
+    strategy: Optional["lightning.fabric.strategies.Strategy"] = None,
+) -> Optional[int]:
+    if strategy is not None:
+        return strategy.global_rank
+    # SLURM_PROCID can be set even if SLURM is not managing the multiprocessing,
+    # therefore LOCAL_RANK needs to be checked first
+    rank_keys = ("RANK", "LOCAL_RANK", "SLURM_PROCID", "JSM_NAMESPACE_RANK")
+    for key in rank_keys:
+        rank = os.environ.get(key)
+        if rank is not None:
+            return int(rank)
+    # None to differentiate whether an environment variable was set at all
+    return None
