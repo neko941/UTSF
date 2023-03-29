@@ -17,8 +17,6 @@ from utils.metrics import metric_dict
 
 import torch
 from torch.utils.data import DataLoader
-from torch.utils.data import TensorDataset
-
 import numpy as np
 import pickle
 from utils.general import yaml_load
@@ -172,33 +170,26 @@ import torch.optim as optim
 import torch.nn as nn
 
 class PytorchModel(BaseModel):
-    def __init__(self, input_shape, output_shape, units, activations, dropouts, seed=941, **kwargs):
+    def __init__(self, model):
+        self.model = model
         self.function_dict = {
             'Adam' : optim.Adam,
             'MSE' : nn.MSELoss,
             'SGD' : optim.SGD
         }
-        self.units = units
-        self.seed = seed
-        self.input_shape = input_shape
-        self.output_shape = output_shape
-        self.units = units
-        self.activations = activations
-        self.dropouts = dropouts
 
     def preprocessing(self, x, y, batchsz):
-        # X = torch.from_numpy(x)
-        # y = torch.from_numpy(y)
-        
-        X = torch.tensor(x)
-        y = torch.tensor(y)
-        
-        dataset = TensorDataset(X, y)
+        # Convert numpy arrays to PyTorch tensors
+        X_train = torch.from_numpy(x)
+        y_train = torch.from_numpy(y)
+
+        # Combine the features and labels into a single tensor
+        train_dataset = torch.utils.data.TensorDataset(X_train, y_train)
 
         # Create the data loader
-        dataloader = DataLoader(dataset, batch_size=batchsz, shuffle=True, num_workers=0)
+        train_dataloader = DataLoader(train_dataset, batch_size=batchsz, shuffle=True, num_workers=0)
 
-        return dataloader
+        return train_dataloader
 
     def fit(self, X_train, y_train, X_val, y_val, patience, learning_rate, epochs, save_dir, batchsz, optimizer='Adam', loss='MSE'):
         # Preprocess data
@@ -209,57 +200,24 @@ class PytorchModel(BaseModel):
         self.optimizer = self.function_dict[optimizer](params=self.model.parameters(), lr=learning_rate)
         self.loss_fn = self.function_dict[loss]()
 
-        # # Train the model
-        # best_loss = float('inf')
-        # early_stop_count = 0
-        # for epoch in range(epochs):
-        #     train_loss = 0.0
-        #     val_loss = 0.0
-
-        #     # Train step
-        #     self.model.train()
-        #     for i, (inputs, targets) in enumerate(train_dataloader):
-        #         self.optimizer.zero_grad()
-        #         outputs = self.model(inputs)
-        #         loss = self.loss_fn(outputs, targets)
-        #         loss.backward()
-        #         self.optimizer.step()
-        #         train_loss += loss.item()
-
-        #     # Validation step
-        #     self.model.eval()
-        #     with torch.no_grad():
-        #         for inputs, targets in val_dataloader:
-        #             outputs = self.model(inputs)
-        #             loss = self.loss_fn(outputs, targets)
-        #             val_loss += loss.item()
-
-        #     train_loss /= len(train_dataloader)
-        #     val_loss /= len(val_dataloader)
-        #     print(f'Epoch {epoch+1}: Train Loss = {train_loss:.4f}, Val Loss = {val_loss:.4f}')
-
-        #     # Save the best model
-        #     if val_loss < best_loss:
-        #         print('Saving model...')
-        #         torch.save(self.model.state_dict(), save_dir)
-        #         best_loss = val_loss
-        #         early_stop_count = 0
-        #     else:
-        #         early_stop_count += 1
-        #         if early_stop_count >= patience:
-        #             print('Stopping early.')
-        #             break
+        # Train the model
+        best_loss = float('inf')
+        early_stop_count = 0
         for epoch in range(epochs):
             train_loss = 0.0
             val_loss = 0.0
 
+            # Train step
             self.model.train()
-            for X_batch, y_batch in train_dataloader:
-                y_pred = self.model(X_batch)
-                loss = self.loss_fn(y_pred, y_batch)
+            for i, (inputs, targets) in enumerate(train_dataloader):
                 self.optimizer.zero_grad()
+                outputs = self.model(inputs)
+                loss = self.loss_fn(outputs, targets)
                 loss.backward()
                 self.optimizer.step()
+                train_loss += loss.item()
+
+            # Validation step
             self.model.eval()
             with torch.no_grad():
                 for inputs, targets in val_dataloader:
@@ -270,6 +228,18 @@ class PytorchModel(BaseModel):
             train_loss /= len(train_dataloader)
             val_loss /= len(val_dataloader)
             print(f'Epoch {epoch+1}: Train Loss = {train_loss:.4f}, Val Loss = {val_loss:.4f}')
+
+            # Save the best model
+            if val_loss < best_loss:
+                print('Saving model...')
+                torch.save(self.model.state_dict(), save_dir)
+                best_loss = val_loss
+                early_stop_count = 0
+            else:
+                early_stop_count += 1
+                if early_stop_count >= patience:
+                    print('Stopping early.')
+                    break
 
     def save(self, save_dir):
         torch.save(self.model.state_dict(), save_dir)

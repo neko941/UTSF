@@ -1,5 +1,5 @@
 tensorflow
-numpy<1.24
+numpy
 pandas
 rich
 scikit-learn

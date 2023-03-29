@@ -74,7 +74,6 @@ from models.RNN import VanillaRNN__Tensorflow
 from models.RNN import BiRNN__Tensorflow
 from models.LSTM import VanillaLSTM__Tensorflow    
 from models.LSTM import BiLSTM__Tensorflow 
-from models.LSTM import BiLSTM__Pytorch
 from models.GRU import VanillaGRU__Tensorflow
 from models.GRU import BiGRU__Tensorflow
 from models.LTSF_Linear import LTSF_Linear__Tensorflow
@@ -293,13 +292,7 @@ model_dict = [
         'model' : BiLSTM__Tensorflow,
         'help' : '',
         'type' : 'Tensorflow',
-        'units' : [128, 64, 32, 32],
-        'activations': ['tanh', 'tanh', 'tanh', None, None]
-    },{
-        'model' : BiLSTM__Pytorch,
-        'help' : '',
-        'type' : 'Pytorch',
-        'units' : [128, 64, 32, 32],
+        'units' : [28, 64, 32, 32],
         'activations': ['tanh', 'tanh', 'tanh', None, None]
     },{ 
         'model' : VanillaGRU__Tensorflow,
@@ -715,6 +708,7 @@ def main(opt):
                           save_dir=save_dir, 
                           optimizer=opt.optimizer, 
                           loss=opt.loss, 
+                          lr=opt.lr, 
                           epochs=opt.epochs, 
                           learning_rate=opt.lr, 
                           batchsz=opt.batchsz,
