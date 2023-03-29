@@ -72,7 +72,8 @@ from models.MachineLearning import OrthogonalMatchingPursuitCrossValidation
 # deep learning models
 from models.RNN import VanillaRNN__Tensorflow    
 from models.RNN import BiRNN__Tensorflow
-from models.LSTM import VanillaLSTM__Tensorflow    
+from models.LSTM import VanillaLSTM__Tensorflow
+from models.LSTM import VanillaLSTM__Pytorch    
 from models.LSTM import BiLSTM__Tensorflow 
 from models.GRU import VanillaGRU__Tensorflow
 from models.GRU import BiGRU__Tensorflow
@@ -289,12 +290,24 @@ model_dict = [
         'units' : [128, 32],
         'activations': ['tanh', None, None]
     },{ 
+    #     'model' : VanillaLSTM__Pytorch,
+    #     'help' : '',
+    #     'type' : 'Pytorch',
+    #     'units' : [128, 64, 32, 32],
+    #     'activations': ['tanh', 'tanh', 'tanh', None, None]
+    # },{ 
         'model' : BiLSTM__Tensorflow,
         'help' : '',
         'type' : 'Tensorflow',
+<<<<<<< Updated upstream
         'units' : [28, 64, 32, 32],
         'activations': ['tanh', 'tanh', 'tanh', None, None]
     },{ 
+=======
+        'units' : [128, 64, 32, 32],
+        'activations': ['tanh', 'tanh', 'tanh', None, None]
+    },{
+>>>>>>> Stashed changes
         'model' : VanillaGRU__Tensorflow,
         'help' : '',
         'type' : 'Tensorflow',
@@ -457,6 +470,7 @@ def main(opt):
     data = yaml_load(opt.source)
     if data['features'] is None: data['features'] = []
     elif not isinstance(data['features'], list): data['features'] = [data['features']]
+    # if not isinstance(data['target'], list): data['target'] = [data['target']]
 
 
     """ Get all files with given extensions and read """
@@ -477,6 +491,8 @@ def main(opt):
                                          index_col=opt.indexCol
                                          )
     data['features'].extend(dir_feature)
+    # print(df)
+    # exit()
 
     """ Convert to datetime """
     if 'time_as_id' in data and 'date' in data: 
@@ -689,6 +705,7 @@ def main(opt):
             # train_console.save_svg(os.path.join(save_dir, 'results_on_train.svg'), theme=MONOKAI)
     else:
         for item in model_dict:
+            
             start = time.time()
             if not vars(opt)[f'{item["model"].__name__}']: continue
             model = item['model'](input_shape=X_train.shape[-2:], output_shape=opt.labelsz, seed=opt.seed,

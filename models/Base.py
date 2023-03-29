@@ -22,7 +22,13 @@ import pickle
 from utils.general import yaml_load
 from pathlib import Path
 
+import torch.optim as optim
+import torch.nn as nn
+
 class BaseModel:
+    def __init__(self):
+        self.history = None
+
     @abstractmethod
     def build(self, *inputs):
         raise NotImplementedError 
@@ -49,7 +55,7 @@ class BaseModel:
 
     def score(self, y, yhat, r):
         # print(y.shape, yhat.shape)
-        if len(yhat.shape) > 2: 
+        if len(yhat.shape) == 3: 
             nsamples, nx, ny = yhat.shape
             yhat = yhat.reshape((nsamples,nx*ny))
         if r != -1:
@@ -60,6 +66,7 @@ class BaseModel:
 
 class MachineLearningModel(BaseModel):
     def __init__(self, config_path, **kwargs):
+        super().__init__()
         self.config_path = config_path
         self.is_classifier = False
     
@@ -95,7 +102,6 @@ class TensorflowModel(BaseModel):
     def __init__(self, input_shape, output_shape, units, activations, dropouts, normalize_layer=None, seed=941, **kwargs):
         self.function_dict = {
             'Adam' : Adam,
-            # 'AdamW' : AdamW,
             'MSE' : MeanSquaredError,
             'SGD' : SGD
         }
@@ -104,7 +110,6 @@ class TensorflowModel(BaseModel):
         self.normalize_layer = normalize_layer
         self.input_shape = input_shape
         self.output_shape = output_shape
-        self.units = units
         self.activations = activations
         self.dropouts = dropouts
 
@@ -166,17 +171,141 @@ class TensorflowModel(BaseModel):
     def load(self, weight):
         if os.path.exists(weight): self.model.load_weights(weight)
 
-import torch.optim as optim
-import torch.nn as nn
+
+
+# class PytorchModel(BaseModel):
+#     def __init__(self, input_shape, output_shape, units, activations, dropouts, seed=941, **kwargs):
+#         self.function_dict = {
+#             'Adam' : optim.Adam,
+#             'MSE' : nn.MSELoss,
+#             'SGD' : optim.SGD
+#         }
+#         self.units = units
+#         self.seed = seed
+#         self.input_shape = input_shape
+#         self.output_shape = output_shape
+#         self.units = units
+#         self.activations = activations
+#         self.dropouts = dropouts
+
+#     def preprocessing(self, x, y, batchsz):
+#         # X = torch.from_numpy(x)
+#         # y = torch.from_numpy(y)
+        
+#         X = torch.tensor(x)
+#         y = torch.tensor(y)
+        
+#         dataset = TensorDataset(X, y)
+
+#         # Create the data loader
+#         dataloader = DataLoader(dataset, batch_size=batchsz, shuffle=True, num_workers=0)
+
+#         return dataloader
+
+#     def fit(self, X_train, y_train, X_val, y_val, patience, learning_rate, epochs, save_dir, batchsz, optimizer='Adam', loss='MSE'):
+#         # Preprocess data
+#         train_dataloader = self.preprocessing(X_train, y_train, batchsz)
+#         val_dataloader = self.preprocessing(X_val, y_val, batchsz)
+
+#         # Set optimizer and loss function
+#         self.optimizer = self.function_dict[optimizer](params=self.model.parameters(), lr=learning_rate)
+#         self.loss_fn = self.function_dict[loss]()
+
+#         # # Train the model
+#         # best_loss = float('inf')
+#         # early_stop_count = 0
+#         # for epoch in range(epochs):
+#         #     train_loss = 0.0
+#         #     val_loss = 0.0
+
+#         #     # Train step
+#         #     self.model.train()
+#         #     for i, (inputs, targets) in enumerate(train_dataloader):
+#         #         self.optimizer.zero_grad()
+#         #         outputs = self.model(inputs)
+#         #         loss = self.loss_fn(outputs, targets)
+#         #         loss.backward()
+#         #         self.optimizer.step()
+#         #         train_loss += loss.item()
+
+#         #     # Validation step
+#         #     self.model.eval()
+#         #     with torch.no_grad():
+#         #         for inputs, targets in val_dataloader:
+#         #             outputs = self.model(inputs)
+#         #             loss = self.loss_fn(outputs, targets)
+#         #             val_loss += loss.item()
+
+#         #     train_loss /= len(train_dataloader)
+#         #     val_loss /= len(val_dataloader)
+#         #     print(f'Epoch {epoch+1}: Train Loss = {train_loss:.4f}, Val Loss = {val_loss:.4f}')
+
+#         #     # Save the best model
+#         #     if val_loss < best_loss:
+#         #         print('Saving model...')
+#         #         torch.save(self.model.state_dict(), save_dir)
+#         #         best_loss = val_loss
+#         #         early_stop_count = 0
+#         #     else:
+#         #         early_stop_count += 1
+#         #         if early_stop_count >= patience:
+#         #             print('Stopping early.')
+#         #             break
+#         for epoch in range(epochs):
+#             train_loss = 0.0
+#             val_loss = 0.0
+
+#             self.model.train()
+#             for X_batch, y_batch in train_dataloader:
+#                 y_pred = self.model(X_batch)
+#                 loss = self.loss_fn(y_pred, y_batch)
+#                 self.optimizer.zero_grad()
+#                 loss.backward()
+#                 self.optimizer.step()
+#             self.model.eval()
+#             with torch.no_grad():
+#                 for inputs, targets in val_dataloader:
+#                     outputs = self.model(inputs)
+#                     loss = self.loss_fn(outputs, targets)
+#                     val_loss += loss.item()
+
+#             train_loss /= len(train_dataloader)
+#             val_loss /= len(val_dataloader)
+#             print(f'Epoch {epoch+1}: Train Loss = {train_loss:.4f}, Val Loss = {val_loss:.4f}')
+
+#     def save(self, save_dir):
+#         torch.save(self.model.state_dict(), save_dir)
+
+#     def load(self, save_dir):
+#         self.model.load_state_dict(torch.load(save_dir))
+
+#     def predict(self, X_test):
+#         # Preprocess test data
+#         test_dataset = torch.utils.data.TensorDataset(torch.from_numpy(X_test))
+#         test_dataloader = DataLoader(test_dataset, batch_size=1)
+
+#         # Make predictions
+#         self.model.eval()
+#         predictions = []
+#         with torch.no_grad():
+#             for inputs in test_dataloader:
+#                 outputs = self.model(inputs[0])
+#                 predictions.append(outputs.numpy())
+                
+#         return np.array(predictions).squeeze()
 
 class PytorchModel(BaseModel):
+<<<<<<< Updated upstream
     def __init__(self, model):
         self.model = model
+=======
+    def __init__(self, input_shape, output_shape, seed, units, **kwargs):
+>>>>>>> Stashed changes
         self.function_dict = {
             'Adam' : optim.Adam,
-            'MSE' : nn.MSELoss,
-            'SGD' : optim.SGD
+            'MSE' : nn.MSELoss
         }
+<<<<<<< Updated upstream
 
     def preprocessing(self, x, y, batchsz):
         # Convert numpy arrays to PyTorch tensors
@@ -190,12 +319,27 @@ class PytorchModel(BaseModel):
         train_dataloader = DataLoader(train_dataset, batch_size=batchsz, shuffle=True, num_workers=0)
 
         return train_dataloader
+=======
+        self.units = units
+        self.seed = seed
+        self.input_shape = input_shape
+        self.output_shape = output_shape
+
+    def preprocessing(self, x, y, batchsz):
+        x = torch.tensor(x)
+        y = torch.tensor(y)
+        loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(x, y), shuffle=True, batch_size=batchsz)
+        return loader
+>>>>>>> Stashed changes
 
     def fit(self, X_train, y_train, X_val, y_val, patience, learning_rate, epochs, save_dir, batchsz, optimizer='Adam', loss='MSE'):
-        # Preprocess data
+        optimizer = self.function_dict[optimizer](self.model.parameters(), lr=learning_rate)
+        loss_fn = self.function_dict[loss]()
+
         train_dataloader = self.preprocessing(X_train, y_train, batchsz)
         val_dataloader = self.preprocessing(X_val, y_val, batchsz)
 
+<<<<<<< Updated upstream
         # Set optimizer and loss function
         self.optimizer = self.function_dict[optimizer](params=self.model.parameters(), lr=learning_rate)
         self.loss_fn = self.function_dict[loss]()
@@ -218,17 +362,42 @@ class PytorchModel(BaseModel):
                 train_loss += loss.item()
 
             # Validation step
+=======
+        self.model = self.model.double()
+        for epoch in range(epochs):
+            train_loss = 0.0
+            val_loss = 0.0
+            self.model.train()
+            for X_batch, y_batch in train_dataloader:
+                y_pred = self.model(X_batch)
+                loss = loss_fn(y_pred, y_batch)
+                train_loss += loss.item()
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+>>>>>>> Stashed changes
             self.model.eval()
             with torch.no_grad():
                 for inputs, targets in val_dataloader:
                     outputs = self.model(inputs)
-                    loss = self.loss_fn(outputs, targets)
+                    loss = loss_fn(outputs, targets)
                     val_loss += loss.item()
-
             train_loss /= len(train_dataloader)
             val_loss /= len(val_dataloader)
             print(f'Epoch {epoch+1}: Train Loss = {train_loss:.4f}, Val Loss = {val_loss:.4f}')
+    
+    def save(self, file_name:str, save_dir:str='.', extension:str='.h5'):
+        pass
+        # os.makedirs(name=save_dir, exist_ok=True)
+        # file_path = os.path.join(save_dir, file_name+extension)
+        # pickle.dump(self.model, open(Path(file_path).absolute(), "wb"))
+        # return file_path
+    
+    def load(self, weight):
+        # if os.path.exists(weight): self.model.load_weights(weight)
+        pass
 
+<<<<<<< Updated upstream
             # Save the best model
             if val_loss < best_loss:
                 print('Saving model...')
@@ -248,16 +417,21 @@ class PytorchModel(BaseModel):
         self.model.load_state_dict(torch.load(save_dir))
 
     def predict(self, X_test):
+=======
+    def predict(self, X):
+>>>>>>> Stashed changes
         # Preprocess test data
-        test_dataset = torch.utils.data.TensorDataset(torch.from_numpy(X_test))
-        test_dataloader = DataLoader(test_dataset, batch_size=1)
+        dataset = torch.utils.data.TensorDataset(torch.from_numpy(X))
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=1)
 
         # Make predictions
         self.model.eval()
         predictions = []
         with torch.no_grad():
-            for inputs in test_dataloader:
+            for inputs in dataloader:
                 outputs = self.model(inputs[0])
                 predictions.append(outputs.numpy())
-                
-        return np.array(predictions).squeeze()
+        
+        # print(np.array(predictions).squeeze().shape); exit()
+        return np.array(predictions)
+        # return [0, 0, 0, 0, 0, 0]

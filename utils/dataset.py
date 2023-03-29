@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
+import polars as pl
 from rich.style import Style
 from rich.progress import track
 from rich.console import Console
@@ -10,10 +11,10 @@ pd.options.mode.chained_assignment = None
 
 def ReadFileAddFetures(csvs, DirAsFeature, ColName, delimiter, index_col):
     dir_features = []
-    if DirAsFeature == 0: df = pd.concat([pd.read_csv(filepath_or_buffer=filename, delimiter=delimiter, index_col=index_col) for filename in csvs], axis=0, ignore_index=True)
+    if DirAsFeature == 0: df = pd.concat([pd.read_csv(filepath_or_buffer=filename, delimiter=delimiter, index_col=index_col) for filename in track(csvs, description='Reading data')], axis=0, ignore_index=True)
     else:
         dfs = []
-        for csv in csvs:
+        for csv in track(csvs, description='Reading data'):
             path = os.path.abspath(csv)
             features = [int(p) if p.isdigit() else p for p in path.split(os.sep)[-DirAsFeature-1:-1]]
             df = pd.read_csv(filepath_or_buffer=path, delimiter=delimiter, index_col=index_col)
@@ -23,6 +24,26 @@ def ReadFileAddFetures(csvs, DirAsFeature, ColName, delimiter, index_col):
         df = pd.concat(dfs, axis=0, ignore_index=True)
     return df, list(set(dir_features))
 
+# def ReadFileAddFetures(csvs, DirAsFeature, ColName, delimiter, index_col, has_header=True):
+#     dir_features = []
+#     if DirAsFeature == 0: df = pl.concat([pl.read_csv(source=filename, separator=delimiter, has_header=has_header) for filename in track(csvs, description='Reading data')])
+#     else:
+#         dfs = []
+#         for csv in track(csvs, description='Reading data'):
+#             path = os.path.abspath(csv)
+#             features = [int(p) if p.isdigit() else p for p in path.split(os.sep)[-DirAsFeature-1:-1]]
+#             df = pl.read_csv(source=path, separator=delimiter, has_header=has_header)
+#             for idx, f in enumerate(features): df = df.with_column(pl.lit(f).alias(f'{ColName}{idx}'))
+#             dir_features.append(f'{ColName}{idx}')
+#             dfs.append(df)
+#         df = pl.concat(dfs)
+#     if index_col is not None: df = df.drop(index_col)
+#     return df, list(set(dir_features))
+
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 def _slicing_window(df, df_start_idx, df_end_idx, input_size, label_size, offset, label_name, description):
     features = [] 
     labels = []
