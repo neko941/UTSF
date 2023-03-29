@@ -97,8 +97,6 @@ class BiLSTM__Tensorflow(TensorflowModel):
                              kernel_initializer=GlorotUniform(seed=self.seed),
                              activation=self.activations[4]))
         
-<<<<<<< Updated upstream
-=======
 
 
 # class _BiLSTM__Pytorch(nn.Module):
@@ -188,7 +186,6 @@ class BiLSTM__Tensorflow(TensorflowModel):
 #                                       units=self.units).double()
 
 
->>>>>>> Stashed changes
 class ConvLSTM__Tensorflow(TensorflowModel):
     def body(self): 
         self.model.add(ConvLSTM2D(filters=40, kernel_size=(3, 3), padding='same', return_sequences=True))

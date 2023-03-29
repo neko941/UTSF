@@ -40,10 +40,6 @@ def ReadFileAddFetures(csvs, DirAsFeature, ColName, delimiter, index_col):
 #     if index_col is not None: df = df.drop(index_col)
 #     return df, list(set(dir_features))
 
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes
 def _slicing_window(df, df_start_idx, df_end_idx, input_size, label_size, offset, label_name, description):
     features = [] 
     labels = []

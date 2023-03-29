@@ -299,15 +299,9 @@ model_dict = [
         'model' : BiLSTM__Tensorflow,
         'help' : '',
         'type' : 'Tensorflow',
-<<<<<<< Updated upstream
         'units' : [28, 64, 32, 32],
         'activations': ['tanh', 'tanh', 'tanh', None, None]
     },{ 
-=======
-        'units' : [128, 64, 32, 32],
-        'activations': ['tanh', 'tanh', 'tanh', None, None]
-    },{
->>>>>>> Stashed changes
         'model' : VanillaGRU__Tensorflow,
         'help' : '',
         'type' : 'Tensorflow',
