@@ -1,0 +1,8 @@
+.gitattributes
+runs
+env
+__pycache__/
+catboost_info
+data/salinity
+data/traffic
+Azure_AI.ipynb
