@@ -55,7 +55,7 @@ features:
 ```
 
 ```
-python .\main.py --inputsz=5 --labelsz=1 --DirAsFeature=1 --SplitDirFeature=0 --source=./data/yaml/test_case_1.yaml
+python .\main.py --inputsz=5 --labelsz=1 --granularity=1440 --DirAsFeature=1 --SplitDirFeature=0 --source=./data/yaml/test_case_1.yaml
 ```
 
 ## Case 2: Multiple ids, split by column
@@ -69,7 +69,7 @@ features:
 ```
 
 ```
-python .\main.py --inputsz=5 --labelsz=1 --SplitFeature='station' --source=./data/yaml/test_case_2.yaml
+python .\main.py --inputsz=5 --labelsz=1 --granularity=1440 --SplitFeature=station --source=./data/yaml/test_case_2.yaml
 ```
 
 ## Case 3: One id, multi-step forecasting
@@ -88,7 +88,12 @@ features:
 ```
 
 ```
-python .\main.py --inputsz=15 --labelsz=2 --source=./data/yaml/test_case_3.yaml
+python .\main.py --inputsz=15 --labelsz=1 --granularity=1440 --source=./data/yaml/test_case_3.yaml
+```
+
+# Stocks
+```
+python .\main.py --inputsz=5 --labelsz=1 --granularity=1440 --source=./data/yaml/test_stocks.yaml
 ```
 
 # Traffic

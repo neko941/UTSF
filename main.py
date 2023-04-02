@@ -32,8 +32,9 @@ from utils.visualize import save_plot
 from utils.metrics import used_metric
 
 # dataset slicing 
-from utils.dataset import slicing_window
-from utils.dataset import ReadFileAddFetures
+# from utils.dataset import slicing_window
+# from utils.dataset import ReadFileAddFetures
+from utils.dataset import DatasetController
 
 # display results
 from rich import box as rbox
@@ -478,85 +479,111 @@ def main(opt):
                     if file.endswith(extensions): csvs.append(os.path.join(root, file))
         if i.endswith(extensions) and os.path.exists(i): csvs.append(i)
     assert len(csvs) > 0, 'No csv file(s)'
-    df, dir_feature = ReadFileAddFetures(csvs=csvs, 
-                                         DirAsFeature=opt.DirAsFeature,
-                                         ColName=opt.DirFeatureName,
-                                         delimiter=opt.delimiter,
-                                         index_col=opt.indexCol
-                                         )
-    # print(df, dir_feature)
-    data['features'].extend(dir_feature)
-    # print(data['features'])
-    # print(df)
-    # exit()
+    # df, dir_feature = ReadFileAddFetures(csvs=csvs, 
+    #                                      DirAsFeature=opt.DirAsFeature,
+    #                                      ColName=opt.DirFeatureName,
+    #                                      delimiter=opt.delimiter,
+    #                                      index_col=opt.indexCol
+    #                                      )
+    # # print(df, dir_feature)
+    # data['features'].extend(dir_feature)
+    # # print(data['features'])
+    # # print(df)
+    # # exit()
 
-    """ Convert to datetime """
-    if 'time_as_id' in data and 'date' in data: 
-        assert df[data['time_as_id']].max() * opt.granularity + opt.startTimeId - 24*60 <= 0, f'time id max should be {(24*60  - opt.startTimeId) / opt.granularity} else it will exceed to the next day'
-        df[data['date']] = df.apply(lambda row: pd.to_datetime(row[data['date']]) + pd.to_timedelta((row[data['time_as_id']]-1)*opt.granularity+opt.startTimeId, unit='m'), axis=1)
+    # """ Convert to datetime """
+    # if 'time_as_id' in data and 'date' in data: 
+    #     assert df[data['time_as_id']].max() * opt.granularity + opt.startTimeId - 24*60 <= 0, f'time id max should be {(24*60  - opt.startTimeId) / opt.granularity} else it will exceed to the next day'
+    #     df[data['date']] = df.apply(lambda row: pd.to_datetime(row[data['date']]) + pd.to_timedelta((row[data['time_as_id']]-1)*opt.granularity+opt.startTimeId, unit='m'), axis=1)
     
 
-    """ Data preprocessing """
-    # if not isinstance(data['target'], list): data['target'] = [data['target']]
-    if data['date'] is not None:
-        # get used cols
-        cols = []
-        for i in [data['date'], data['features'], data['target']]: 
-            if isinstance(i, list): cols.extend(i)
-            else: cols.append(i) 
-        df = df[cols]
+    # """ Data preprocessing """
+    # # if not isinstance(data['target'], list): data['target'] = [data['target']]
+    # if data['date'] is not None:
+    #     # get used cols
+    #     cols = []
+    #     for i in [data['date'], data['features'], data['target']]: 
+    #         if isinstance(i, list): cols.extend(i)
+    #         else: cols.append(i) 
+    #     df = df[cols]
 
-        # convert date to type datetime
-        df[data['date']] = pd.to_datetime(df[data['date']])
+    #     # convert date to type datetime
+    #     df[data['date']] = pd.to_datetime(df[data['date']])
 
-        # auto fill missing data
-        # TODO: drop date for case the does not need a whole year
-        if opt.AutoInterpolate != '':
-            df = pd.merge(df,
-                          pd.DataFrame(pd.date_range(min(df[data['date']]), max(df[data['date']])), columns=[data['date']]),
-                          how='right',
-                          left_on=[data['date']],
-                          right_on = [data['date']])
-            df.fillna(method=f'{list(opt.AutoInterpolate)[0].lower()}fill', inplace=True)
+    #     # auto fill missing data
+    #     # TODO: drop date for case the does not need a whole year
+    #     if opt.AutoInterpolate != '':
+    #         df = pd.merge(df,
+    #                       pd.DataFrame(pd.date_range(min(df[data['date']]), max(df[data['date']])), columns=[data['date']]),
+    #                       how='right',
+    #                       left_on=[data['date']],
+    #                       right_on = [data['date']])
+    #         df.fillna(method=f'{list(opt.AutoInterpolate)[0].lower()}fill', inplace=True)
 
-        # sort data by date
-        df.sort_values(data['date'], inplace=True, ignore_index=True)
+    #     # sort data by date
+    #     df.sort_values(data['date'], inplace=True, ignore_index=True)
 
-        # add month sin, month cos (cyclical pattern)
-        if opt.CyclicalPattern:
-            # Extracting the hour of day
-            # d["hour"] = [x.hour for x in d["dt"]]
-            # # Creating the cyclical daily feature 
-            # d["day_cos"] = [np.cos(x * (2 * np.pi / 24)) for x in d["hour"]]
-            # d["day_sin"] = [np.sin(x * (2 * np.pi / 24)) for x in d["hour"]]
+    #     # add month sin, month cos (cyclical pattern)
+    #     if opt.CyclicalPattern:
+    #         # Extracting the hour of day
+    #         # d["hour"] = [x.hour for x in d["dt"]]
+    #         # # Creating the cyclical daily feature 
+    #         # d["day_cos"] = [np.cos(x * (2 * np.pi / 24)) for x in d["hour"]]
+    #         # d["day_sin"] = [np.sin(x * (2 * np.pi / 24)) for x in d["hour"]]
 
-            d = [x.timestamp() for x in df[f"{data['date']}"]]
-            day = 24 * 60 * 60 # Seconds in day  
-            year = (365.2425) * day # Seconds in year 
+    #         d = [x.timestamp() for x in df[f"{data['date']}"]]
+    #         day = 24 * 60 * 60 # Seconds in day  
+    #         year = (365.2425) * day # Seconds in year 
 
-            if df[data['date']].dt.day.nunique() > 1:
-                df.insert(loc=0, column='day_cos', value=[np.cos((x) * (2 * np.pi / day)) for x in d])
-                df.insert(loc=0, column='day_sin', value=[np.sin((x) * (2 * np.pi / day)) for x in d]) 
+    #         if df[data['date']].dt.day.nunique() > 1:
+    #             df.insert(loc=0, column='day_cos', value=[np.cos((x) * (2 * np.pi / day)) for x in d])
+    #             df.insert(loc=0, column='day_sin', value=[np.sin((x) * (2 * np.pi / day)) for x in d]) 
             
-            if df[data['date']].dt.month.nunique() > 1:
-                df.insert(loc=0, column='month_cos', value=[np.cos((x) * (2 * np.pi / year)) for x in d])
-                df.insert(loc=0, column='month_sin', value=[np.sin((x) * (2 * np.pi / year)) for x in d]) 
+    #         if df[data['date']].dt.month.nunique() > 1:
+    #             df.insert(loc=0, column='month_cos', value=[np.cos((x) * (2 * np.pi / year)) for x in d])
+    #             df.insert(loc=0, column='month_sin', value=[np.sin((x) * (2 * np.pi / year)) for x in d]) 
 
-    assert not all([opt.DirAsFeature != 0, opt.SplitFeature is not None])
+    # assert not all([opt.DirAsFeature != 0, opt.SplitFeature is not None])
 
-    if opt.DirAsFeature != 0 and opt.SplitDirFeature != -1: segment_feature = dir_feature[opt.SplitDirFeature]
-    elif opt.SplitFeature is not None: segment_feature = opt.SplitFeature
-    else: segment_feature = None
+    # if opt.DirAsFeature != 0 and opt.SplitDirFeature != -1: segment_feature = dir_feature[opt.SplitDirFeature]
+    # elif opt.SplitFeature is not None: segment_feature = opt.SplitFeature
+    # else: segment_feature = None
 
-    X_train, y_train, X_val, y_val, X_test, y_test = slicing_window(df=df, 
-                                                                    date_feature=data['date'],
-                                                                    segment_feature=segment_feature,
-                                                                    split_ratio=(opt.trainsz, opt.valsz, 1-opt.trainsz-opt.valsz), 
-                                                                    input_size=opt.inputsz, 
-                                                                    label_size=opt.labelsz, 
-                                                                    offset=opt.offset, 
-                                                                    label_name=data['target'],
-                                                                    multimodels=opt.multimodels)
+    # X_train, y_train, X_val, y_val, X_test, y_test = slicing_window(df=df, 
+    #                                                                 date_feature=data['date'],
+    #                                                                 segment_feature=segment_feature,
+    #                                                                 split_ratio=(opt.trainsz, opt.valsz, 1-opt.trainsz-opt.valsz), 
+    #                                                                 input_size=opt.inputsz, 
+    #                                                                 label_size=opt.labelsz, 
+    #                                                                 offset=opt.offset, 
+    #                                                                 label_name=data['target'],
+    #                                                                 multimodels=opt.multimodels)
+
+    dataset = DatasetController(trainFeatures=data['features'],
+                                dateFeature=data['date'],
+                                targetFeatures=data['target'],
+                                granularity=opt.granularity)
+    dataset.ReadFileAddFetures(csvs=csvs, 
+                               dirAsFeature=opt.DirAsFeature,
+                               newColumnName=opt.DirFeatureName,
+                               delimiter=opt.delimiter,
+                               indexColumnToDrop=opt.indexCol,
+                               hasHeader=True)
+
+    if 'time_as_id' in data and 'date' in data: 
+        dataset.TimeIDToDateTime(timeIDColumn=data['time_as_id'], 
+                                 startTimeId=opt.startTimeId)
+    dataset.GetUsedColumn()
+    dataset.GetSegmentFeature(dirAsFeature=opt.DirAsFeature, 
+                              splitDirFeature=opt.SplitDirFeature, 
+                              splitFeature=opt.SplitFeature)
+    dataset.TimeBasedCrossValidation(splitRatio=(opt.trainsz, opt.valsz, 1-opt.trainsz-opt.valsz), 
+                                     lag=opt.inputsz, 
+                                     ahead=opt.labelsz, 
+                                     offset=opt.offset, 
+                                     multimodels=opt.multimodels)
+    X_train, y_train, X_val, y_val, X_test, y_test = dataset.X_train, dataset.y_train, dataset.X_val, dataset.y_val, dataset.X_test, dataset.y_test
+                                
     np.random.shuffle(X_train)
     np.random.shuffle(y_train)
     np.random.shuffle(X_val)
