@@ -287,8 +287,8 @@ model_dict = [
         'model' : VanillaLSTM__Tensorflow,
         'help' : '',
         'type' : 'Tensorflow',
-        'units' : [128, 32],
-        'activations': ['tanh', None, None]
+        'units' : [512, 512, 256, 256, 128, 128, 64],
+        'activations': ['tanh', 'tanh', 'tanh', 'tanh', 'tanh', 'tanh', 'relu', None]
     },{ 
     #     'model' : VanillaLSTM__Pytorch,
     #     'help' : '',
@@ -557,7 +557,13 @@ def main(opt):
                                                                     offset=opt.offset, 
                                                                     label_name=data['target'],
                                                                     multimodels=opt.multimodels)
-
+    np.random.shuffle(X_train)
+    np.random.shuffle(y_train)
+    np.random.shuffle(X_val)
+    np.random.shuffle(y_val)
+    np.random.shuffle(X_test)
+    np.random.shuffle(y_test)
+    
     console = Console(record=True)
     table = Table(title="[cyan]Results", 
                   show_header=True, 

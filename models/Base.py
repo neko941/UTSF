@@ -139,7 +139,7 @@ class TensorflowModel(BaseModel):
                 CSVLogger(filename=os.path.join(log_path, f'{self.__class__.__name__}.csv'), separator=',', append=False)]  
         
     def preprocessing(self, x, y, batchsz):
-        return tf.data.Dataset.from_tensor_slices((x, y)).batch(batchsz).cache().prefetch(buffer_size=tf.data.AUTOTUNE)
+        return tf.data.Dataset.from_tensor_slices((x, y)).shuffle(buffer_size=5120, seed=self.seed, reshuffle_each_iteration=True).batch(batchsz).cache().prefetch(buffer_size=tf.data.AUTOTUNE)
 
     def build(self):
         try:

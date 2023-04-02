@@ -22,21 +22,47 @@ class VanillaLSTM__Tensorflow(TensorflowModel):
     def body(self):
         # Normalization
         if self.normalize_layer: self.model.add(self.normalize_layer)
-        # LSTM Layer 1
-        self.model.add(LSTM(name='LSTM_layer',
+        # LSTM Layer 
+        self.model.add(LSTM(name='LSTM_layer_0',
                             units=self.units[0],
+                            return_sequences=True,
                             kernel_initializer=GlorotUniform(seed=self.seed), 
                             activation=self.activations[0]))
+        self.model.add(LSTM(name='LSTM_layer_1',
+                            units=self.units[1],
+                            return_sequences=True,
+                            kernel_initializer=GlorotUniform(seed=self.seed), 
+                            activation=self.activations[1]))
+        self.model.add(LSTM(name='LSTM_layer_2',
+                            units=self.units[2],
+                            return_sequences=True,
+                            kernel_initializer=GlorotUniform(seed=self.seed), 
+                            activation=self.activations[2]))
+        self.model.add(LSTM(name='LSTM_layer_3',
+                            units=self.units[3],
+                            return_sequences=True,
+                            kernel_initializer=GlorotUniform(seed=self.seed), 
+                            activation=self.activations[3]))
+        self.model.add(LSTM(name='LSTM_layer_4',
+                            units=self.units[4],
+                            return_sequences=True,
+                            kernel_initializer=GlorotUniform(seed=self.seed), 
+                            activation=self.activations[4]))
+        self.model.add(LSTM(name='LSTM_layer_5',
+                            units=self.units[5],
+                            return_sequences=False,
+                            kernel_initializer=GlorotUniform(seed=self.seed), 
+                            activation=self.activations[5]))
         # FC Layer
         self.model.add(Dense(name='Fully_Connected_layer',
-                             units=self.units[1],
+                             units=self.units[6],
                              kernel_initializer=GlorotUniform(seed=self.seed),
-                             activation=self.activations[1]))
+                             activation=self.activations[6]))
         # Output Layer
         self.model.add(Dense(name='Output_layer',
                              units=self.output_shape, 
                              kernel_initializer=GlorotUniform(seed=self.seed),
-                             activation=self.activations[2]))
+                             activation=self.activations[7]))
 
 class _VanillaLSTM__Pytorch(nn.Module):
     def __init__(self, input_shape, output_shape, units):

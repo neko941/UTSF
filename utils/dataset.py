@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
-import polars as pl
+# import polars as pl
 from rich.style import Style
 from rich.progress import track
 from rich.console import Console
