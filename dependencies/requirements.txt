@@ -8,3 +8,4 @@ xgboost==1.7.3
 pyyaml==6.0
 lightgbm==3.3.4
 catboost==1.1.1
+polars=0.16.17

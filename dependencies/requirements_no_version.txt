@@ -1,5 +1,5 @@
 tensorflow
-numpy
+numpy<1.24
 pandas
 rich
 scikit-learn
@@ -7,3 +7,4 @@ xgboost
 pyyaml
 lightgbm
 catboost
+polars

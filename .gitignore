@@ -1,6 +1,7 @@
 .gitattributes
 runs
 env
+test
 __pycache__/
 catboost_info
 data/salinity

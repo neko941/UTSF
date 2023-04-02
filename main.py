@@ -582,6 +582,13 @@ def main(opt):
                                      ahead=opt.labelsz, 
                                      offset=opt.offset, 
                                      multimodels=opt.multimodels)
+    
+    # ids = [i['id'] for i in sorted(dataset.num_samples, key=lambda d: d['train'])[:500]]
+    # print(ids)
+    # with open('somefile.txt', 'a') as the_file:
+    #     the_file.write('\n'.join(ids))
+    # exit()
+     
     X_train, y_train, X_val, y_val, X_test, y_test = dataset.X_train, dataset.y_train, dataset.X_val, dataset.y_val, dataset.X_test, dataset.y_test
                                 
     np.random.shuffle(X_train)

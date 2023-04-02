@@ -241,6 +241,8 @@ class DatasetController():
         self.X_test = []
         self.y_test = []
 
+        self.num_samples = []
+
     def ReadFileAddFetures(self, csvs, dirAsFeature=0, newColumnName='dir', delimiter=',', indexColumnToDrop=None, hasHeader=True):
         if not isinstance(csvs, list): self.csvs = [csvs]
         else: self.csvs = csvs 
@@ -254,7 +256,7 @@ class DatasetController():
                 df = pl.read_csv(source=csv, separator=delimiter, has_header=hasHeader, try_parse_dates=True)
                 for idx, f in enumerate(features): 
                     df = df.with_column(pl.lit(f).alias(f'{newColumnName}{idx}'))
-                dirFeatures.append(f'{newColumnName}{idx}')
+                self.dirFeatures.append(f'{newColumnName}{idx}')
                 dfs.append(df)
             df = pl.concat(dfs)
             self.dirFeatures = list(set(self.dirFeatures))
@@ -265,9 +267,9 @@ class DatasetController():
         else: self.df = pl.concat([self.df, df])
 
     def TimeIDToDateTime(self, timeIDColumn, startTimeId=0):
-        max_time_id = self.df[timeIDColumn].max() * granularity + startTimeId - 24*60
-        assert max_time_id <= 0, f'time id max should be {(24*60 - startTimeId) / granularity} else it will exceed to the next day'
-        self.df = self.df.with_column(pl.col(self.dateFeature).cast(pl.Datetime) + pl.duration(minutes=(pl.col(timeIDColumn)-1)*granularity+startTimeId))
+        max_time_id = self.df[timeIDColumn].max() * self.granularity + startTimeId - 24*60
+        assert max_time_id <= 0, f'time id max should be {(24*60 - startTimeId) / self.granularity} else it will exceed to the next day'
+        self.df = self.df.with_column(pl.col(self.dateFeature).cast(pl.Datetime) + pl.duration(minutes=(pl.col(timeIDColumn)-1)*self.granularity+startTimeId))
     
     def GetUsedColumn(self):
         self.df = self.df[[col for i in [self.dateFeature, self.trainFeatures, self.targetFeatures] for col in (i if isinstance(i, list) else [i])]]
@@ -353,6 +355,11 @@ class DatasetController():
                     self.y_val.extend(labels[train_end:val_end])
                     self.X_test.extend(features[val_end:length])
                     self.y_test.extend(labels[val_end:length])
+                
+                self.num_samples.append({'id' : ele,
+                                         'train': len(labels[0:train_end]),
+                                         'val': len(labels[train_end:val_end]),
+                                         'test': len(labels[val_end:length])})
         else:
             d = self.df.clone()
             d = self.FillDate(df=d)
@@ -385,9 +392,16 @@ class DatasetController():
             self.X_test.extend(features[val_end:length])
             self.y_test.extend(labels[val_end:length])
 
+            self.num_samples.append({'id' : ele,
+                                     'train': len(labels[0:train_end]),
+                                     'val': len(labels[train_end:val_end]),
+                                     'test': len(labels[val_end:length])})
+
         self.X_train = np.array(self.X_train)
         self.y_train = np.array(self.y_train)
         self.X_val = np.array(self.X_val)
         self.y_val = np.array(self.y_val)
         self.X_test = np.array(self.X_test)
         self.y_test = np.array(self.y_test)
+    
+    def display(self): pass
