@@ -94,6 +94,10 @@ python .\main.py --inputsz=15 --labelsz=2 --source=./data/yaml/test_case_3.yaml
 # Traffic
 
 ## Case 1
+```
+python .\main.py --inputsz=1 --labelsz=1 --trainsz=0.8 --valsz=0.15 --batchsz=1 --SplitFeature=current_geopath_id --source=./data/yaml/test_traffic.yaml --indexCol=0 --delimiter='|' --granularity=5 --startTimeId=240
+```
+## Case 2
 
 ```
 data: .\data\traffic\vehiclework_segment_avg_speed.csv
@@ -104,5 +108,5 @@ features: road_segment_id
 ```
 
 ```
-python .\main.py --inputsz=5 --labelsz=1 --SplitFeature='road_segment_id' --source=./data/yaml/test_traffic.yaml --delimiter='|' --indexCol=0 --granularity=5 --startTimeId=240
+python .\main.py --inputsz=5 --labelsz=1 --SplitFeature=current_geopath_id --source=./data/yaml/test_traffic_1.yaml --delimiter='|' --indexCol=0 --granularity=5 --startTimeId=240
 ```

@@ -484,7 +484,9 @@ def main(opt):
                                          delimiter=opt.delimiter,
                                          index_col=opt.indexCol
                                          )
+    # print(df, dir_feature)
     data['features'].extend(dir_feature)
+    # print(data['features'])
     # print(df)
     # exit()
 
@@ -492,6 +494,7 @@ def main(opt):
     if 'time_as_id' in data and 'date' in data: 
         assert df[data['time_as_id']].max() * opt.granularity + opt.startTimeId - 24*60 <= 0, f'time id max should be {(24*60  - opt.startTimeId) / opt.granularity} else it will exceed to the next day'
         df[data['date']] = df.apply(lambda row: pd.to_datetime(row[data['date']]) + pd.to_timedelta((row[data['time_as_id']]-1)*opt.granularity+opt.startTimeId, unit='m'), axis=1)
+    
 
     """ Data preprocessing """
     # if not isinstance(data['target'], list): data['target'] = [data['target']]
@@ -699,7 +702,6 @@ def main(opt):
             # train_console.save_svg(os.path.join(save_dir, 'results_on_train.svg'), theme=MONOKAI)
     else:
         for item in model_dict:
-            
             start = time.time()
             if not vars(opt)[f'{item["model"].__name__}']: continue
             model = item['model'](input_shape=X_train.shape[-2:], output_shape=opt.labelsz, seed=opt.seed,
@@ -714,71 +716,71 @@ def main(opt):
                                   normalize_layer=norm,
                                   enc_in=1) #TODO: make this dynamic enc_in=len(data['target'])
             model.build()
-            try:
-                model.fit(patience=opt.patience, 
-                          save_dir=save_dir, 
-                          optimizer=opt.optimizer, 
-                          loss=opt.loss, 
-                          lr=opt.lr, 
-                          epochs=opt.epochs, 
-                          learning_rate=opt.lr, 
-                          batchsz=opt.batchsz,
-                          X_train=X_train, y_train=y_train,
-                          X_val=X_val, y_val=y_val)
-                weight=os.path.join(save_dir, 'weights', f"{model.__class__.__name__}_best.h5")
-                if not os.path.exists(weight): weight = model.save(save_dir=os.path.join(save_dir, 'weights'),
-                                                                   file_name=model.__class__.__name__)
-                if weight is not None: model.load(weight)
-                yhat = model.predict(X=X_test)
-                scores = model.score(y=y_test, yhat=yhat, r=opt.round)
-                
-                if opt.labelsz == 1:
-                    save_plot(filename=os.path.join(visualize_path, f'{model.__class__.__name__}.png'),
-                              data=[{'data': [range(len(y_test)), y_test],
-                                      'color': 'green',
-                                      'label': 'y'},
-                                     {'data': [range(len(yhat)), yhat],
-                                      'color': 'red',
-                                      'label': 'yhat'}],
-                              xlabel='Sample',
-                              ylabel='Value')
-                if model.history is not None:
-                    loss = model.history.history.get('loss')
-                    val_loss = model.history.history.get('val_loss')
-                    if all([len(loss)>1, len(val_loss)>1]):
-                        save_plot(filename=os.path.join(visualize_path, f'{model.__class__.__name__}-Loss.png'),
-                                  data=[{'data': [range(len(loss)), loss],
-                                         'color': 'green',
-                                         'label': 'loss'},
-                                        {'data': [range(len(val_loss)), val_loss],
-                                         'color': 'red',
-                                         'label': 'val_loss'}],
-                                  xlabel='Epoch',
-                                  ylabel='Loss Value')
-                # if opt.labelsz == 1:
-                #     save_plot(filename=os.path.join(visualize_path, f'{model.__class__.__name__}_train.png'),
-                #                 data=[{'data': y_train,
-                #                         'color': 'green',
-                #                         'label': 'y'},
-                #                         {'data': yhat,
-                #                         'color': 'red',
-                #                         'label': 'yhat'}])
-                table.add_row(model.__class__.__name__, *scores)
-                if opt.debug:
-                    debug_table.add_row(model.__class__.__name__, 
-                                        convert_seconds(time.time()-start), 
-                                        '\n'.join(['None' if a == None else a for a in item.get('activations')]),
-                                        str(yhat.shape)
-                                        )
-            except Exception as e:
-                errors.append([model.__class__.__name__, str(e)])
-                table.add_row(model.__class__.__name__, *list('_' * len(used_metric())))
-                if opt.debug:
-                    theshape = str(model.predict(X_test).shape) if model.model is not None else '_'
-                    debug_table.add_row(model.__class__.__name__, 
-                                        convert_seconds(time.time()-start), 
-                                        '\n'.join(['None' if a == None else a for a in item.get('activations')]),
-                                        theshape)
+            # try:
+            model.fit(patience=opt.patience, 
+                      save_dir=save_dir, 
+                      optimizer=opt.optimizer, 
+                      loss=opt.loss, 
+                      lr=opt.lr, 
+                      epochs=opt.epochs, 
+                      learning_rate=opt.lr, 
+                      batchsz=opt.batchsz,
+                      X_train=X_train, y_train=y_train,
+                      X_val=X_val, y_val=y_val)
+            weight=os.path.join(save_dir, 'weights', f"{model.__class__.__name__}_best.h5")
+            if not os.path.exists(weight): weight = model.save(save_dir=os.path.join(save_dir, 'weights'),
+                                                               file_name=model.__class__.__name__)
+            if weight is not None: model.load(weight)
+            yhat = model.predict(X=X_test)
+            scores = model.score(y=y_test, yhat=yhat, r=opt.round)
+            
+            if opt.labelsz == 1:
+                save_plot(filename=os.path.join(visualize_path, f'{model.__class__.__name__}.png'),
+                          data=[{'data': [range(len(y_test)), y_test],
+                                  'color': 'green',
+                                  'label': 'y'},
+                                 {'data': [range(len(yhat)), yhat],
+                                  'color': 'red',
+                                  'label': 'yhat'}],
+                          xlabel='Sample',
+                          ylabel='Value')
+            if model.history is not None:
+                loss = model.history.history.get('loss')
+                val_loss = model.history.history.get('val_loss')
+                if all([len(loss)>1, len(val_loss)>1]):
+                    save_plot(filename=os.path.join(visualize_path, f'{model.__class__.__name__}-Loss.png'),
+                              data=[{'data': [range(len(loss)), loss],
+                                     'color': 'green',
+                                     'label': 'loss'},
+                                    {'data': [range(len(val_loss)), val_loss],
+                                     'color': 'red',
+                                     'label': 'val_loss'}],
+                              xlabel='Epoch',
+                              ylabel='Loss Value')
+            # if opt.labelsz == 1:
+            #     save_plot(filename=os.path.join(visualize_path, f'{model.__class__.__name__}_train.png'),
+            #                 data=[{'data': y_train,
+            #                         'color': 'green',
+            #                         'label': 'y'},
+            #                         {'data': yhat,
+            #                         'color': 'red',
+            #                         'label': 'yhat'}])
+            table.add_row(model.__class__.__name__, *scores)
+            if opt.debug:
+                debug_table.add_row(model.__class__.__name__, 
+                                    convert_seconds(time.time()-start), 
+                                    '\n'.join(['None' if a == None else a for a in item.get('activations')]),
+                                    str(yhat.shape)
+                                    )
+            # except Exception as e:
+            #     errors.append([model.__class__.__name__, str(e)])
+            #     table.add_row(model.__class__.__name__, *list('_' * len(used_metric())))
+            #     if opt.debug:
+            #         theshape = str(model.predict(X_test).shape) if model.model is not None else '_'
+            #         debug_table.add_row(model.__class__.__name__, 
+            #                             convert_seconds(time.time()-start), 
+            #                             '\n'.join(['None' if a == None else a for a in item.get('activations')]),
+            #                             theshape)
             console.print(table)
             console.save_svg(os.path.join(save_dir, 'results.svg'), theme=MONOKAI)
     if opt.debug: 

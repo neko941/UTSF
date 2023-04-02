@@ -8,6 +8,20 @@ import tensorflow as tf
 from pathlib import Path
 from typing import Optional
 
+from utils.decorator import _list
+
+@_list
+def flatten_list(alist):
+    flattened_list = []
+    if isinstance(alist, type(np.array([0]))):
+        alist = alist.tolist()
+    for element in alist:
+        if isinstance(element, list):
+            flattened_list.extend(flatten_list(element))
+        else:
+            flattened_list.append(element)
+    return flattened_list
+
 def yaml_load(file='data.yaml'):
     # Single-line safe yaml loading
     return yaml.safe_load(open(file, errors='ignore'))
