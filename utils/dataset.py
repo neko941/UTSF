@@ -248,10 +248,10 @@ class DatasetController():
         else: self.csvs = csvs 
         self.csvs = [os.path.abspath(csv) for csv in self.csvs]
         if dirAsFeature == 0:
-            df = pl.concat([pl.read_csv(source=csv, separator=delimiter, has_header=hasHeader, try_parse_dates=True) for csv in track(self.csvs, description='Reading data')])
+            df = pl.concat([pl.read_csv(source=csv, separator=delimiter, has_header=hasHeader, try_parse_dates=True) for csv in track(self.csvs, description='  Reading data')])
         else:
             dfs = []
-            for csv in track(self.csvs, description='Reading data'):
+            for csv in track(self.csvs, description='  Reading data'):
                 features = [int(p) if p.isdigit() else p for p in csv.split(os.sep)[-dirAsFeature-1:-1]]
                 df = pl.read_csv(source=csv, separator=delimiter, has_header=hasHeader, try_parse_dates=True)
                 for idx, f in enumerate(features): 
@@ -314,9 +314,7 @@ class DatasetController():
 
         if self.segmentFeature:
             console = Console()
-            for ele in self.df[self.segmentFeature].unique():
-                print('PROCESSING ID', end=' ')
-                console.print(ele, style=Style())
+            for ele in track(self.df[self.segmentFeature].unique(), description='Splitting data'):
                 d = self.df.filter(pl.col(self.segmentFeature) == ele).clone()
                 d = self.FillDate(df=d)
                 d.drop_in_place(self.dateFeature) 

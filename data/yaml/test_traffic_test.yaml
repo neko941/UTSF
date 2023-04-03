@@ -1,0 +1,6 @@
+data: .\data\traffic\test.csv
+target: speed
+date: date
+time_as_id: time_id
+features: 
+  - id
