@@ -597,6 +597,24 @@ def main(opt):
     np.random.shuffle(y_val)
     np.random.shuffle(X_test)
     np.random.shuffle(y_test)
+
+    # if opt.batchsz == -1:
+    #     import math
+    #     import tensorflow as tf
+    #     def autobatch(x, y, batch):
+    #         while True:
+    #             try:
+    #                 tf.data.Dataset.from_tensor_slices((x, y)).batch(batchsz).cache().prefetch(buffer_size=tf.data.AUTOTUNE)
+    #                 print('dasdasd')
+    #                 break
+    #             except:
+    #                 autobatch(x, y, batch/2)
+    #         return batch
+    #     opt.bathsz = autobatch(X_train, y_train, 2**(math.floor(math.log2(len(X_train)))))
+    #     print('dasdasd')
+        
+    #     print(opt.bathsz)
+
     
     console = Console(record=True)
     table = Table(title="[cyan]Results", 
