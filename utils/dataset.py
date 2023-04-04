@@ -325,8 +325,10 @@ class DatasetController():
                     feature = d[idx:idx+lag]
                     label = d[self.targetFeatures][idx+lag+offset-ahead:idx+lag+offset].to_frame()
                     if all(flatten_list(feature.with_columns(pl.all().is_not_null()).rows())) and all(flatten_list(label.with_columns(pl.all().is_not_null()).rows())): 
-                        features.append(np.squeeze(feature.to_numpy())) 
-                        labels.append(np.squeeze(label.to_numpy()))
+                        # features.append(np.squeeze(feature.to_numpy())) 
+                        # labels.append(np.squeeze(label.to_numpy()))
+                        features.append(feature.to_numpy()) 
+                        labels.append(label.to_numpy())
 
                 length = len(features)
                 if splitRatio[1]==0 and splitRatio[2]==0: 
