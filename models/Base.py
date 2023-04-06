@@ -1,5 +1,6 @@
 import os
 from abc import abstractmethod
+import json
 
 import tensorflow as tf
 from keras.losses import MeanSquaredError
@@ -12,6 +13,7 @@ from keras.callbacks import ModelCheckpoint
 from keras.callbacks import ReduceLROnPlateau
 from keras.models import Sequential 
 from keras.layers import Input
+# from keras.model import model_to_json
 
 from utils.metrics import metric_dict
 
@@ -53,8 +55,7 @@ class BaseModel:
     def predict(self, *inputs):
         raise NotImplementedError
 
-    def score(self, y, yhat, r):
-        # print(y.shape, yhat.shape)
+    def score(self, y, yhat, r, path=None):
         if len(yhat.shape) == 3: 
             nsamples, nx, ny = yhat.shape
             yhat = yhat.reshape((nsamples,nx*ny))
@@ -62,6 +63,10 @@ class BaseModel:
             results = [str(np.round(np.float64(metric_dict[key](y, yhat)), r)) for key in metric_dict.keys()]
         else:
             results = [str(metric_dict[key](y, yhat)) for key in metric_dict.keys()]
+        if path: 
+            os.makedirs(os.path.join(path, 'values'), exist_ok=True)
+            np.save(open(os.path.join(path, 'values', 'y.npy'), 'wb'), y)
+            np.save(open(os.path.join(path, 'values', 'yhat.npy'), 'wb'), yhat)
         return results
 
 class MachineLearningModel(BaseModel):
@@ -100,6 +105,7 @@ class MachineLearningModel(BaseModel):
 
 class TensorflowModel(BaseModel):
     def __init__(self, input_shape, output_shape, units, activations, dropouts, normalize_layer=None, seed=941, **kwargs):
+        super().__init__()
         self.function_dict = {
             'Adam' : Adam,
             'MSE' : MeanSquaredError,
@@ -163,10 +169,21 @@ class TensorflowModel(BaseModel):
         return self.model.predict(X)
     
     def save(self, file_name:str, save_dir:str='.', extension:str='.h5'):
-        os.makedirs(name=save_dir, exist_ok=True)
-        file_path = os.path.join(save_dir, file_name+extension)
-        pickle.dump(self.model, open(Path(file_path).absolute(), "wb"))
-        return file_path
+        os.makedirs(name=os.path.join(save_dir, 'weights'), exist_ok=True)
+        os.makedirs(name=os.path.join(save_dir, 'architectures'), exist_ok=True)
+        os.makedirs(name=os.path.join(save_dir, 'models'), exist_ok=True)
+        
+        weight_path = os.path.join(save_dir, 'weights', f'{file_name}.h5')
+        architecture_path = os.path.join(save_dir, 'architectures', f'{file_name}.json') 
+        model_path = os.path.join(save_dir, 'models', file_name)
+        
+        self.model.save_weights(weight_path)
+        with open(architecture_path, 'w') as outfile: json.dump(self.model.to_json(), outfile, indent=4)
+        self.model.save(model_path)
+        return weight_path
+
+        # pickle.dump(self.model, open(Path(file_path).absolute(), "wb"))
+        # return file_path
     
     def load(self, weight):
         if os.path.exists(weight): self.model.load_weights(weight)
