@@ -583,7 +583,7 @@ def main(opt):
                           ahead=opt.labelsz, 
                           offset=opt.offset, 
                           multimodels=opt.multimodels)
-    
+    dataset.save(save_dir=save_dir)
     with open(os.path.join(save_dir, "num_samples.json"), "w") as final: json.dump(dataset.num_samples, final, indent = 4) 
     # ids = [i['id'] for i in sorted(dataset.num_samples, key=lambda d: d['train'])[:500]]
     # print(ids)
@@ -592,7 +592,9 @@ def main(opt):
     # exit()
      
     X_train, y_train, X_val, y_val, X_test, y_test = dataset.X_train, dataset.y_train, dataset.X_val, dataset.y_val, dataset.X_test, dataset.y_test
-                                
+
+    
+
     np.random.shuffle(X_train)
     np.random.shuffle(y_train)
     np.random.shuffle(X_val)
@@ -686,8 +688,8 @@ def main(opt):
                             X_train=sub_X_train, y_train=sub_y_train,
                             X_val=sub_X_val, y_val=sub_y_val)
                     weight=os.path.join(save_dir, 'weights', f"{model_list[model_id].__class__.__name__}_best.h5")
-                    if not os.path.exists(weight): weight = model_list[model_id].save(save_dir=os.path.join(save_dir, 'weights'),
-                                                                    file_name=model_list[model_id].__class__.__name__)
+                    if not os.path.exists(weight): weight = model_list[model_id].save(save_dir=save_dir,
+                                                                                      file_name=model_list[model_id].__class__.__name__)
                     if weight is not None: model_list[model_id].load(weight)
                     yhat = model_list[model_id].predict(X=sub_X_test)
                     scores = model_list[model_id].score(y=sub_y_test, yhat=yhat, r=opt.round)

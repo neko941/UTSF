@@ -375,9 +375,9 @@ class DatasetController():
             self.y_test.extend(y[2])
 
             self.num_samples.append({'id' : ele,
-                                     'train': len(labels[0:train_end]),
-                                     'val': len(labels[train_end:val_end]),
-                                     'test': len(labels[val_end:length])})
+                                     'train': len(y[0]),
+                                     'val': len(y[1]),
+                                     'test': len(y[2])})
 
         self.X_train = np.array(self.X_train)
         self.y_train = np.array(self.y_train)
@@ -386,4 +386,14 @@ class DatasetController():
         self.X_test = np.array(self.X_test)
         self.y_test = np.array(self.y_test)
     
+    def save(self, save_dir):
+        save_dir = os.path.join(save_dir, 'values')
+        os.makedirs(save_dir, exist_ok=True)
+        np.save(open(os.path.join(save_dir, 'X_train.npy'), 'wb'), self.X_train)
+        np.save(open(os.path.join(save_dir, 'y_train.npy'), 'wb'), self.y_train)
+        np.save(open(os.path.join(save_dir, 'X_val.npy'), 'wb'), self.X_val)
+        np.save(open(os.path.join(save_dir, 'y_val.npy'), 'wb'), self.y_val)
+        np.save(open(os.path.join(save_dir, 'X_test.npy'), 'wb'), self.X_test)
+        np.save(open(os.path.join(save_dir, 'y_test.npy'), 'wb'), self.y_test)
+
     def display(self): pass

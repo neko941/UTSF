@@ -30,6 +30,12 @@ import torch.nn as nn
 class BaseModel:
     def __init__(self):
         self.history = None
+        self.dir_weight = 'weights'
+        self.dir_value = 'values'
+        self.dir_log = 'logs'
+        self.dir_model = 'models'
+        self.dir_architecture = 'architectures'
+
 
     @abstractmethod
     def build(self, *inputs):
@@ -65,7 +71,7 @@ class BaseModel:
             results = [str(metric_dict[key](y, yhat)) for key in metric_dict.keys()]
         if path: 
             os.makedirs(os.path.join(path, 'values'), exist_ok=True)
-            np.save(open(os.path.join(path, 'values', 'y.npy'), 'wb'), y)
+            # np.save(open(os.path.join(path, 'values', 'y.npy'), 'wb'), y)
             np.save(open(os.path.join(path, 'values', f'yhat-{self.__class__.__name__}.npy'), 'wb'), yhat)
         return results
 
