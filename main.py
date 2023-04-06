@@ -578,11 +578,11 @@ def main(opt):
     dataset.GetSegmentFeature(dirAsFeature=opt.DirAsFeature, 
                               splitDirFeature=opt.SplitDirFeature, 
                               splitFeature=opt.SplitFeature)
-    dataset.TimeBasedCrossValidation(splitRatio=(opt.trainsz, opt.valsz, 1-opt.trainsz-opt.valsz), 
-                                     lag=opt.inputsz, 
-                                     ahead=opt.labelsz, 
-                                     offset=opt.offset, 
-                                     multimodels=opt.multimodels)
+    dataset.SplittingData(splitRatio=(opt.trainsz, opt.valsz, 1-opt.trainsz-opt.valsz), 
+                          lag=opt.inputsz, 
+                          ahead=opt.labelsz, 
+                          offset=opt.offset, 
+                          multimodels=opt.multimodels)
     
     with open(os.path.join(save_dir, "num_samples.json"), "w") as final: json.dump(dataset.num_samples, final, indent = 4) 
     # ids = [i['id'] for i in sorted(dataset.num_samples, key=lambda d: d['train'])[:500]]

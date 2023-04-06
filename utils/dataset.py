@@ -214,7 +214,7 @@ import pandas as pd
 import polars as pl
 from rich.style import Style
 from rich.progress import track
-from rich.console import Console
+# from rich.console import Console
 from datetime import timedelta
 from utils.general import flatten_list
 
@@ -305,7 +305,29 @@ class DatasetController():
 
         return df
 
-    def TimeBasedCrossValidation(self, splitRatio, lag, ahead, offset, multimodels=False):
+    def TimeBasedCrossValidation(self, d, lag, ahead, offset, splitRatio):
+        features = []
+        labels = []
+        for idx in range(len(d)-offset-lag+1):
+            feature = d[idx:idx+lag]
+            label = d[self.targetFeatures][idx+lag+offset-ahead:idx+lag+offset].to_frame()
+            if all(flatten_list(feature.with_columns(pl.all().is_not_null()).rows())) and all(flatten_list(label.with_columns(pl.all().is_not_null()).rows())): 
+                labels.append(np.squeeze(label.to_numpy()))
+                features.append(feature.to_numpy()) 
+
+        length = len(features)
+        if splitRatio[1]==0 and splitRatio[2]==0: 
+            train_end = length 
+            val_end = length
+        elif splitRatio[1]!=0 and splitRatio[2]==0:
+            train_end = int(length*splitRatio[0])
+            val_end = length
+        else:
+            train_end = int(length*splitRatio[0])
+            val_end = int(length*(splitRatio[0] + splitRatio[1]))
+        return [features[0:train_end], features[train_end:val_end], features[val_end:length]], [labels[0:train_end], labels[train_end:val_end], labels[val_end:length]]
+
+    def SplittingData(self, splitRatio, lag, ahead, offset, multimodels=False):
         if self.segmentFeature:
             if self.dateFeature: self.df = self.df.sort(by=[self.segmentFeature, self.dateFeature])
             else: self.df = self.df.sort(by=[self.segmentFeature])
@@ -313,84 +335,44 @@ class DatasetController():
         if offset<ahead: offset=ahead
 
         if self.segmentFeature:
-            console = Console()
             for ele in track(self.df[self.segmentFeature].unique(), description='Splitting data'):
                 d = self.df.filter(pl.col(self.segmentFeature) == ele).clone()
                 d = self.FillDate(df=d)
                 d.drop_in_place(self.dateFeature) 
                 
-                features = []
-                labels = []
-                for idx in range(len(d)-offset-lag+1):
-                    feature = d[idx:idx+lag]
-                    label = d[self.targetFeatures][idx+lag+offset-ahead:idx+lag+offset].to_frame()
-                    if all(flatten_list(feature.with_columns(pl.all().is_not_null()).rows())) and all(flatten_list(label.with_columns(pl.all().is_not_null()).rows())): 
-                        # features.append(np.squeeze(feature.to_numpy())) 
-                        labels.append(np.squeeze(label.to_numpy()))
-                        features.append(feature.to_numpy()) 
-                        # labels.append(label.to_numpy())
-
-                length = len(features)
-                if splitRatio[1]==0 and splitRatio[2]==0: 
-                    train_end = length 
-                    val_end = length
-                elif splitRatio[1]!=0 and splitRatio[2]==0:
-                    train_end = int(length*splitRatio[0])
-                    val_end = length
-                else:
-                    train_end = int(length*splitRatio[0])
-                    val_end = int(length*(splitRatio[0] + splitRatio[1]))
+                x, y = self.TimeBasedCrossValidation(d=d, lag=lag, ahead=ahead, offset=offset, splitRatio=splitRatio) 
                 
                 if multimodels:
-                    self.X_train.append(features[0:train_end])
-                    self.y_train.append(labels[0:train_end])
-                    self.X_val.append(features[train_end:val_end])
-                    self.y_val.append(labels[train_end:val_end])
-                    self.X_test.append(features[val_end:length])
-                    self.y_test.append(labels[val_end:length])
+                    self.X_train.append(x[0])
+                    self.y_train.append(y[0])
+                    self.X_val.append(x[1])
+                    self.y_val.append(y[1])
+                    self.X_test.append(x[2])
+                    self.y_test.append(y[2])
                 else:
-                    self.X_train.extend(features[0:train_end])
-                    self.y_train.extend(labels[0:train_end])
-                    self.X_val.extend(features[train_end:val_end])
-                    self.y_val.extend(labels[train_end:val_end])
-                    self.X_test.extend(features[val_end:length])
-                    self.y_test.extend(labels[val_end:length])
+                    self.X_train.extend(x[0])
+                    self.y_train.extend(y[0])
+                    self.X_val.extend(x[1])
+                    self.y_val.extend(y[1])
+                    self.X_test.extend(x[2])
+                    self.y_test.extend(y[2])
                 
                 self.num_samples.append({'id' : ele,
-                                         'train': len(labels[0:train_end]),
-                                         'val': len(labels[train_end:val_end]),
-                                         'test': len(labels[val_end:length])})
+                                         'train': len(y[0]),
+                                         'val': len(y[1]),
+                                         'test': len(y[2])})
         else:
             d = self.df.clone()
             d = self.FillDate(df=d)
             d.drop_in_place(self.dateFeature) 
             
-            features = []
-            labels = []
-            for idx in range(len(d)-offset-lag+1):
-                feature = d[idx:idx+lag]
-                label = d[self.targetFeatures][idx+lag+offset-ahead:idx+lag+offset].to_frame()
-                if all(flatten_list(feature.with_columns(pl.all().is_not_null()).rows())) and all(flatten_list(label.with_columns(pl.all().is_not_null()).rows())): 
-                    features.append(np.squeeze(feature.to_numpy())) 
-                    labels.append(np.squeeze(label.to_numpy()))
-
-            length = len(features)
-            if splitRatio[1]==0 and splitRatio[2]==0: 
-                train_end = length 
-                val_end = length
-            elif splitRatio[1]!=0 and splitRatio[2]==0:
-                train_end = int(length*splitRatio[0])
-                val_end = length
-            else:
-                train_end = int(length*splitRatio[0])
-                val_end = int(length*(splitRatio[0] + splitRatio[1]))
-            
-            self.X_train.extend(features[0:train_end])
-            self.y_train.extend(labels[0:train_end])
-            self.X_val.extend(features[train_end:val_end])
-            self.y_val.extend(labels[train_end:val_end])
-            self.X_test.extend(features[val_end:length])
-            self.y_test.extend(labels[val_end:length])
+            x, y = self.TimeBasedCrossValidation(d=d, lag=lag, ahead=ahead, offset=offset, splitRatio=splitRatio) 
+            self.X_train.extend(x[0])
+            self.y_train.extend(y[0])
+            self.X_val.extend(x[1])
+            self.y_val.extend(y[1])
+            self.X_test.extend(x[2])
+            self.y_test.extend(y[2])
 
             self.num_samples.append({'id' : ele,
                                      'train': len(labels[0:train_end]),

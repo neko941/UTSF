@@ -66,7 +66,7 @@ class BaseModel:
         if path: 
             os.makedirs(os.path.join(path, 'values'), exist_ok=True)
             np.save(open(os.path.join(path, 'values', 'y.npy'), 'wb'), y)
-            np.save(open(os.path.join(path, 'values', 'yhat.npy'), 'wb'), yhat)
+            np.save(open(os.path.join(path, 'values', f'yhat-{self.__class__.__name__}.npy'), 'wb'), yhat)
         return results
 
 class MachineLearningModel(BaseModel):
@@ -135,13 +135,13 @@ class TensorflowModel(BaseModel):
                                 save_weights_only=False,
                                 verbose=0),
                 ReduceLROnPlateau(monitor='val_loss',
-                                    factor=0.1,
-                                    patience=patience / 5,
-                                    verbose=0,
-                                    mode='auto',
-                                    min_delta=min_delta * 10,
-                                    cooldown=0,
-                                    min_lr=0), 
+                                  factor=0.1,
+                                  patience=patience / 5,
+                                  verbose=0,
+                                  mode='auto',
+                                  min_delta=min_delta * 10,
+                                  cooldown=0,
+                                  min_lr=0), 
                 CSVLogger(filename=os.path.join(log_path, f'{self.__class__.__name__}.csv'), separator=',', append=False)]  
         
     def preprocessing(self, x, y, batchsz):
