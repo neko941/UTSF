@@ -217,6 +217,12 @@ from rich.progress import track
 # from rich.console import Console
 from datetime import timedelta
 from utils.general import flatten_list
+import multiprocessing
+import random
+from concurrent.futures import ProcessPoolExecutor
+from time import sleep
+from rich import progress
+from multiprocessing import Pool
 
 class DatasetController():
     def __init__(self, trainFeatures, targetFeatures, granularity=1, dateFeature=None):
@@ -302,7 +308,6 @@ class DatasetController():
         df = df.join(other=d, 
                      on=self.dateFeature, 
                      how='outer')
-
         return df
 
     def TimeBasedCrossValidation(self, d, lag, ahead, offset, splitRatio):
@@ -397,3 +402,136 @@ class DatasetController():
         np.save(open(os.path.join(save_dir, 'y_test.npy'), 'wb'), self.y_test)
 
     def display(self): pass
+
+
+    # def TimeBasedCrossValidation(self, d, lag, ahead, offset, splitRatio, progress=None, task_id=None):
+    #     features = []
+    #     labels = []
+    #     max_length = len(d)-offset-lag+1
+    #     for idx in range(max_length):
+    #         feature = d[idx:idx+lag]
+    #         label = d[self.targetFeatures][idx+lag+offset-ahead:idx+lag+offset].to_frame()
+    #         if all(flatten_list(feature.with_columns(pl.all().is_not_null()).rows())) and all(flatten_list(label.with_columns(pl.all().is_not_null()).rows())): 
+    #             labels.append(np.squeeze(label.to_numpy()))
+    #             features.append(feature.to_numpy()) 
+    #         if task_id is not None and progress is not None: 
+    #             progress[task_id] = {"progress": idx + 1, "total": max_length}
+
+    #     length = len(features)
+    #     if splitRatio[1]==0 and splitRatio[2]==0: 
+    #         train_end = length 
+    #         val_end = length
+    #     elif splitRatio[1]!=0 and splitRatio[2]==0:
+    #         train_end = int(length*splitRatio[0])
+    #         val_end = length
+    #     else:
+    #         train_end = int(length*splitRatio[0])
+    #         val_end = int(length*(splitRatio[0] + splitRatio[1]))
+    #     return [features[0:train_end], features[train_end:val_end], features[val_end:length]], [labels[0:train_end], labels[train_end:val_end], labels[val_end:length]]
+
+    # def SplittingData(self, splitRatio, lag, ahead, offset, multimodels=False):
+    #     if self.segmentFeature:
+    #         if self.dateFeature: self.df = self.df.sort(by=[self.segmentFeature, self.dateFeature])
+    #         else: self.df = self.df.sort(by=[self.segmentFeature])
+        
+    #     if offset<ahead: offset=ahead
+
+    #     if self.segmentFeature:
+    #         n_workers = 8  # set this to the number of cores you have on your machine
+
+    #         from rich import progress
+    #         with progress.Progress(
+    #             "[progress.description]{task.description}",
+    #             progress.BarColumn(),
+    #             "[progress.percentage]{task.percentage:>3.0f}%",
+    #             progress.TimeRemainingColumn(),
+    #             progress.TimeElapsedColumn(),
+    #             refresh_per_second=1,  # bit slower updates
+    #         ) as progress:
+    #             futures = []  # keep track of the jobs
+    #             with multiprocessing.Manager() as manager:
+    #                 # this is the key - we share some state between our 
+    #                 # main process and our worker functions
+    #                 _progress = manager.dict()
+    #                 overall_progress_task = progress.add_task("[green]Splitting Data:")
+
+    #                 with ProcessPoolExecutor(max_workers=n_workers) as executor:
+    #                     for ele in self.df[self.segmentFeature].unique():
+    #                         d = self.df.filter(pl.col(self.segmentFeature) == ele).clone()
+    #                         d = self.FillDate(df=d)
+    #                         d.drop_in_place(self.dateFeature) 
+                            
+    #                         task_id = progress.add_task(f"ID => {ele:14}", visible=False)
+    #                         futures.append(executor.submit(self.TimeBasedCrossValidation, 
+    #                                                        d, 
+    #                                                        lag,
+    #                                                        ahead,
+    #                                                        offset,
+    #                                                        _progress, 
+    #                                                        task_id))
+    #                         # x, y = self.TimeBasedCrossValidation(d=d, lag=lag, ahead=ahead, offset=offset, splitRatio=splitRatio) 
+                        
+
+    #                     # monitor the progress:
+    #                     while (n_finished := sum([future.done() for future in futures])) < len(futures):
+    #                         progress.update(overall_progress_task, completed=n_finished, total=len(futures))
+    #                         for task_id, update_data in _progress.items():
+    #                             latest = update_data["progress"]
+    #                             total = update_data["total"]
+    #                             # update the progress bar for this task:
+    #                             progress.update(task_id,
+    #                                             completed=latest,
+    #                                             total=total,
+    #                                             visible=latest<total)
+
+    #                     # raise any errors:
+    #                     for future in futures:
+    #                         if future.done() and not future.cancelled():  # check if the future is done and not cancelled
+    #                             x, y  = future.result()  # get the result from the future
+    #                             if multimodels:
+    #                                 self.X_train.append(x[0])
+    #                                 self.y_train.append(y[0])
+    #                                 self.X_val.append(x[1])
+    #                                 self.y_val.append(y[1])
+    #                                 self.X_test.append(x[2])
+    #                                 self.y_test.append(y[2])
+    #                             else:
+    #                                 self.X_train.extend(x[0])
+    #                                 self.y_train.extend(y[0])
+    #                                 self.X_val.extend(x[1])
+    #                                 self.y_val.extend(y[1])
+    #                                 self.X_test.extend(x[2])
+    #                                 self.y_test.extend(y[2])
+                                
+    #                             self.num_samples.append({'id' : ele,
+    #                                                      'train': len(y[0]),
+    #                                                      'val': len(y[1]),
+    #                                                      'test': len(y[2])})
+    #                             futures.remove(future)  # remove the future from the list
+    #                             break  # break out of the loop to check the next future
+    #     else:
+    #         d = self.df.clone()
+    #         d = self.FillDate(df=d)
+    #         d.drop_in_place(self.dateFeature) 
+            
+    #         x, y = self.TimeBasedCrossValidation(d=d, lag=lag, ahead=ahead, offset=offset, splitRatio=splitRatio) 
+    #         self.X_train.extend(x[0])
+    #         self.y_train.extend(y[0])
+    #         self.X_val.extend(x[1])
+    #         self.y_val.extend(y[1])
+    #         self.X_test.extend(x[2])
+    #         self.y_test.extend(y[2])
+
+    #         self.num_samples.append({'id' : ele,
+    #                                  'train': len(labels[0:train_end]),
+    #                                  'val': len(labels[train_end:val_end]),
+    #                                  'test': len(labels[val_end:length])})
+
+    #     self.X_train = np.array(self.X_train)
+    #     self.y_train = np.array(self.y_train)
+    #     self.X_val = np.array(self.X_val)
+    #     self.y_val = np.array(self.y_val)
+    #     self.X_test = np.array(self.X_test)
+    #     self.y_test = np.array(self.y_test)
+    
+    # def display(self): pass
