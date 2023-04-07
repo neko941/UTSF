@@ -405,6 +405,7 @@ def parse_opt(known=False):
     parser.add_argument('--individual', action='store_true', help='for LTSF Linear models')
     parser.add_argument('--debug', action='store_true', help='print debug information in table')
     parser.add_argument('--multimodels', action='store_true', help='split data of n segment ids for n models ')
+    parser.add_argument('--workers', type=int, default=8, help='')
 
     parser.add_argument('--AutoInterpolate', type=str, choices=['', 'forward', 'backward'], default='', help='')
     parser.add_argument('--CyclicalPattern', action='store_true', help='Add sin cos cyclical feature')
@@ -563,7 +564,8 @@ def main(opt):
     dataset = DatasetController(trainFeatures=data['features'],
                                 dateFeature=data['date'],
                                 targetFeatures=data['target'],
-                                granularity=opt.granularity)
+                                granularity=opt.granularity,
+                                workers=opt.workers)
     dataset.ReadFileAddFetures(csvs=csvs, 
                                dirAsFeature=opt.DirAsFeature,
                                newColumnName=opt.DirFeatureName,
