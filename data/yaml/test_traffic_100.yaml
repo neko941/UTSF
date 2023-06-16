@@ -1,4 +1,4 @@
-data: .\data\traffic\vehicleworkgeopath_avg_speed-1.csv
+data: .\data\traffic\vehicleworkgeopath_avg_speed-100.csv
 target: speed
 date: date
 time_as_id: time_id

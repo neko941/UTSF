@@ -1,18 +1,10 @@
 import os
 import numpy as np
-import pandas as pd
 import polars as pl
-from rich.style import Style
 from rich.progress import track
 from datetime import timedelta
 from utils.general import flatten_list
-import multiprocessing
-import random
-from concurrent.futures import ProcessPoolExecutor
-from time import sleep
-from rich import progress
-from multiprocessing import Pool
-from multiprocessing import Pool
+from multiprocessing.pool import ThreadPool
 from rich.progress import Progress
 from rich.progress import (
                         BarColumn,
@@ -153,6 +145,7 @@ class DatasetController():
         if offset<ahead: offset=ahead
 
         if self.segmentFeature:
+            # if self.workers != 1: 
             data = []
             with self.ProgressBar() as progress:
                 for ele in progress.track(self.df[self.segmentFeature].unique(), description='Splitting jobs'):
@@ -163,7 +156,7 @@ class DatasetController():
             
             with self.ProgressBar() as progress:
                 task_id = progress.add_task("Splitting data", total=len(data))
-                with Pool(8) as p:
+                with ThreadPool(self.workers) as p:
                     for result in p.imap(self.TimeBasedCrossValidation, data):
                         x = result[0]
                         y = result[1]
@@ -183,10 +176,38 @@ class DatasetController():
                             self.y_test.extend(y[2])
                         
                         self.num_samples.append({'id' : ele,
-                                                 'train': len(y[0]),
-                                                 'val': len(y[1]),
-                                                 'test': len(y[2])})
+                                                'train': len(y[0]),
+                                                'val': len(y[1]),
+                                                'test': len(y[2])})
                         progress.advance(task_id)
+            # else:
+            #     with self.ProgressBar() as progress:
+            #         for ele in progress.track(self.df[self.segmentFeature].unique(), description='Splitting data'):
+            #             d = self.df.filter(pl.col(self.segmentFeature) == ele).clone()
+            #             d = self.FillDate(df=d)
+            #             d.drop_in_place(self.dateFeature) 
+                        
+            #             x, y = self.TimeBasedCrossValidation(args=[d, lag, ahead, offset, splitRatio]) 
+
+            #             if multimodels:
+            #                 self.X_train.append(x[0])
+            #                 self.y_train.append(y[0])
+            #                 self.X_val.append(x[1])
+            #                 self.y_val.append(y[1])
+            #                 self.X_test.append(x[2])
+            #                 self.y_test.append(y[2])
+            #             else:
+            #                 self.X_train.extend(x[0])
+            #                 self.y_train.extend(y[0])
+            #                 self.X_val.extend(x[1])
+            #                 self.y_val.extend(y[1])
+            #                 self.X_test.extend(x[2])
+            #                 self.y_test.extend(y[2])
+                        
+            #             self.num_samples.append({'id' : ele,
+            #                                     'train': len(y[0]),
+            #                                     'val': len(y[1]),
+            #                                     'test': len(y[2])})
         else:
             d = self.df.clone()
             d = self.FillDate(df=d)
@@ -199,11 +220,6 @@ class DatasetController():
             self.y_val.extend(y[1])
             self.X_test.extend(x[2])
             self.y_test.extend(y[2])
-
-            self.num_samples.append({'id' : ele,
-                                     'train': len(y[0]),
-                                     'val': len(y[1]),
-                                     'test': len(y[2])})
 
         self.X_train = np.array(self.X_train)
         self.y_train = np.array(self.y_train)

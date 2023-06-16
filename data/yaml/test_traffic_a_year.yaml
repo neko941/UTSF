@@ -1,0 +1,5 @@
+data: .\data\traffic\a_year
+target: speed
+date: date
+time_as_id: time_id
+features: current_geopath_id

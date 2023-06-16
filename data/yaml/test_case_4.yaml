@@ -1,0 +1,4 @@
+data: .\data\salinity\615.csv
+target: average
+date: dt
+features: station

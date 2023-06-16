@@ -98,7 +98,7 @@ class MachineLearningModel(BaseModel):
     
     def save(self, file_name:str, save_dir:str='.', extension:str='.pkl'):
         os.makedirs(name=save_dir, exist_ok=True)
-        file_path = os.path.join(save_dir, file_name+extension)
+        file_path = os.path.join(save_dir, 'weight', file_name+extension)
         pickle.dump(self.model, open(Path(file_path).absolute(), "wb"))
         return file_path
 

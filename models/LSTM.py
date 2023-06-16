@@ -89,39 +89,80 @@ class VanillaLSTM__Pytorch(PytorchModel):
                                            output_shape=self.output_shape,
                                            units=self.units)
 
+import tensorflow as tf
 class BiLSTM__Tensorflow(TensorflowModel):
-    def body(self):
-        # Normalization
-        if self.normalize_layer: self.model.add(self.normalize_layer)
-        # BiLSTM Layer 1 
-        self.model.add(Bidirectional(name='BiLSTM_layer_1',
-                                     layer=LSTM(units=self.units[0],
-                                                return_sequences=True,
-                                                kernel_initializer=GlorotUniform(seed=self.seed),
-                                                activation=self.activations[0])))
-        # BiLSTM Layer 2 
-        self.model.add(Bidirectional(name='BiLSTM_layer_2',
-                                     layer=LSTM(units=self.units[1],
-                                                return_sequences=True,
-                                                kernel_initializer=GlorotUniform(seed=self.seed),
-                                                activation=self.activations[1])))
-        # BiLSTM Layer 3 
-        self.model.add(Bidirectional(name='BiLSTM_layer_3',
-                                     layer=LSTM(units=self.units[2],
-                                                return_sequences=False,
-                                                kernel_initializer=GlorotUniform(seed=self.seed),
-                                                activation=self.activations[2])))
-        # FC Layer
-        self.model.add(Dense(name='Fully_Connected_layer',
-                             units=self.units[3],
-                             kernel_initializer=GlorotUniform(seed=self.seed),
-                             activation=self.activations[3]))
+    def build(self):
+        self.model = tf.keras.Sequential([
+            # Input layer 
+            tf.keras.Input(shape=self.input_shape, name='input_layer'), 
 
-        # Output Layer
-        self.model.add(Dense(name='Output_layer',
-                             units=self.output_shape, 
-                             kernel_initializer=GlorotUniform(seed=self.seed),
-                             activation=self.activations[4]))
+            # normalize_layer,
+
+            # BiLSTM Layer 1 
+            tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(128, 
+                                                            return_sequences=True, 
+                                                            kernel_initializer=tf.initializers.GlorotUniform(seed=self.seed)),
+                                        name='bilstm_layer_1'), 
+
+            # BiLSTM Layer 2
+            tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64, 
+                                                            return_sequences=True, 
+                                                            kernel_initializer=tf.initializers.GlorotUniform(seed=self.seed)),
+                                        name='bilstm_layer_2'),          
+
+            # BiLSTM Layer 3
+            tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(32, 
+                                                            return_sequences=False, 
+                                                            kernel_initializer=tf.initializers.GlorotUniform(seed=self.seed)),
+                                        name='bilstm_layer_3'),   
+                                
+            # FC Layer 1
+            tf.keras.layers.Dense(32,
+                                activation='relu',
+                                kernel_initializer=tf.initializers.GlorotUniform(seed=self.seed),
+                                name='fc_layer_1'
+                                ),
+            
+            # Output Layer
+            tf.keras.layers.Dense(self.output_shape, 
+                                kernel_initializer=tf.initializers.GlorotUniform(seed=self.seed),
+                                name='output_layer') 
+        ],
+        name='bilstm_model')
+
+# class BiLSTM__Tensorflow(TensorflowModel):
+#     def body(self):
+#         # Normalization
+#         if self.normalize_layer: self.model.add(self.normalize_layer)
+#         # BiLSTM Layer 1 
+#         self.model.add(Bidirectional(name='BiLSTM_layer_1',
+#                                      layer=LSTM(units=self.units[0],
+#                                                 return_sequences=True,
+#                                                 kernel_initializer=GlorotUniform(seed=self.seed),
+#                                                 activation=self.activations[0])))
+#         # BiLSTM Layer 2 
+#         self.model.add(Bidirectional(name='BiLSTM_layer_2',
+#                                      layer=LSTM(units=self.units[1],
+#                                                 return_sequences=True,
+#                                                 kernel_initializer=GlorotUniform(seed=self.seed),
+#                                                 activation=self.activations[1])))
+#         # BiLSTM Layer 3 
+#         self.model.add(Bidirectional(name='BiLSTM_layer_3',
+#                                      layer=LSTM(units=self.units[2],
+#                                                 return_sequences=False,
+#                                                 kernel_initializer=GlorotUniform(seed=self.seed),
+#                                                 activation=self.activations[2])))
+#         # FC Layer
+#         self.model.add(Dense(name='Fully_Connected_layer',
+#                              units=self.units[3],
+#                              kernel_initializer=GlorotUniform(seed=self.seed),
+#                              activation=self.activations[3]))
+
+#         # Output Layer
+#         self.model.add(Dense(name='Output_layer',
+#                              units=self.output_shape, 
+#                              kernel_initializer=GlorotUniform(seed=self.seed),
+#                              activation=self.activations[4]))
         
 
 

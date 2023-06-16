@@ -165,7 +165,7 @@ class LTSF_Linear_Base(TensorflowModel):
 
     def save(self, file_name:str, save_dir:str='.'):
         os.makedirs(name=save_dir, exist_ok=True)
-        file_path = os.path.join(save_dir, file_name, "ckpt")
+        file_path = os.path.join(save_dir, 'weights', file_name, "ckpt")
         self.model.save_weights(Path(file_path).absolute())
         return file_path
 
